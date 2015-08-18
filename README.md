@@ -1,2 +1,2 @@
 # covjson-reader
-Read CoverageJSON documents and expose them as Coverage objects
+Read [CoverageJSON](https://github.com/neothemachine/coveragejson) documents and expose them as [Coverage objects](https://github.com/neothemachine/coverage-jsapi).
