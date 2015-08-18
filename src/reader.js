@@ -276,12 +276,41 @@ function transformRange (range) {
   const validMin = range.validMin
   const validMax = range.validMax
   
-  if (isTyped && !hasMissing && !hasOffsetFactor) {
-    // As we don't have to transform any values we can keep the
-    // efficient typed array representation and are done.
+  if (!hasMissing && !hasOffsetFactor) {
+    // No transformation necessary.
+    // For efficiency we can use a typed array instead if this is not the case yet.
+    if (!isTyped) {
+      // FIXME if the range is categorical data, then we should use an integer array instead
+      let vals = new Float64Array(values.length)
+      for (let i=0, len=values.length; i < len; i++) {
+        vals[i] = values[i]
+      }
+    }
   } else {
     // Transformation is necessary.
-    let vals = new Array(values.length)
+    let vals
+    if (!hasMissing) {
+      // Since there are no missing values, we can use a typed array for efficiency.
+      if (isTyped) {
+        // If the input array is already of a suitable type, we use that array directly
+        // if the type is suitable.
+
+        // FIXME when is a type suitable?
+        let suitable = false
+        if (suitable) {
+          vals = values
+        } else {
+          vals = new Float64Array(values.length)
+        }
+      } else {
+        // FIXME if the range is categorical data, then we should use an integer array instead
+        vals = new Float64Array(values.length)
+      }
+    } else {
+      // we use a regular array so that missing values can be represented as "undefined"
+      vals = new Array(values.length)
+    }
+    
     if (hasOffsetFactor) {
       for (let i=0; i < values.length; i++) {
         const val = values[i]
@@ -296,7 +325,7 @@ function transformRange (range) {
         range.validMin = validMin * factor + offset
         range.validMax = validMax * factor + offset
       }
-    } else if (hasMissing) {
+    } else { // hasMissing == true
       for (let i=0; i < values.length; i++) {
         const val = values[i]
         if (val < validMin || val > validMax) {
