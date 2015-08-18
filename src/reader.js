@@ -258,11 +258,62 @@ export class Coverage {
 function transformRange (range) {
   if ('__transformDone' in range) return
   
-  // TODO transform the range
+  const values = range.values
+  const isTyped = ArrayBuffer.isView(values)
+  const hasMissing = range.missing === 'nonvalid'
+  const hasOffsetFactor = 'offset' in range
+
+  if ('offset' in range) {
+    assert('factor' in range)
+  }
+  const offset = range.offset
+  const factor = range.factor
   
-  // decode values (factor/offset/missing)
+  if (hasMissing) {
+    assert('validMin' in range)
+    assert('validMax' in range)
+  }
+  const validMin = range.validMin
+  const validMax = range.validMax
   
-  // turn into typed arrays
+  if (isTyped && !hasMissing && !hasOffsetFactor) {
+    // As we don't have to transform any values we can keep the
+    // efficient typed array representation and are done.
+  } else {
+    // Transformation is necessary.
+    let vals = new Array(values.length)
+    if (hasOffsetFactor) {
+      for (let i=0; i < values.length; i++) {
+        const val = values[i]
+        if (hasMissing && (val < validMin || val > validMax)) {
+          // leave vals[i] as undefined
+        } else {
+          vals[i] = val * factor + offset
+        }
+      }
+      
+      if (validMin !== undefined) {
+        range.validMin = validMin * factor + offset
+        range.validMax = validMax * factor + offset
+      }
+    } else if (hasMissing) {
+      for (let i=0; i < values.length; i++) {
+        const val = values[i]
+        if (val < validMin || val > validMax) {
+          // leave vals[i] as undefined
+        } else {
+          vals[i] = val
+        }
+      }
+    }
+    range.values = vals
+    
+    delete range.offset
+    delete range.factor
+    delete range.missing
+  }
+    
+  range.__transformDone = true
   
   return range
 }
