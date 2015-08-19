@@ -1,7 +1,18 @@
 {
   "name": "covjson-reader",
   "version": "0.1.0",
-  "main": "src/reader.js",
+  "main": "src/reader",
+  "registry": "jspm",
+  "format": "esm",
+  "scripts": {
+    "test": "standard"
+  },
+  "standard": {
+    "parser": "babel-eslint",
+    "ignore": [
+      "src/config.js"
+    ]
+  },
   "jspm": {
     "directories": {
       "baseURL": "src"
@@ -10,9 +21,14 @@
       "cbor": "github:paroga/cbor-js@master"
     },
     "devDependencies": {
-      "babel": "npm:babel-core@^5.6.4",
-      "babel-runtime": "npm:babel-runtime@^5.6.4",
-      "core-js": "npm:core-js@^0.9.17"
+      "babel": "npm:babel-core@^5.8.22",
+      "babel-runtime": "npm:babel-runtime@^5.8.20",
+      "core-js": "npm:core-js@^1.1.0"
     }
+  },
+  "devDependencies": {
+    "babel-eslint": "^4.0.10",
+    "jspm": "^0.16.0",
+    "standard": "^5.1.0"
   }
 }
