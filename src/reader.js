@@ -1,3 +1,4 @@
+import ndarray from 'ndarray'
 import cbor from 'cbor'
 
 const MEDIA = {
@@ -208,8 +209,9 @@ export class Coverage {
   }
   
   /**
+   * Returns the requested range data as a Promise.
    * 
-   * 
+   * Note that this method implicitly loads the domain as well. 
    * 
    * Example:
    * 
@@ -227,24 +229,25 @@ export class Coverage {
    * @return A Promise object which loads the requested range data and provides a Range object in its callback.
    */
   loadRange (paramKey) {
-    // TODO should loading a range implicitly load the domain as well if it's not loaded yet?
-    
-    let rangeOrUrl = this.covjson.ranges[paramKey]
-    let isCategorical = 'categories' in this.parameters.get(paramKey)
-    if (typeof rangeOrUrl === 'object') {
-      transformRange(rangeOrUrl, isCategorical)
-      return new Promise(resolve => {
-        resolve(rangeOrUrl)
-      })
-    } else { // URL
-      return loadCovJSON(rangeOrUrl).then(range => {
-        transformRange(range, isCategorical)
-        if (this.cacheRanges) {
-          this.covjson.ranges[paramKey] = range
+    // Since the shape of the range array is derived from the domain, it has to be loaded as well.
+    return this.loadDomain().then(domain => {
+      let rangeOrUrl = this.covjson.ranges[paramKey]
+      let isCategorical = 'categories' in this.parameters.get(paramKey)
+      if (typeof rangeOrUrl === 'object') {
+        transformRange(rangeOrUrl, domain.shape, isCategorical)
+        return new Promise(resolve => {
+          resolve(rangeOrUrl)
+        })
+      } else { // URL
+        return loadCovJSON(rangeOrUrl).then(range => {
+          transformRange(range, domain.shape, isCategorical)
+          if (this.cacheRanges) {
+            this.covjson.ranges[paramKey] = range
+          }
+          return range
         }
-        return range
       }
-    }
+    })    
   }
   
 }
@@ -287,13 +290,16 @@ function arrayType(validMin, validMax) {
 
 /**
  * Transforms a CoverageJSON range to the Coverage API format, that is,
- * no special encoding etc. Transformation is made in-place.
+ * no special encoding etc. is left. Transformation is made in-place.
  * 
  * @param {Object} range The original range.
- * @param {bool} isCategorical Whether the range represents categories and should be treated as integers.
+ * @param {Array} shape The array shape of the range values as determined by the domain. 
+ * @param {bool} isCategorical
+ *    Whether the range represents categories and should be treated as integers.
+ *    This hint is currently not used. It may come in handy for typed arrays later.  
  * @return {Object} The transformed range.
  */
-function transformRange (range, isCategorical) {
+function transformRange (range, shape, isCategorical) {
   if ('__transformDone' in range) return
   
   const values = range.values
@@ -313,13 +319,15 @@ function transformRange (range, isCategorical) {
   }
   const validMin = range.validMin
   const validMax = range.validMax
-    
+  
+  let vals
   if (!missingIsEncoded && !hasOffsetFactor) {
     // No transformation necessary.
+    vals = values
   } else {
     // Transformation is necessary.
     // we use a regular array so that missing values can be represented as "undefined"
-    let vals = new Array(values.length)
+    vals = new Array(values.length)
     
     // TODO can we use typed arrays here without having to scan for missing values first?
     //  When typed arrays with missing value encoding was used we could keep that and provide
@@ -352,13 +360,13 @@ function transformRange (range, isCategorical) {
         }
       }
     }
-    range.values = vals
-    
+        
     delete range.offset
     delete range.factor
     delete range.missing
   }
-    
+  
+  range.values = ndarray(vals, shape)  
   range.__transformDone = true
   
   return range
@@ -373,10 +381,57 @@ function transformRange (range, isCategorical) {
  */
 function transformDomain (domain) {
   if ('__transformDone' in domain) return
+   
+  let type = domain.type
+  let x = dimSize(domain.x) 
+  let y = dimSize(domain.y)
+  let z = dimSize(domain.z)
+  let t = dimSize(domain.t)
   
-  // TODO 
+  let shape
+  switch (type) {
+  case 'Grid': 
+    shape = [t,z,y,x]; break
+  case 'Profile': 
+    shape = [z]; break
+  case 'PointSeries':
+    shape = [t]; break
+  case 'Point':
+    shape = [1]; break
+  case 'Trajectory':
+    assert(x === y === t, 'Trajectory cannot have x, y, t arrays of different lengths')
+    assert(!Array.isArray(domain.z) || x === z, 'Trajectory z array must be of same length as x, y, t arrays')
+    shape = [x]; break
+  case 'Section':
+    assert(x === y === t, 'Section cannot have x, y, t arrays of different lengths')
+    shape = [z,x]; break
+  case 'Polygon':
+    shape = [1]; break
+  case 'PolygonSeries':
+    shape = [t]; break
+  case 'MultiPolygon':
+    shape = [dimSize(domain.polygon)]; break
+  case 'MultiPolygonSeries':
+    shape = [t,dimSize(domain.polygon)]; break
+  default:
+    throw new Error('Unknown domain type: ' + type)
+  }
+  
+  domain.shape = shape
   
   return domain
+}
+
+/**
+ * 
+ * @param {Array|scalar|undefined} axis
+ * @returns the elements within the axis or 1 if not defined
+ */
+function axisSize(axis) {
+  if (Array.isArray(axis)) {
+    return axis.length
+  }
+  return 1  
 }
 
 function assert (condition, message) {
