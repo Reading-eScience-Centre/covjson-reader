@@ -443,6 +443,8 @@ function transformDomain (domain) {
     }
   }
   
+  domain.__transformDone = true
+  
   return domain
 }
 
