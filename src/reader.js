@@ -388,6 +388,8 @@ function transformDomain (domain) {
   let z = dimSize(domain.z)
   let t = dimSize(domain.t)
   
+  domain.type = 'http://coveragejson.org/def/domains/' + type
+  
   let shape
   switch (type) {
   case 'Grid': 
@@ -401,9 +403,13 @@ function transformDomain (domain) {
   case 'Trajectory':
     assert(x === y === t, 'Trajectory cannot have x, y, t arrays of different lengths')
     assert(!Array.isArray(domain.z) || x === z, 'Trajectory z array must be of same length as x, y, t arrays')
+    let seq = domain.sequence.join('')
+    assert((Array.isArray(domain.z) && seq === 'xyzt') || (!Array.isArray(domain.z) && seq === 'xyt'),
+        'Trajectory must have "sequence" property ["x","y","t"] or ["x","y","z","t"]')
     shape = [x]; break
   case 'Section':
     assert(x === y === t, 'Section cannot have x, y, t arrays of different lengths')
+    assert(domain.sequence.join('') === 'xyt', 'Section must have "sequence" property ["x","y","t"]')
     shape = [z,x]; break
   case 'Polygon':
     shape = [1]; break
@@ -418,6 +424,24 @@ function transformDomain (domain) {
   }
   
   domain.shape = shape
+  
+  // replace 1D numeric axis arrays with typed arrays for efficiency
+  for (let field of ['x', 'y', 'z', 't']) {
+    if (field in domain) {
+      let axis = domain[field]
+      if (ArrayBuffer.isView(axis)) {
+        // already a typed array
+        continue
+      }
+      if (Array.isArray(axis) && typeof axis[0] === 'number') {
+        let arr = new Float64Array(axis.length)
+        for (let i=0; i < axis.length; i++) {
+          arr[i] = axis[i]
+        }
+        domain[field] = arr
+      }
+    }
+  }
   
   return domain
 }
