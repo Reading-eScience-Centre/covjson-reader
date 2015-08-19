@@ -230,14 +230,15 @@ export class Coverage {
     // TODO should loading a range implicitly load the domain as well if it's not loaded yet?
     
     let rangeOrUrl = this.covjson.ranges[paramKey]
+    let isCategorical = 'categories' in this.parameters.get(paramKey)
     if (typeof rangeOrUrl === 'object') {
-      transformRange(rangeOrUrl)
+      transformRange(rangeOrUrl, isCategorical)
       return new Promise(resolve => {
         resolve(rangeOrUrl)
       })
     } else { // URL
       return loadCovJSON(rangeOrUrl).then(range => {
-        transformRange(range)
+        transformRange(range, isCategorical)
         if (this.cacheRanges) {
           this.covjson.ranges[paramKey] = range
         }
@@ -249,18 +250,55 @@ export class Coverage {
 }
 
 /**
+ * Currently unused, but may need in future.
+ * This determines the best array type for categorical data which
+ * doesn't have missing values.
+ */
+function arrayType(validMin, validMax) {
+  let type
+  if (validMin !== undefined) {
+    if (validMin >= 0) {
+      if (validMax < Math.pow(2,8)) {
+        type = Uint8Array
+      } else if (validMax < Math.pow(2,16)) {
+        type = Uint16Array
+      } else if (validMax < Math.pow(2,32)) {
+        type = Uint32Array
+      } else {
+        type = Array
+      }
+    } else {
+      let max = Math.max(Math.abs(validMin), validMax)
+      if (max < Math.pow(2,8)) {
+        type = Int8Array
+      } else if (validMax < Math.pow(2,16)) {
+        type = Int16Array
+      } else if (validMax < Math.pow(2,32)) {
+        type = Int32Array
+      } else {
+        type = Array
+      }
+    }
+  } else {
+    type = Array
+  }
+  return type
+}
+
+/**
  * Transforms a CoverageJSON range to the Coverage API format, that is,
  * no special encoding etc. Transformation is made in-place.
  * 
  * @param {Object} range The original range.
+ * @param {bool} isCategorical Whether the range represents categories and should be treated as integers.
  * @return {Object} The transformed range.
  */
-function transformRange (range) {
+function transformRange (range, isCategorical) {
   if ('__transformDone' in range) return
   
   const values = range.values
   const isTyped = ArrayBuffer.isView(values)
-  const hasMissing = range.missing === 'nonvalid'
+  const missingIsEncoded = range.missing === 'nonvalid'
   const hasOffsetFactor = 'offset' in range
 
   if ('offset' in range) {
@@ -269,52 +307,31 @@ function transformRange (range) {
   const offset = range.offset
   const factor = range.factor
   
-  if (hasMissing) {
+  if (missingIsEncoded) {
     assert('validMin' in range)
     assert('validMax' in range)
   }
   const validMin = range.validMin
   const validMax = range.validMax
-  
-  if (!hasMissing && !hasOffsetFactor) {
+    
+  if (!missingIsEncoded && !hasOffsetFactor) {
     // No transformation necessary.
-    // For efficiency we can use a typed array instead if this is not the case yet.
-    if (!isTyped) {
-      // FIXME if the range is categorical data, then we should use an integer array instead
-      let vals = new Float64Array(values.length)
-      for (let i=0, len=values.length; i < len; i++) {
-        vals[i] = values[i]
-      }
-    }
   } else {
     // Transformation is necessary.
-    let vals
-    if (!hasMissing) {
-      // Since there are no missing values, we can use a typed array for efficiency.
-      if (isTyped) {
-        // If the input array is already of a suitable type, we use that array directly
-        // if the type is suitable.
-
-        // FIXME when is a type suitable?
-        let suitable = false
-        if (suitable) {
-          vals = values
-        } else {
-          vals = new Float64Array(values.length)
-        }
-      } else {
-        // FIXME if the range is categorical data, then we should use an integer array instead
-        vals = new Float64Array(values.length)
-      }
-    } else {
-      // we use a regular array so that missing values can be represented as "undefined"
-      vals = new Array(values.length)
-    }
+    // we use a regular array so that missing values can be represented as "undefined"
+    let vals = new Array(values.length)
+    
+    // TODO can we use typed arrays here without having to scan for missing values first?
+    //  When typed arrays with missing value encoding was used we could keep that and provide
+    //  a higher abstraction on the array similar to an ndarray interface. This means that [] syntax
+    //  would be impossible and change to .get(index).
     
     if (hasOffsetFactor) {
       for (let i=0; i < values.length; i++) {
         const val = values[i]
-        if (hasMissing && (val < validMin || val > validMax)) {
+        if (missingIsEncoded && (val < validMin || val > validMax)) {
+          // leave vals[i] as undefined
+        } else if (!missingIsEncoded && val === undefined) {
           // leave vals[i] as undefined
         } else {
           vals[i] = val * factor + offset
@@ -325,7 +342,7 @@ function transformRange (range) {
         range.validMin = validMin * factor + offset
         range.validMax = validMax * factor + offset
       }
-    } else { // hasMissing == true
+    } else { // missingIsEncoded == true
       for (let i=0; i < values.length; i++) {
         const val = values[i]
         if (val < validMin || val > validMax) {
