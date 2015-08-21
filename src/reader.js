@@ -382,10 +382,45 @@ function transformRange (range, shape, isCategorical) {
     delete range.missing
   }
   
+  if (validMin === undefined) {
+    [min,max] = minMax(vals)
+    if (min !== null) {
+      range.validMin = min
+      range.validMax = max
+    }
+  }
+  
   range.values = ndarray(vals, shape)  
   range.__transformDone = true
   
   return range
+}
+
+function minMax (arr) {
+  var len = arr.length
+  var min = Infinity
+  var max = -Infinity
+  while (len--) {
+    var el = arr[len]
+    if (el == null) {
+      // do nothing
+    } else if (el < min) {
+      min = el
+    } else if (el > max) {
+      max = el
+    }
+  }
+  if (min === Infinity) {
+    min = max
+  } else if (max === -Infinity) {
+    max = min
+  }
+  if (min === Infinity) {
+    // all values were null
+    min = null
+    max = null
+  }
+  return [min, max]
 }
 
 /**
