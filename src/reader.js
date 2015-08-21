@@ -194,18 +194,25 @@ export class Coverage {
   
   loadDomain () {
     let domainOrUrl = this.covjson.domain
+    if (this._domainPromise) return this._domainPromise
     if (typeof domainOrUrl === 'object') {
       transformDomain(domainOrUrl)
-      return new Promise(resolve => {
+      var promise = new Promise(resolve => {
         resolve(domainOrUrl)
       })
     } else { // URL
-      return loadCovJSON(domainOrUrl).then(domain => {
+      var promise = loadCovJSON(domainOrUrl).then(domain => {
         transformDomain(domain)
         this.covjson.domain = domain
         return domain
       }
     }
+    /* The promise gets cached so that the domain is not loaded twice remotely.
+     * This might otherwise happen when loadDomain and loadRange is used
+     * with Promise.all(). Remember that loadRange also invokes loadDomain.
+     */ 
+    this._domainPromise = promise
+    return promise
   }
   
   /**
