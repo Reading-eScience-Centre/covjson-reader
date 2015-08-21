@@ -196,8 +196,8 @@ export class Coverage {
     let domainOrUrl = this.covjson.domain
     if (this._domainPromise) return this._domainPromise
     if (typeof domainOrUrl === 'object') {
-      transformDomain(domainOrUrl)
       var promise = new Promise(resolve => {
+        transformDomain(domainOrUrl)
         resolve(domainOrUrl)
       })
     } else { // URL
