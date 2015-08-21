@@ -340,7 +340,7 @@ function transformRange (range, shape, isCategorical) {
         if (missingIsEncoded && (val < validMin || val > validMax)) {
           // This is necessary as the default value is "undefined".
           vals[i] = null
-        } else if (!missingIsEncoded && val === undefined) {
+        } else if (!missingIsEncoded && val === null) {
           vals[i] = null
         } else {
           vals[i] = val * factor + offset
