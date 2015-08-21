@@ -1,6 +1,8 @@
 import ndarray from 'ndarray'
 import cbor from 'cbor'
 
+const PREFIX = 'http://coveragejson.org/def#'
+
 const MEDIA = {
     COVCBOR: 'application/prs.coverage+cbor',
     COVJSON = 'application/prs.coverage+json',
@@ -165,9 +167,15 @@ export class Coverage {
   }
   
   get type () {
-    // the domain type
-    // TODO if the domain is not embedded then the type must be taken from somewhere else...
-    return this.covjson.domain.type
+    // FIXME change CoverageJSON spec so that type has domain name in it
+    return PREFIX + this.covjson.type
+  }
+  
+  get domainType () {
+    // we extract the domain type from the coverage type
+    // this is possible with CoverageJSON since there is a 1:1 relationship
+    let withoutSuffix = this.covjson.type.substr(0, this.covjson.type.length - 'Coverage'.length)
+    return PREFIX + withoutSuffix
   }
   
   get bbox () {
