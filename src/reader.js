@@ -326,7 +326,7 @@ function transformRange (range, shape, isCategorical) {
     vals = values
   } else {
     // Transformation is necessary.
-    // we use a regular array so that missing values can be represented as "undefined"
+    // we use a regular array so that missing values can be represented as null
     vals = new Array(values.length)
     
     // TODO can we use typed arrays here without having to scan for missing values first?
@@ -338,9 +338,10 @@ function transformRange (range, shape, isCategorical) {
       for (let i=0; i < values.length; i++) {
         const val = values[i]
         if (missingIsEncoded && (val < validMin || val > validMax)) {
-          // leave vals[i] as undefined
+          // This is necessary as the default value is "undefined".
+          vals[i] = null
         } else if (!missingIsEncoded && val === undefined) {
-          // leave vals[i] as undefined
+          vals[i] = null
         } else {
           vals[i] = val * factor + offset
         }
@@ -354,7 +355,7 @@ function transformRange (range, shape, isCategorical) {
       for (let i=0; i < values.length; i++) {
         const val = values[i]
         if (val < validMin || val > validMax) {
-          // leave vals[i] as undefined
+          vals[i] = null
         } else {
           vals[i] = val
         }
