@@ -5,7 +5,8 @@
   "registry": "jspm",
   "format": "esm",
   "scripts": {
-    "test": "standard",
+    "style": "standard",
+    "test": "mocha test/tests",
     "build": "jspm bundle-sfx src/CoverageLayerFactory bundle.js"
   },
   "standard": {
@@ -19,7 +20,8 @@
       "lib": "src"
     },
     "dependencies": {
-      "cbor": "github:paroga/cbor-js@^0.1.0"
+      "cbor": "github:paroga/cbor-js@^0.1.0",
+      "ndarray": "npm:ndarray@^1.0.18"
     },
     "devDependencies": {
       "babel": "npm:babel-core@^5.8.22",
@@ -30,6 +32,7 @@
   "devDependencies": {
     "babel-eslint": "^4.0.10",
     "jspm": "^0.16.1",
+    "mocha": "^2.2.5",
     "standard": "^5.1.0"
   }
 }

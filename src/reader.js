@@ -5,9 +5,9 @@ const PREFIX = 'http://coveragejson.org/def#'
 
 const MEDIA = {
     COVCBOR: 'application/prs.coverage+cbor',
-    COVJSON = 'application/prs.coverage+json',
-    JSONLD = 'application/ld+json',
-    JSON = 'application/json'
+    COVJSON: 'application/prs.coverage+json',
+    JSONLD: 'application/ld+json',
+    JSON: 'application/json'
 }
 const ACCEPT = MEDIA.COVCBOR + '; q=1.0, ' +
                MEDIA.COVJSON + '; q=0.5, ' + 
@@ -213,7 +213,7 @@ export class Coverage {
         transformDomain(domain)
         this.covjson.domain = domain
         return domain
-      }
+      })
     }
     /* The promise gets cached so that the domain is not loaded twice remotely.
      * This might otherwise happen when loadDomain and loadRange is used
@@ -260,7 +260,7 @@ export class Coverage {
             this.covjson.ranges[paramKey] = range
           }
           return range
-        }
+        })
       }
     })    
   }
