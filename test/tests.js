@@ -2,21 +2,20 @@ var System = require("jspm");
 var assert = require("assert");
 
 var count = 4
+it("ignoreme", function(done) {
+  this.timeout(5000)
+  var iv = setInterval(function() {
+    if (count === 0) {
+      clearInterval(iv)
+      done()
+    }
+  }, 500)
+})
 var oldit = it
 it = function(name, fn) {
   count--
   oldit(name, fn)
 }
-describe("foo", function() {
-  it("bar", function(done) {
-    var iv = setInterval(function() {
-      if (count === 0) {
-        clearInterval(iv)
-        done()
-      }
-    }, 500)
-  })
-})
 
 System.import("src/reader").then(function(reader) {
   describe("reader methods", function() {
@@ -24,10 +23,12 @@ System.import("src/reader").then(function(reader) {
       // The following tests only check for basic reading errors.
       // This is done by returning the Promise directly to Mocha which can handle it.
       it("should read a CoverageJSON Coverage in JSON format", function() {
-        return reader.default("test/fixtures/Coverage-Profile-standalone.covjson")
+        // FIXME not so easy to support this within node as there is no really good xhr2 library
+        return reader.default("file://test/fixtures/Coverage-Profile-standalone.covjson")
       })
       it("should read a CoverageJSON CoverageCollection in JSON format", function() {
-        return reader.default("test/fixtures/CoverageCollection-Point-param_in_collection-standalone.covjson")
+        // FIXME see above
+        return reader.default("file://test/fixtures/CoverageCollection-Point-param_in_collection-standalone.covjson")
       })
       it("should read a CoverageJSON Coverage in object format", function() {
         return reader.default({

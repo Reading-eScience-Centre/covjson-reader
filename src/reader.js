@@ -79,6 +79,7 @@ function transformCovJSON (obj) {
       cov.push(new Coverage(coverage))
     }
   }
+  console.log(cov)
   
   return cov
 }
@@ -117,13 +118,15 @@ export function loadCovJSON(url) {
     req.responseType = 'arraybuffer'
     req.setRequestHeader('Accept', ACCEPT)
 
-    req.onload = () => {
-      if (!(req.status >= 200 && status < 300 || status === 304)) { // as in jquery
+    req.addEventListener('load', () => {
+      console.log("foo")
+      if (!(req.status >= 200 && req.status < 300 || req.status === 304)) { // as in jquery
         reject(new Error('Resource not found, HTTP status code: ' + req.status))
         return
       }
       
       var type = req.getResponseHeader('Content-Type')
+      console.log("content type:" + type)
       if (type === MEDIA.COVCBOR) {
         var arrayBuffer = req.response
         var data = cbor.decode(arrayBuffer)
@@ -135,10 +138,10 @@ export function loadCovJSON(url) {
         return
       }
       resolve(data)
-    }
-    req.onerror = () => {
+    })
+    req.addEventListener('error', () => {
       reject(new Error('Network error loading resource at ' + url))
-    }
+    })
 
     req.send()
   })
