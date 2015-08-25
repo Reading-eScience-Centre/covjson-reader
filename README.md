@@ -4,4 +4,4 @@ Read [CoverageJSON](https://github.com/neothemachine/coveragejson) documents and
 
 ## Acknowledgments
 
-This project is developed within the [MELODIES project](http://www.melodiesproject.eu).
+This library is developed within the [MELODIES project](http://www.melodiesproject.eu).
