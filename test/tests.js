@@ -3,11 +3,11 @@ import System from 'jspm'
 import assert from 'assert'
 
 describe("reader methods", function() {
-  let reader
+  let read
   
   before(() => {
     return System.import('src/reader')
-      .then(mod => reader = mod.default)
+      .then(mod => read = mod.default)
   })
   
   describe("#read", () => {
@@ -15,14 +15,14 @@ describe("reader methods", function() {
     // This is done by returning the Promise directly to Mocha which can handle it.
     it("should read a CoverageJSON Coverage in JSON format", () => {
       // FIXME not so easy to support this within node as there is no really good xhr2 library
-      return reader("file://test/fixtures/Coverage-Profile-standalone.covjson")
+      return read("file://test/fixtures/Coverage-Profile-standalone.covjson")
     })
     it("should read a CoverageJSON CoverageCollection in JSON format", () => {
       // FIXME see above
-      return reader("file://test/fixtures/CoverageCollection-Point-param_in_collection-standalone.covjson")
+      return read("file://test/fixtures/CoverageCollection-Point-param_in_collection-standalone.covjson")
     })
     it("should read a CoverageJSON Coverage in object format", () => {
-      return reader({
+      return read({
         "type" : "Coverage",
         "domain" : {
           "type" : "Profile",
@@ -52,7 +52,7 @@ describe("reader methods", function() {
       })
     })
     it("should read a CoverageJSON CoverageCollection in object format", () => {
-      return reader({
+      return read({
         "type" : "CoverageCollection",
         "coverages": []
       })
