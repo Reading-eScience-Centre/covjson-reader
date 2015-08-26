@@ -1,25 +1,38 @@
-// these are npm-only imports!
-import System from 'jspm'
 import assert from 'assert'
+import sinon from 'sinon'
 
-describe("reader methods", function() {
-  let read
-  
+import read from 'covjson-reader/reader'
+
+describe("reader methods", () => {
+  let server
+
   before(() => {
-    return System.import('covjson-reader/reader')
-      .then(mod => read = mod.default)
+    server = sinon.fakeServer.create()
+  })
+  
+  after(() => {
+    server.restore()
   })
   
   describe("#read", () => {
     // The following tests only check for basic reading errors.
     // This is done by returning the Promise directly to Mocha which can handle it.
+    
     it("should read a CoverageJSON Coverage in JSON format", () => {
-      // FIXME not so easy to support this within node as there is no really good xhr2 library
-      return read("file://test/fixtures/Coverage-Profile-standalone.covjson")
+      // mocks XMLHttpRequest
+      server.respondWith('GET', 'http://example.com/coverage.covjson',
+          [200, { 'Content-Type': 'application/prs.coverage+json' },
+           // FIXME check how to do fixtures with karma
+           readthatsomehow('test/fixtures/Coverage-Profile-standalone.covjson', 'utf8')])
+      
+      return read("http://example.com/coverage.covjson")
     })
     it("should read a CoverageJSON CoverageCollection in JSON format", () => {
-      // FIXME see above
-      return read("file://test/fixtures/CoverageCollection-Point-param_in_collection-standalone.covjson")
+      server.respondWith('GET', 'http://example.com/coverages.covjson',
+          [200, { 'Content-Type': 'application/prs.coverage+json' },
+           readthatsomehow('test/fixtures/CoverageCollection-Point-param_in_collection-standalone.covjson', 'utf8')])
+      
+      return read("http://example.com/coverages.covjson")
     })
     it("should read a CoverageJSON Coverage in object format", () => {
       return read({

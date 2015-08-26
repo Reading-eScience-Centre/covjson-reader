@@ -25,7 +25,14 @@ Simply run:
 $ npm test
 ```
 
-This tests the library within the node.js environment (using Chrome's V8 engine).
+This tests the library with Firefox and Chrome which will get started for that purpose.
+
+Tests can be automatically re-run on file changes. For that, instead start the long-running
+test runner:
+```
+$ npm run karma
+```
+and minimize the browser windows that popped up. Test output will appear in the shell.
 
 ## Building a bundle
 

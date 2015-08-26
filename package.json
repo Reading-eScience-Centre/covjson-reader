@@ -6,13 +6,17 @@
   "format": "esm",
   "scripts": {
     "style": "standard",
-    "test": "./node_modules/.bin/mocha --compilers js:babel/register test/tests",
-    "build": "jspm bundle-sfx src/reader bundle.js"
+    "test": "./node_modules/.bin/karma start --single-run",
+    "karma": "./node_modules/.bin/karma start",
+    "saucelabs": "./node_modules/.bin/karma start karma.conf-ci.js",
+    "build": "jspm bundle-sfx covjson-reader/reader bundle.js"
   },
   "standard": {
     "parser": "babel-eslint",
     "ignore": [
-      "config.js"
+      "config.js",
+      "karma.conf.js",
+      "karma.conf-ci.js"
     ]
   },
   "jspm": {
@@ -24,15 +28,22 @@
       "ndarray": "npm:ndarray@^1.0.18"
     },
     "devDependencies": {
+      "assert": "github:jspm/nodelibs-assert@^0.1.0",
       "babel": "npm:babel-core@^5.8.22",
       "babel-runtime": "npm:babel-runtime@^5.8.20",
-      "core-js": "npm:core-js@^1.1.0"
+      "core-js": "npm:core-js@^1.1.0",
+      "sinon": "npm:sinon@^1.16.1"
     }
   },
   "devDependencies": {
-    "babel": "^5.8.21",
     "babel-eslint": "^4.0.10",
     "jspm": "^0.16.1",
+    "karma": "^0.13.9",
+    "karma-chrome-launcher": "^0.2.0",
+    "karma-firefox-launcher": "^0.1.6",
+    "karma-jspm": "^2.0.1",
+    "karma-mocha": "^0.2.0",
+    "karma-sauce-launcher": "^0.2.14",
     "mocha": "^2.2.5",
     "standard": "^5.1.0"
   }
