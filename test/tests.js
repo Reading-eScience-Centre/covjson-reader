@@ -6,7 +6,7 @@ describe("reader methods", function() {
   let read
   
   before(() => {
-    return System.import('src/reader')
+    return System.import('covjson-reader/reader')
       .then(mod => read = mod.default)
   })
   

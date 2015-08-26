@@ -7,7 +7,7 @@
   "scripts": {
     "style": "standard",
     "test": "./node_modules/.bin/mocha --compilers js:babel/register test/tests",
-    "build": "jspm bundle-sfx src/CoverageLayerFactory bundle.js"
+    "build": "jspm bundle-sfx src/reader bundle.js"
   },
   "standard": {
     "parser": "babel-eslint",
@@ -17,7 +17,7 @@
   },
   "jspm": {
     "directories": {
-      "lib": "src"
+      "lib": "covjson-reader"
     },
     "dependencies": {
       "cbor": "github:paroga/cbor-js@^0.1.0",
