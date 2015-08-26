@@ -7,7 +7,7 @@ describe("reader methods", function() {
   
   before(() => {
     return System.import('src/reader')
-      .then(mod => reader = mod)
+      .then(mod => reader = mod.default)
   })
   
   describe("#read", () => {
@@ -15,14 +15,14 @@ describe("reader methods", function() {
     // This is done by returning the Promise directly to Mocha which can handle it.
     it("should read a CoverageJSON Coverage in JSON format", () => {
       // FIXME not so easy to support this within node as there is no really good xhr2 library
-      return reader.default("file://test/fixtures/Coverage-Profile-standalone.covjson")
+      return reader("file://test/fixtures/Coverage-Profile-standalone.covjson")
     })
     it("should read a CoverageJSON CoverageCollection in JSON format", () => {
       // FIXME see above
-      return reader.default("file://test/fixtures/CoverageCollection-Point-param_in_collection-standalone.covjson")
+      return reader("file://test/fixtures/CoverageCollection-Point-param_in_collection-standalone.covjson")
     })
     it("should read a CoverageJSON Coverage in object format", () => {
-      return reader.default({
+      return reader({
         "type" : "Coverage",
         "domain" : {
           "type" : "Profile",
@@ -52,7 +52,7 @@ describe("reader methods", function() {
       })
     })
     it("should read a CoverageJSON CoverageCollection in object format", () => {
-      return reader.default({
+      return reader({
         "type" : "CoverageCollection",
         "coverages": []
       })
