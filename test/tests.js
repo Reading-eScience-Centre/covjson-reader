@@ -1,38 +1,21 @@
 import assert from 'assert'
-import sinon from 'sinon'
 
 import read from 'covjson-reader/reader'
 
 describe("reader methods", () => {
   let server
 
-  before(() => {
-    server = sinon.fakeServer.create()
-  })
-  
-  after(() => {
-    server.restore()
-  })
-  
   describe("#read", () => {
     // The following tests only check for basic reading errors.
     // This is done by returning the Promise directly to Mocha which can handle it.
     
     it("should read a CoverageJSON Coverage in JSON format", () => {
-      // mocks XMLHttpRequest
-      server.respondWith('GET', 'http://example.com/coverage.covjson',
-          [200, { 'Content-Type': 'application/prs.coverage+json' },
-           // FIXME check how to do fixtures with karma
-           readthatsomehow('test/fixtures/Coverage-Profile-standalone.covjson', 'utf8')])
-      
-      return read("http://example.com/coverage.covjson")
+      // TODO this loads via the karma server but currently with wrong content type (text/plain)
+      return read("base/test/fixtures/Coverage-Profile-standalone.covjson")
     })
     it("should read a CoverageJSON CoverageCollection in JSON format", () => {
-      server.respondWith('GET', 'http://example.com/coverages.covjson',
-          [200, { 'Content-Type': 'application/prs.coverage+json' },
-           readthatsomehow('test/fixtures/CoverageCollection-Point-param_in_collection-standalone.covjson', 'utf8')])
-      
-      return read("http://example.com/coverages.covjson")
+      // FIXME see above
+      return read("base/test/fixtures/CoverageCollection-Point-param_in_collection-standalone.covjson")
     })
     it("should read a CoverageJSON Coverage in object format", () => {
       return read({

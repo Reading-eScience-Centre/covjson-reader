@@ -17,8 +17,9 @@ module.exports = function(config) {
       serveFiles: ['covjson-reader/**/*.js']
     },
 
-    // list of files / patterns to load in the browser
+    // list of files / patterns to load and/or serve in the browser
     files: [
+      {pattern: 'test/fixtures/*.covjson', included: false, served: true}
     ],
 
 

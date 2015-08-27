@@ -119,21 +119,18 @@ export function loadCovJSON(url) {
     req.setRequestHeader('Accept', ACCEPT)
 
     req.addEventListener('load', () => {
-      console.log("foo")
       if (!(req.status >= 200 && req.status < 300 || req.status === 304)) { // as in jquery
-        reject(new Error('Resource not found, HTTP status code: ' + req.status))
+        reject(new Error('Resource "' + url + '" not found, HTTP status code: ' + req.status))
         return
       }
       
       var type = req.getResponseHeader('Content-Type')
-      console.log("content type:" + type)
       if (type === MEDIA.COVCBOR) {
         var arrayBuffer = req.response
         var data = cbor.decode(arrayBuffer)
       } else if ([MEDIA.COVJSON, MEDIA.JSONLD, MEDIA.JSON].indexOf(type) > -1) {
         var data = JSON.parse(req.responseText)
       } else {
-        // unsupported media type
         reject(new Error('Unsupported media type: ' + type))
         return
       }
