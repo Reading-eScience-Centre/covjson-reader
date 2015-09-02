@@ -119,12 +119,15 @@ function checkValidCovJSON (obj) {
  *   The data is the CoverageJSON object. The promise fails if the resource at
  *   the given URL is not a valid JSON or CBOR document. 
  */
-export function loadCovJSON(url) {
+export function loadCovJSON(url, mediaTypeOverride) {
   return new Promise((resolve, reject) => {
     var req = new XMLHttpRequest()
     req.open('GET', url)
     req.responseType = 'arraybuffer'
     req.setRequestHeader('Accept', ACCEPT)
+    if (mediaTypeOverride) {
+      req.overrideMimeType(mediaTypeOverride)
+    }
 
     req.addEventListener('load', () => {
       if (!(req.status >= 200 && req.status < 300 || req.status === 304)) { // as in jquery
@@ -137,7 +140,9 @@ export function loadCovJSON(url) {
       if (type === MEDIA.OCTETSTREAM || type === MEDIA.TEXT) {
         // wrong media type, try to infer type from extension
         if (url.endsWith(EXT.COVJSON)) {
-          type = MEDIA.COVJSON
+          // need to load again to have access to req.responseText
+          reject({mediaTypeOverride: MEDIA.COVJSON})
+          return
         } else if (url.endsWith(EXT.COVCBOR)) {
           type = MEDIA.COVCBOR
         }
@@ -159,6 +164,12 @@ export function loadCovJSON(url) {
     })
 
     req.send()
+  }).catch(e => {
+    if (e.mediaTypeOverride) {
+      return loadCovJSON(url, e.mediaTypeOverride)
+    } else {
+      throw e
+    }
   })
 }
 
