@@ -119,15 +119,15 @@ function checkValidCovJSON (obj) {
  *   The data is the CoverageJSON object. The promise fails if the resource at
  *   the given URL is not a valid JSON or CBOR document. 
  */
-export function loadCovJSON(url, mediaTypeOverride) {
+export function loadCovJSON(url, responseType='arraybuffer') {
+  if (['arraybuffer', 'json'].indexOf(responseType) === -1) {
+    throw new Error()
+  }
   return new Promise((resolve, reject) => {
     var req = new XMLHttpRequest()
     req.open('GET', url)
-    req.responseType = 'arraybuffer'
+    req.responseType = responseType
     req.setRequestHeader('Accept', ACCEPT)
-    if (mediaTypeOverride) {
-      req.overrideMimeType(mediaTypeOverride)
-    }
 
     req.addEventListener('load', () => {
       if (!(req.status >= 200 && req.status < 300 || req.status === 304)) { // as in jquery
@@ -140,9 +140,7 @@ export function loadCovJSON(url, mediaTypeOverride) {
       if (type === MEDIA.OCTETSTREAM || type === MEDIA.TEXT) {
         // wrong media type, try to infer type from extension
         if (url.endsWith(EXT.COVJSON)) {
-          // need to load again to have access to req.responseText
-          reject({mediaTypeOverride: MEDIA.COVJSON})
-          return
+          type = MEDIA.COVJSON
         } else if (url.endsWith(EXT.COVCBOR)) {
           type = MEDIA.COVCBOR
         }
@@ -152,7 +150,12 @@ export function loadCovJSON(url, mediaTypeOverride) {
         var arrayBuffer = req.response
         var data = cbor.decode(arrayBuffer)
       } else if ([MEDIA.COVJSON, MEDIA.JSONLD, MEDIA.JSON].indexOf(type) > -1) {
-        var data = JSON.parse(req.responseText)
+        if (responseType === 'arraybuffer') {
+          // load again (from cache) to get correct response type
+          reject({responseType: 'json'})
+          return
+        }
+        var data = req.response
       } else {
         reject(new Error('Unsupported media type: ' + type))
         return
@@ -165,8 +168,8 @@ export function loadCovJSON(url, mediaTypeOverride) {
 
     req.send()
   }).catch(e => {
-    if (e.mediaTypeOverride) {
-      return loadCovJSON(url, e.mediaTypeOverride)
+    if (e.responseType) {
+      return loadCovJSON(url, e.responseType)
     } else {
       throw e
     }
