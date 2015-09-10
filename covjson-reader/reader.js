@@ -7,12 +7,20 @@ const MEDIA = {
     COVCBOR: 'application/prs.coverage+cbor',
     COVJSON: 'application/prs.coverage+json',
     JSONLD: 'application/ld+json',
-    JSON: 'application/json'
+    JSON: 'application/json',
+    OCTETSTREAM: 'application/octet-stream',
+    TEXT: 'text/plain'
 }
+
 const ACCEPT = MEDIA.COVCBOR + '; q=1.0, ' +
                MEDIA.COVJSON + '; q=0.5, ' + 
                MEDIA.JSONLD + '; q=0.1, ' + 
                MEDIA.JSON + '; q=0.1'
+               
+const EXT = {
+    COVJSON: '.covjson',
+    COVCBOR: '.covcbor'
+}
 
 /**
  * 
@@ -111,11 +119,14 @@ function checkValidCovJSON (obj) {
  *   The data is the CoverageJSON object. The promise fails if the resource at
  *   the given URL is not a valid JSON or CBOR document. 
  */
-export function loadCovJSON(url) {
+export function loadCovJSON(url, responseType='arraybuffer') {
+  if (['arraybuffer', 'json'].indexOf(responseType) === -1) {
+    throw new Error()
+  }
   return new Promise((resolve, reject) => {
     var req = new XMLHttpRequest()
     req.open('GET', url)
-    req.responseType = 'arraybuffer'
+    req.responseType = responseType
     req.setRequestHeader('Accept', ACCEPT)
 
     req.addEventListener('load', () => {
@@ -125,11 +136,26 @@ export function loadCovJSON(url) {
       }
       
       var type = req.getResponseHeader('Content-Type')
+      
+      if (type === MEDIA.OCTETSTREAM || type === MEDIA.TEXT) {
+        // wrong media type, try to infer type from extension
+        if (url.endsWith(EXT.COVJSON)) {
+          type = MEDIA.COVJSON
+        } else if (url.endsWith(EXT.COVCBOR)) {
+          type = MEDIA.COVCBOR
+        }
+      }
+      
       if (type === MEDIA.COVCBOR) {
         var arrayBuffer = req.response
         var data = cbor.decode(arrayBuffer)
       } else if ([MEDIA.COVJSON, MEDIA.JSONLD, MEDIA.JSON].indexOf(type) > -1) {
-        var data = JSON.parse(req.responseText)
+        if (responseType === 'arraybuffer') {
+          // load again (from cache) to get correct response type
+          reject({responseType: 'json'})
+          return
+        }
+        var data = req.response
       } else {
         reject(new Error('Unsupported media type: ' + type))
         return
@@ -141,6 +167,12 @@ export function loadCovJSON(url) {
     })
 
     req.send()
+  }).catch(e => {
+    if (e.responseType) {
+      return loadCovJSON(url, e.responseType)
+    } else {
+      throw e
+    }
   })
 }
 
