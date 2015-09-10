@@ -162,6 +162,7 @@ export class Coverage {
     
     this.params = new Map()
     for (let key of Object.keys(covjson.parameters)) {
+      transformParameter(covjson.parameters[key])
       this.params.set(key, covjson.parameters[key])
     }
   }
@@ -301,6 +302,39 @@ function arrayType(validMin, validMax) {
     type = Array
   }
   return type
+}
+
+/**
+ * Transforms a CoverageJSON parameter to the Coverage API format, that is,
+ * language maps become real Maps. Transformation is made in-place.
+ * 
+ * @param {Object} param The original parameter.
+ */
+function transformParameter (param) {
+  let maps = [
+              [param, 'description'], 
+              [param.observedProperty, 'label'],
+              [param.observedProperty, 'description'],
+              [param.unit, 'label']
+             ]
+  for (let cat of param.categories || []) {
+    maps.push([cat, 'label'])
+    maps.push([cat, 'description'])
+  }
+  for (let entry of maps) {
+    transformLanguageMap(entry[0], entry[1])
+  }
+}
+
+function transformLanguageMap (obj, key) {
+  if (!obj || !(key in obj)) {
+    return    
+  }
+  var map = new Map()
+  for (let tag of Object.keys(obj[key])) {
+    map.set(tag, obj[key][tag])
+  }
+  obj[key] = map
 }
 
 /**
