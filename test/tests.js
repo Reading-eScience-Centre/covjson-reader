@@ -34,7 +34,9 @@ describe("reader methods", () => {
               "symbol" : "psu"
             },
             "observedProperty" : {
-              "label" : "Sea Water Salinity"
+              "label" : {
+                "en": "Sea Water Salinity"
+              }
             }
           }
         },

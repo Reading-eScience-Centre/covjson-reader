@@ -6,9 +6,9 @@
   "format": "esm",
   "scripts": {
     "style": "standard",
-    "test": "./node_modules/.bin/karma start --single-run",
-    "karma": "./node_modules/.bin/karma start",
-    "saucelabs": "./node_modules/.bin/karma start karma.conf-ci.js",
+    "test": "karma start --single-run",
+    "karma": "karma start",
+    "saucelabs": "karma start karma.conf-ci.js",
     "build": "jspm bundle-sfx covjson-reader/reader bundle.js"
   },
   "standard": {

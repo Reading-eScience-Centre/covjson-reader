@@ -60,11 +60,7 @@ export default function read (input) {
  * @return {Coverage|Array of Coverage} 
  */
 function transformCovJSON (obj) {
-  try {
-    checkValidCovJSON(obj)
-  } catch (error) {
-    throw new Error('Not a valid CoverageJSON document, reason: ' + error.message)
-  }
+  checkValidCovJSON(obj)
   if (obj.type !== 'Coverage' && obj.type !== 'CoverageCollection') {
     throw new Error('CoverageJSON document must be of Coverage or CoverageCollection type')
   }
@@ -87,7 +83,6 @@ function transformCovJSON (obj) {
       cov.push(new Coverage(coverage))
     }
   }
-  console.log(cov)
   
   return cov
 }
@@ -120,7 +115,7 @@ function checkValidCovJSON (obj) {
  *   the given URL is not a valid JSON or CBOR document. 
  */
 export function loadCovJSON(url, responseType='arraybuffer') {
-  if (['arraybuffer', 'json'].indexOf(responseType) === -1) {
+  if (['arraybuffer', 'text'].indexOf(responseType) === -1) {
     throw new Error()
   }
   return new Promise((resolve, reject) => {
@@ -152,10 +147,13 @@ export function loadCovJSON(url, responseType='arraybuffer') {
       } else if ([MEDIA.COVJSON, MEDIA.JSONLD, MEDIA.JSON].indexOf(type) > -1) {
         if (responseType === 'arraybuffer') {
           // load again (from cache) to get correct response type
-          reject({responseType: 'json'})
+          // Note we use 'text' and not 'json' as we want to throw parsing errors.
+          // With 'json', the response is just 'null'.
+          reject({responseType: 'text'})
           return
         }
-        var data = req.response
+        var data = JSON.parse(req.response)
+        
       } else {
         reject(new Error('Unsupported media type: ' + type))
         return
