@@ -84,6 +84,7 @@ module.exports = function(config) {
     autoWatch: true,
 
     sauceLabs: {
+      testName: 'covjson-reader',
       recordScreenshots: false
     },
     captureTimeout: 120000,
