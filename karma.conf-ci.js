@@ -46,6 +46,7 @@ module.exports = function(config) {
 
     // list of files / patterns to load in the browser
     files: [
+      {pattern: 'test/fixtures/*.covjson', included: false, served: true}
     ],
 
 
@@ -86,6 +87,7 @@ module.exports = function(config) {
       recordScreenshots: false
     },
     captureTimeout: 120000,
+    browserNoActivityTimeout: 120000,
     customLaunchers: customLaunchers,
 
     // start these browsers
