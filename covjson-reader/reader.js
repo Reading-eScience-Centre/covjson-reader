@@ -107,6 +107,13 @@ function checkValidCovJSON (obj) {
   }
 }
 
+function endsWith (subject, search) {
+  // IE support
+  let position = subject.length - search.length
+  let lastIndex = subject.indexOf(search, position)
+  return lastIndex !== -1 && lastIndex === position
+}
+
 /**
  * Loads a CoverageJSON document from a given URL and returns a Promise.
  * 
@@ -134,9 +141,9 @@ export function loadCovJSON(url, responseType='arraybuffer') {
       
       if (type === MEDIA.OCTETSTREAM || type === MEDIA.TEXT) {
         // wrong media type, try to infer type from extension
-        if (url.endsWith(EXT.COVJSON)) {
+        if (endsWith(url, EXT.COVJSON)) {
           type = MEDIA.COVJSON
-        } else if (url.endsWith(EXT.COVCBOR)) {
+        } else if (endsWith(url, EXT.COVCBOR)) {
           type = MEDIA.COVCBOR
         }
       }
@@ -505,35 +512,43 @@ function transformDomain (domain) {
   
   domain.type = 'http://coveragejson.org/def/domains/' + type
   
+  const T = 't'
+  const Z = 'z'
+  const Y = 'y'
+  const X = 'z'
+  const P = 'p'
+  const SEQ = 'seq'
+    
   let shape
+  let names
   switch (type) {
   case 'Grid': 
-    shape = [t,z,y,x]; break
+    shape = [t,z,y,x]; names = [T,Z,Y,X]; break
   case 'Profile': 
-    shape = [z]; break
+    shape = [z]; names = [Z]; break
   case 'PointSeries':
-    shape = [t]; break
+    shape = [t]; names = [T]; break
   case 'Point':
-    shape = [1]; break
+    shape = [1]; names = [P]; break
   case 'Trajectory':
     assert(x === y === t, 'Trajectory cannot have x, y, t arrays of different lengths')
     assert(!Array.isArray(domain.z) || x === z, 'Trajectory z array must be of same length as x, y, t arrays')
     let seq = domain.sequence.join('')
     assert((Array.isArray(domain.z) && seq === 'xyzt') || (!Array.isArray(domain.z) && seq === 'xyt'),
         'Trajectory must have "sequence" property ["x","y","t"] or ["x","y","z","t"]')
-    shape = [x]; break
+    shape = [x]; names = [SEQ]; break
   case 'Section':
     assert(x === y === t, 'Section cannot have x, y, t arrays of different lengths')
     assert(domain.sequence.join('') === 'xyt', 'Section must have "sequence" property ["x","y","t"]')
-    shape = [z,x]; break
+    shape = [z,x]; names = [Z,SEQ]; break
   case 'Polygon':
-    shape = [1]; break
+    shape = [1]; names = [P]; break
   case 'PolygonSeries':
-    shape = [t]; break
+    shape = [t]; names = [T]; break
   case 'MultiPolygon':
-    shape = [axisSize(domain.polygon)]; break
+    shape = [axisSize(domain.polygon)]; names = [P]; break
   case 'MultiPolygonSeries':
-    shape = [t,axisSize(domain.polygon)]; break
+    shape = [t,axisSize(domain.polygon)]; names = [T,P]; break
   default:
     throw new Error('Unknown domain type: ' + type)
   }
