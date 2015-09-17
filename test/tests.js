@@ -2,6 +2,14 @@ import assert from 'assert'
 
 import read from 'covjson-reader/reader'
 
+function readall(input) {
+  return read(input).then(cov => {
+    if (!Array.isArray(cov)) {
+      return cov.loadDomain()
+    }
+  })
+}
+
 describe("reader methods", () => {
   let server
 
@@ -10,15 +18,13 @@ describe("reader methods", () => {
     // This is done by returning the Promise directly to Mocha which can handle it.
     
     it("should read a CoverageJSON Coverage in JSON format", () => {
-      // TODO this loads via the karma server but currently with wrong content type (text/plain)
-      return read("base/test/fixtures/Coverage-Profile-standalone.covjson")
+      return readall("base/test/fixtures/Coverage-Profile-standalone.covjson")
     })
     it("should read a CoverageJSON CoverageCollection in JSON format", () => {
-      // FIXME see above
-      return read("base/test/fixtures/CoverageCollection-Point-param_in_collection-standalone.covjson")
+      return readall("base/test/fixtures/CoverageCollection-Point-param_in_collection-standalone.covjson")
     })
     it("should read a CoverageJSON Coverage in object format", () => {
-      return read({
+      return readall({
         "type" : "Coverage",
         "domain" : {
           "type" : "Profile",
@@ -50,7 +56,7 @@ describe("reader methods", () => {
       })
     })
     it("should read a CoverageJSON CoverageCollection in object format", () => {
-      return read({
+      return readall({
         "type" : "CoverageCollection",
         "coverages": []
       })

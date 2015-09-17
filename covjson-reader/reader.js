@@ -498,10 +498,10 @@ function transformDomain (domain) {
   if ('__transformDone' in domain) return
    
   let type = domain.type
-  let x = dimSize(domain.x) 
-  let y = dimSize(domain.y)
-  let z = dimSize(domain.z)
-  let t = dimSize(domain.t)
+  let x = axisSize(domain.x) 
+  let y = axisSize(domain.y)
+  let z = axisSize(domain.z)
+  let t = axisSize(domain.t)
   
   domain.type = 'http://coveragejson.org/def/domains/' + type
   
@@ -531,9 +531,9 @@ function transformDomain (domain) {
   case 'PolygonSeries':
     shape = [t]; break
   case 'MultiPolygon':
-    shape = [dimSize(domain.polygon)]; break
+    shape = [axisSize(domain.polygon)]; break
   case 'MultiPolygonSeries':
-    shape = [t,dimSize(domain.polygon)]; break
+    shape = [t,axisSize(domain.polygon)]; break
   default:
     throw new Error('Unknown domain type: ' + type)
   }
