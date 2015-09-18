@@ -77,6 +77,9 @@ describe('reader methods', () => {
       read(FIXTURES.Profile).then(cov => {
         assert.equal(cov.type, PREFIX + FIXTURES.Profile.type)
         assert.equal(cov.domainType, PREFIX + FIXTURES.Profile.domain.type)
+        let label = cov.parameters.get('PSAL').observedProperty.label
+        assert(label.has('en'))
+        assert.equal(label.get('en'), 'Sea Water Salinity')
         done()
       })
     })
