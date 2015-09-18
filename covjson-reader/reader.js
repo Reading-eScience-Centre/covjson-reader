@@ -84,6 +84,8 @@ function transformCovJSON (obj) {
     }
   }
   
+  console.log('reading done:', cov)
+  
   return cov
 }
 
