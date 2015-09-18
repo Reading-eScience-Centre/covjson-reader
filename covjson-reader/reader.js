@@ -201,7 +201,7 @@ export class Coverage {
     
     this.params = new Map()
     for (let key of Object.keys(covjson.parameters)) {
-      transformParameter(covjson.parameters[key])
+      transformParameter(covjson.parameters, key)
       this.params.set(key, covjson.parameters[key])
     }
   }
@@ -350,7 +350,9 @@ function arrayType(validMin, validMax) {
  * 
  * @param {Object} param The original parameter.
  */
-function transformParameter (param) {
+function transformParameter (params, key) {
+  let param = params[key]
+  param.key = key
   let maps = [
               [param, 'description'], 
               [param.observedProperty, 'label'],
