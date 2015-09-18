@@ -240,17 +240,20 @@ export class Coverage {
   }
   
   loadDomain () {
+    console.log('loading domain')
     let domainOrUrl = this.covjson.domain
     if (this._domainPromise) return this._domainPromise
     if (typeof domainOrUrl === 'object') {
       var promise = new Promise(resolve => {
         transformDomain(domainOrUrl)
+        console.log('loading domain: done (inline)')
         resolve(domainOrUrl)
       })
     } else { // URL
       var promise = loadCovJSON(domainOrUrl).then(domain => {
         transformDomain(domain)
         this.covjson.domain = domain
+        console.log('loading domain: done (URL)')
         return domain
       })
     }
@@ -283,6 +286,7 @@ export class Coverage {
    * @return A Promise object which loads the requested range data and provides a Range object in its callback.
    */
   loadRange (paramKey) {
+    console.log('loading range "' + paramKey + '"')
     // Since the shape of the range array is derived from the domain, it has to be loaded as well.
     return this.loadDomain().then(domain => {
       let rangeOrUrl = this.covjson.ranges[paramKey]
@@ -290,6 +294,7 @@ export class Coverage {
       if (typeof rangeOrUrl === 'object') {
         transformRange(rangeOrUrl, domain.shape, isCategorical)
         return new Promise(resolve => {
+          console.log('loading range "' + paramKey + '": done (inline)')
           resolve(rangeOrUrl)
         })
       } else { // URL
@@ -298,6 +303,7 @@ export class Coverage {
           if (this.cacheRanges) {
             this.covjson.ranges[paramKey] = range
           }
+          console.log('loading range "' + paramKey + '": done (URL)')
           return range
         })
       }
