@@ -1,5 +1,5 @@
 {
-  "type" : "Coverage",
+  "type" : "ProfileCoverage",
   "id" : "http://.../datasets/1/coverages/123",
   "domain" : {
     "type" : "Profile",

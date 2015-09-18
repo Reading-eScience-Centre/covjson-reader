@@ -20,7 +20,7 @@
   },
   "coverages": [
   	{
-	    "type" : "Coverage",
+	    "type" : "PointCoverage",
 	    "id" : "http://.../datasets/1/coverages/123",
 	    "domain" : {
 	      "type" : "Point",
@@ -39,7 +39,7 @@
 	      }
 	    }
     }, {
-	    "type" : "Coverage",
+	    "type" : "PointCoverage",
 	    "id" : "http://.../datasets/1/coverages/123",
 	    "domain" : {
 	      "type" : "Point",

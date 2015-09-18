@@ -1,7 +1,7 @@
 import ndarray from 'ndarray'
 import cbor from 'cbor'
 
-const PREFIX = 'http://coveragejson.org/def#'
+export const PREFIX = 'http://coveragejson.org/def#'
 
 const MEDIA = {
     COVCBOR: 'application/prs.coverage+cbor',
@@ -61,11 +61,11 @@ export default function read (input) {
  */
 function transformCovJSON (obj) {
   checkValidCovJSON(obj)
-  if (obj.type !== 'Coverage' && obj.type !== 'CoverageCollection') {
-    throw new Error('CoverageJSON document must be of Coverage or CoverageCollection type')
+  if (!endsWith(obj.type, 'Coverage') && obj.type !== 'CoverageCollection') {
+    throw new Error('CoverageJSON document must be of *Coverage or CoverageCollection type')
   }
   
-  if (obj.type === 'Coverage') {
+  if (endsWith(obj.type, 'Coverage')) {
     var cov = new Coverage(obj)
   } else { // Collection
     var cov = []
@@ -98,7 +98,7 @@ function transformCovJSON (obj) {
  */
 function checkValidCovJSON (obj) {
   assert('type' in obj, '"type" missing')
-  if (obj.type === 'Coverage') {
+  if (endsWith(obj.type, 'Coverage')) {
     assert('parameters' in obj, '"parameters" missing')
     assert('domain' in obj, '"domain" missing')
     assert('ranges' in obj, '"ranges" missing')
@@ -205,7 +205,6 @@ export class Coverage {
   }
   
   get type () {
-    // FIXME change CoverageJSON spec so that type has domain name in it
     return PREFIX + this.covjson.type
   }
   
@@ -510,7 +509,7 @@ function transformDomain (domain) {
   let z = axisSize(domain.z)
   let t = axisSize(domain.t)
   
-  domain.type = 'http://coveragejson.org/def/domains/' + type
+  domain.type = PREFIX + type
   
   const T = 't'
   const Z = 'z'
