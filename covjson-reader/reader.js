@@ -534,14 +534,14 @@ function transformDomain (domain) {
   case 'Point':
     shape = [1]; names = [P]; break
   case 'Trajectory':
-    assert(x === y === t, 'Trajectory cannot have x, y, t arrays of different lengths')
+    assert(x === y && y === t, 'Trajectory cannot have x, y, t arrays of different lengths')
     assert(!Array.isArray(domain.z) || x === z, 'Trajectory z array must be of same length as x, y, t arrays')
     let seq = domain.sequence.join('')
     assert((Array.isArray(domain.z) && seq === 'xyzt') || (!Array.isArray(domain.z) && seq === 'xyt'),
         'Trajectory must have "sequence" property ["x","y","t"] or ["x","y","z","t"]')
     shape = [x]; names = [SEQ]; break
   case 'Section':
-    assert(x === y === t, 'Section cannot have x, y, t arrays of different lengths')
+    assert(x === y && y === t, 'Section cannot have x, y, t arrays of different lengths')
     assert(domain.sequence.join('') === 'xyt', 'Section must have "sequence" property ["x","y","t"]')
     shape = [z,x]; names = [Z,SEQ]; break
   case 'Polygon':
