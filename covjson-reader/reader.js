@@ -244,11 +244,9 @@ export class Coverage {
     let domainOrUrl = this.covjson.domain
     if (this._domainPromise) return this._domainPromise
     if (typeof domainOrUrl === 'object') {
-      var promise = new Promise(resolve => {
-        transformDomain(domainOrUrl)
-        console.log('loading domain: done (inline)')
-        resolve(domainOrUrl)
-      })
+      transformDomain(domainOrUrl)
+      console.log('loading domain: done (inline)')
+      var promise = Promise.resolve(domainOrUrl)
     } else { // URL
       var promise = loadCovJSON(domainOrUrl).then(domain => {
         transformDomain(domain)
@@ -293,10 +291,8 @@ export class Coverage {
       let isCategorical = 'categories' in this.parameters.get(paramKey)
       if (typeof rangeOrUrl === 'object') {
         transformRange(rangeOrUrl, domain.shape, isCategorical)
-        return new Promise(resolve => {
-          console.log('loading range "' + paramKey + '": done (inline)')
-          resolve(rangeOrUrl)
-        })
+        console.log('loading range "' + paramKey + '": done (inline)')
+        return Promise.resolve(rangeOrUrl)
       } else { // URL
         return loadCovJSON(rangeOrUrl).then(range => {
           transformRange(range, domain.shape, isCategorical)
