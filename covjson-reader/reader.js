@@ -139,13 +139,13 @@ export function loadCovJSON(url, responseType='arraybuffer') {
       
       var type = req.getResponseHeader('Content-Type')
       
-      if (type === MEDIA.OCTETSTREAM || type === MEDIA.TEXT) {
+      if (type.indexOf(MEDIA.OCTETSTREAM) === 0 || type.indexOf(MEDIA.TEXT) === 0) {
         // wrong media type, try to infer type from extension
         if (endsWith(url, EXT.COVJSON)) {
           type = MEDIA.COVJSON
         } else if (endsWith(url, EXT.COVCBOR)) {
           type = MEDIA.COVCBOR
-        }
+        } 
       }
       
       if (type === MEDIA.COVCBOR) {
