@@ -34,13 +34,16 @@ $ npm run karma
 ```
 and minimize the browser windows that popped up. Test output will appear in the shell.
 
-## Building a bundle
+## Building a classic bundle
 
-A stand-alone bundle can be created with:
+A stand-alone bundle that exposes the global `CovJSON` object can be created with:
 ```
 $ npm run build
 ```
-This will build a bundle.js file in the root project folder.
+This will build the covjson-reader.{src|min}.js files in the root project folder.
+
+Note that for convenienc both the cbor-js and ndarray dependencies are included in the bundle since
+they are not hosted on a CDN yet. 
 
 ## Code style
 

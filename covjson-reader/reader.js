@@ -27,7 +27,7 @@ const EXT = {
  * Example:
  * 
  * <pre><code>
- * read('http://example.com/coverage.covjson').then(function (cov) {
+ * CovJSON.read('http://example.com/coverage.covjson').then(function (cov) {
  *   // work with Coverage object
  * }).catch(function (e) {
  *   // there was an error when loading the coverage
@@ -44,7 +44,7 @@ const EXT = {
  *    an array of Coverage objects as data. In the error case, an Error object is supplied
  *    from the Promise.
  */
-export default function read (input) {
+export function read (input) {
   if (typeof input === 'object') {
     return new Promise(resolve => resolve(transformCovJSON(input)))
   } else {

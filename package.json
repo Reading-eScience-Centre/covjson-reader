@@ -9,7 +9,9 @@
     "test": "karma start --single-run",
     "karma": "karma start",
     "saucelabs": "karma start karma.conf-ci.js",
-    "build": "jspm bundle-sfx covjson-reader/reader bundle.js"
+    "build": "npm run build-src && npm run build-min",
+    "build-src": "jspm bundle-sfx covjson-reader/reader covjson-reader.src.js --format global --global-name CovJSON --skip-source-maps",
+    "build-min": "jspm bundle-sfx covjson-reader/reader covjson-reader.min.js --format global --global-name CovJSON --minify --skip-source-maps"
   },
   "standard": {
     "parser": "babel-eslint",

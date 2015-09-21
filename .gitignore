@@ -2,3 +2,5 @@
 /node_modules/
 /jspm_packages/
 /sauce.json
+/covjson-reader.min.js
+/covjson-reader.src.js
