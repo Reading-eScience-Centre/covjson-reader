@@ -4,19 +4,18 @@
 
 First, install [Node.js](https://nodejs.org/download/).
 
-Then, install JSPM globally:
-```
-$ npm install jspm/jspm-cli -g
-```
-
 Now, clone this repository and run the following in a shell in the checked out folder:
 ```
 $ npm install
-$ jspm install
 ```
 
 This installs all (development) dependencies in local subfolders.
 It can be run at any time should the versions in the package.json change.
+
+If you need to use the `jspm` CLI, install it globally:
+```
+$ npm install jspm/jspm-cli -g
+```
 
 ## Running tests
 

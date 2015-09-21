@@ -2,23 +2,24 @@
   "name": "covjson-reader",
   "version": "0.1.0",
   "description": "A reader for CoverageJSON files.",
-  "repository" : {
+  "repository": {
     "type": "git",
     "url": "https://github.com/Reading-eScience-Centre/covjson-reader.git"
   },
-  "bugs": { 
-    "url" : "https://github.com/Reading-eScience-Centre/covjson-reader/issues"
+  "bugs": {
+    "url": "https://github.com/Reading-eScience-Centre/covjson-reader/issues"
   },
   "author": {
     "name": "Maik Riechert"
   },
   "files": [
     "covjson-reader.src.js",
-  	"covjson-reader.min.js"
+    "covjson-reader.min.js"
   ],
   "registry": "jspm",
   "format": "esm",
   "scripts": {
+    "postinstall": "jspm install",
     "style": "standard",
     "test": "karma start --single-run",
     "karma": "karma start",
@@ -37,10 +38,10 @@
     ]
   },
   "jspm": {
+    "main": "reader",
     "directories": {
       "lib": "covjson-reader"
     },
-    "main": "reader",
     "dependencies": {
       "cbor": "github:paroga/cbor-js@^0.1.0",
       "ndarray": "npm:ndarray@^1.0.18"
