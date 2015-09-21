@@ -41,8 +41,7 @@ $ npm run build
 ```
 This will build the covjson-reader.{src|min}.js files in the root project folder.
 
-Note that for convenienc both the cbor-js and ndarray dependencies are included in the bundle since
-they are not hosted on a CDN yet. 
+Note that currently both the cbor-js and ndarray dependencies are included in the bundle.
 
 ## Publishing a new version
 
