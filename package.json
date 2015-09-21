@@ -42,6 +42,7 @@
     "directories": {
       "lib": "covjson-reader"
     },
+    "files": null,
     "dependencies": {
       "cbor": "github:paroga/cbor-js@^0.1.0",
       "ndarray": "npm:ndarray@^1.0.18"
