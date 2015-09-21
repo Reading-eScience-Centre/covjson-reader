@@ -218,8 +218,7 @@ export class Coverage {
   }
   
   get bbox () {
-    // TODO not done in CovJSON spec yet
-    return null
+    return this.covjson.bbox
   }
   
   get timeExtent () {
