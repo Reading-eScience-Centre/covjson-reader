@@ -45,6 +45,21 @@ This will build the covjson-reader.{src|min}.js files in the root project folder
 Note that for convenienc both the cbor-js and ndarray dependencies are included in the bundle since
 they are not hosted on a CDN yet. 
 
+## Publishing a new version
+
+Raise the version number, create a semver git tag (`x.y.z`), and run:
+```
+$ npm publish
+```
+
+This builds and publishes the classic bundle to the npm registry.
+This project is registered on http://www.jsdelivr.com such that on every new
+npm release, the bundle is made available automatically on the jsDelivr CDN.
+
+Note that the git tag alone is enough to make a new version usable via the JSPM CDN.
+The publishing step on npm (and therefore jsDelivr) is there to support classic clients
+which can't / don't want to use ECMAScript modules yet.
+
 ## Code style
 
 The [JavaScript Standard Style](http://standardjs.com) is used in this project.
