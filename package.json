@@ -1,7 +1,21 @@
 {
   "name": "covjson-reader",
   "version": "0.1.0",
-  "main": "reader",
+  "description": "A reader for CoverageJSON files.",
+  "repository" : {
+    "type": "git",
+    "url": "https://github.com/Reading-eScience-Centre/covjson-reader.git"
+  },
+  "bugs": { 
+    "url" : "https://github.com/Reading-eScience-Centre/covjson-reader/issues"
+  },
+  "author": {
+    "name": "Maik Riechert"
+  },
+  "files": [
+    "covjson-reader.src.js",
+  	"covjson-reader.min.js"
+  ],
   "registry": "jspm",
   "format": "esm",
   "scripts": {
@@ -11,7 +25,8 @@
     "saucelabs": "karma start karma.conf-ci.js",
     "build": "npm run build-src && npm run build-min",
     "build-src": "jspm bundle-sfx covjson-reader/reader covjson-reader.src.js --format global --global-name CovJSON --skip-source-maps",
-    "build-min": "jspm bundle-sfx covjson-reader/reader covjson-reader.min.js --format global --global-name CovJSON --minify --skip-source-maps"
+    "build-min": "jspm bundle-sfx covjson-reader/reader covjson-reader.min.js --format global --global-name CovJSON --minify --skip-source-maps",
+    "prepublish": "npm run build"
   },
   "standard": {
     "parser": "babel-eslint",
@@ -25,6 +40,7 @@
     "directories": {
       "lib": "covjson-reader"
     },
+    "main": "reader",
     "dependencies": {
       "cbor": "github:paroga/cbor-js@^0.1.0",
       "ndarray": "npm:ndarray@^1.0.18"
