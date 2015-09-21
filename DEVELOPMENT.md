@@ -46,12 +46,12 @@ they are not hosted on a CDN yet.
 
 ## Publishing a new version
 
-Raise the version number, create a semver git tag (`x.y.z`), and run:
-```
-$ npm publish
-```
+1. Raise the version number in package.json.
+2. Create a semver git tag (`x.y.z`) and push it.
+3. Run `npm publish`.
+4. Attach the `covjson-reader.{src|min}.js` files to the GitHub release.
 
-This builds and publishes the classic bundle to the npm registry.
+The last two steps build and publish the classic bundle to the npm registry.
 This project is registered on http://www.jsdelivr.com such that on every new
 npm release, the bundle is made available automatically on the jsDelivr CDN.
 
