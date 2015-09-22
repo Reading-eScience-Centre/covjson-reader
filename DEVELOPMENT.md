@@ -46,13 +46,14 @@ Note that currently both the cbor-js and ndarray dependencies are included in th
 ## Publishing a new version
 
 1. Raise the version number in package.json.
-2. Create a semver git tag (`x.y.z`) and push it.
-3. Run `npm publish`.
-4. Attach the `covjson-reader.{src|min}.js` files to the GitHub release.
+2. If it is a minor or major version change, update the version in README.md.
+3. Create a semver git tag (`x.y.z`) and push it.
+4. Run `npm publish`.
+5. Attach the `covjson-reader.{src|min}.js` files to the GitHub release.
 
 The last two steps build and publish the classic bundle to the npm registry.
 This project is registered on http://www.jsdelivr.com such that on every new
-npm release, the bundle is made available automatically on the jsDelivr CDN.
+npm release, the minified bundle is made available automatically on the jsDelivr CDN.
 
 Note that the git tag alone is enough to make a new version usable via the JSPM CDN.
 The publishing step on npm (and therefore jsDelivr) is there to support classic clients
