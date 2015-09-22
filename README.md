@@ -1,6 +1,8 @@
 # covjson-reader [![Build Status](https://travis-ci.org/Reading-eScience-Centre/covjson-reader.svg?branch=master)](https://travis-ci.org/Reading-eScience-Centre/covjson-reader)
 
-Read [CoverageJSON](https://github.com/neothemachine/coveragejson) documents and expose them as [Coverage objects](https://github.com/neothemachine/coverage-jsapi).
+A library that reads [CoverageJSON](https://github.com/neothemachine/coveragejson) documents and exposes them as [Coverage objects](https://github.com/neothemachine/coverage-jsapi).
+
+[API docs](https://doc.esdoc.org/github.com/reading-escience-centre/covjson-reader/)
 
 ## Usage
 
