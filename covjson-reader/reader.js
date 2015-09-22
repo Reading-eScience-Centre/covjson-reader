@@ -23,33 +23,41 @@ const EXT = {
 }
 
 /**
+ * Reads a CoverageJSON document and returns a {@link Promise} that succeeds with
+ * a {@link Coverage} object or an array of such.
  * 
- * Example:
+ * Note that if the document references external domain or range documents,
+ * then these are not loaded immediately. 
  * 
- * <pre><code>
+ * 
+ * @example <caption>ES6 module</caption>
+ * read('http://example.com/coverage.covjson').then(cov => {
+ *   // work with Coverage object
+ * }).catch(e => {
+ *   // there was an error when loading the coverage
+ *   console.log(e)
+ * })
+ * @example <caption>ES5 global</caption>
  * CovJSON.read('http://example.com/coverage.covjson').then(function (cov) {
  *   // work with Coverage object
  * }).catch(function (e) {
  *   // there was an error when loading the coverage
- *   console.log(e.message)
+ *   console.log(e)
  * })
- * </code></pre>
- * 
- * 
- * @param {Object|URL} input 
+ * @param {Object|string} input 
  *    Either a URL pointing to a CoverageJSON Coverage or Coverage Collection document
  *    or a CoverageJSON Coverage or Coverage Collection object.
  * @return {Promise} 
- *    A promise object having a Coverage object or, for CoverageJSON Coverage Collections,
- *    an array of Coverage objects as data. In the error case, an Error object is supplied
- *    from the Promise.
+ *    A promise object having a {@link Coverage} object or, for CoverageJSON Coverage Collections,
+ *    an array of {@link Coverage} objects as data. In the error case, an {@link Error} object is supplied
+ *    from the {@link Promise}.
  */
 export function read (input) {
   if (typeof input === 'object') {
     return new Promise(resolve => resolve(transformCovJSON(input)))
   } else {
     // it's a URL, load it
-    return loadCovJSON(input).then(transformCovJSON)
+    return load(input).then(transformCovJSON)
   }
 }
 
@@ -117,13 +125,15 @@ function endsWith (subject, search) {
 }
 
 /**
- * Loads a CoverageJSON document from a given URL and returns a Promise.
+ * Loads a CoverageJSON document from a given URL and returns a {@link Promise} object
+ * that succeeds with the unmodified CoverageJSON object.
  * 
+ * @param {string} url
  * @return {Promise}
  *   The data is the CoverageJSON object. The promise fails if the resource at
  *   the given URL is not a valid JSON or CBOR document. 
  */
-export function loadCovJSON(url, responseType='arraybuffer') {
+export function load(url, responseType='arraybuffer') {
   if (['arraybuffer', 'text'].indexOf(responseType) === -1) {
     throw new Error()
   }
@@ -176,49 +186,65 @@ export function loadCovJSON(url, responseType='arraybuffer') {
     req.send()
   }).catch(e => {
     if (e.responseType) {
-      return loadCovJSON(url, e.responseType)
+      return load(url, e.responseType)
     } else {
       throw e
     }
   })
 }
 
-/** Wraps a CoverageJSON Coverage object as a Coverage API object. 
+/** 
+ * Wraps a CoverageJSON Coverage object as a Coverage API object.
+ * 
+ * @see https://github.com/Reading-eScience-Centre/coverage-jsapi
  * 
  */
 export class Coverage {
   
   /**
    * @param {Object} covjson A CoverageJSON Coverage object.
-   * @param {Bool} cacheRanges
+   * @param {boolean} cacheRanges
    *   If true, then any range that was loaded remotely is cached.
    *   (The domain is always cached.)
    *                           
    */
   constructor(covjson, cacheRanges = false) {
-    this.covjson = covjson
+    this._covjson = covjson
+    
+    /** @type {boolean} */
     this.cacheRanges = cacheRanges
     
-    this.params = new Map()
+    this._params = new Map()
     for (let key of Object.keys(covjson.parameters)) {
       transformParameter(covjson.parameters, key)
-      this.params.set(key, covjson.parameters[key])
+      this._params.set(key, covjson.parameters[key])
     }
   }
   
+  /**
+   * @type {string}
+   */
   get type () {
-    return PREFIX + this.covjson.type
+    return PREFIX + this._covjson.type
   }
   
+  /**
+   * @type {string}
+   */
   get domainType () {
     // we extract the domain type from the coverage type
     // this is possible with CoverageJSON since there is a 1:1 relationship
-    let withoutSuffix = this.covjson.type.substr(0, this.covjson.type.length - 'Coverage'.length)
+    let withoutSuffix = this._covjson.type.substr(0, this._covjson.type.length - 'Coverage'.length)
     return PREFIX + withoutSuffix
   }
   
+  /**
+   * A bounding box array with elements [westLon, southLat, eastLon, northLat].
+   * 
+   * @type {Array|undefined}
+   */
   get bbox () {
-    return this.covjson.bbox
+    return this._covjson.bbox
   }
   
   get timeExtent () {
@@ -232,24 +258,27 @@ export class Coverage {
   }
   
   /**
-   * A Map of parameters.
+   * @type {Map}
    */
   get parameters () {
-    return this.params
+    return this._params
   }
   
+  /**
+   * @return {Promise}
+   */
   loadDomain () {
     console.log('loading domain')
-    let domainOrUrl = this.covjson.domain
+    let domainOrUrl = this._covjson.domain
     if (this._domainPromise) return this._domainPromise
     if (typeof domainOrUrl === 'object') {
       transformDomain(domainOrUrl)
       console.log('loading domain: done (inline)')
       var promise = Promise.resolve(domainOrUrl)
     } else { // URL
-      var promise = loadCovJSON(domainOrUrl).then(domain => {
+      var promise = load(domainOrUrl).then(domain => {
         transformDomain(domain)
-        this.covjson.domain = domain
+        this._covjson.domain = domain
         console.log('loading domain: done (URL)')
         return domain
       })
@@ -267,36 +296,31 @@ export class Coverage {
    * 
    * Note that this method implicitly loads the domain as well. 
    * 
-   * Example:
-   * 
-   * <pre><code>
-   * var cov = ... 
+   * @example
    * cov.loadRange('salinity').then(function (sal) {
    *   // work with Range object
    * }).catch(function (e) {
    *   // there was an error when loading the range
    *   console.log(e.message)
-   * })
-   * </code></pre>
-   * 
+   * }) 
    * @param {string} paramKey The key of the Parameter for which to load the range.
-   * @return A Promise object which loads the requested range data and provides a Range object in its callback.
+   * @return {Promise} A Promise object which loads the requested range data and succeeds with a Range object.
    */
   loadRange (paramKey) {
     console.log('loading range "' + paramKey + '"')
     // Since the shape of the range array is derived from the domain, it has to be loaded as well.
     return this.loadDomain().then(domain => {
-      let rangeOrUrl = this.covjson.ranges[paramKey]
+      let rangeOrUrl = this._covjson.ranges[paramKey]
       let isCategorical = 'categories' in this.parameters.get(paramKey)
       if (typeof rangeOrUrl === 'object') {
         transformRange(rangeOrUrl, domain.shape, isCategorical)
         console.log('loading range "' + paramKey + '": done (inline)')
         return Promise.resolve(rangeOrUrl)
       } else { // URL
-        return loadCovJSON(rangeOrUrl).then(range => {
+        return load(rangeOrUrl).then(range => {
           transformRange(range, domain.shape, isCategorical)
           if (this.cacheRanges) {
-            this.covjson.ranges[paramKey] = range
+            this._covjson.ranges[paramKey] = range
           }
           console.log('loading range "' + paramKey + '": done (URL)')
           return range
