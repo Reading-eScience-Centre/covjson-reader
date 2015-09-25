@@ -1,6 +1,7 @@
 {
   "name": "covjson-reader",
   "version": "0.1.0",
+  "license" : "BSD-3-Clause",
   "description": "A reader for CoverageJSON files.",
   "repository": {
     "type": "git",
