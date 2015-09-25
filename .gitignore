@@ -1,4 +1,5 @@
 /.project
+/*.log
 /node_modules/
 /jspm_packages/
 /sauce.json
