@@ -329,6 +329,34 @@ export class Coverage {
     })    
   }
   
+  /**
+   * Returns the requested range data as a Promise.
+   * 
+   * Note that this method implicitly loads the domain as well. 
+   * 
+   * @example
+   * cov.loadRanges(['salinity','temp']).then(function (ranges) {
+   *   // work with Map object
+   *   console.log(ranges.get('salinity').values)
+   * }).catch(function (e) {
+   *   // there was an error when loading the range data
+   *   console.log(e)
+   * }) 
+   * @param {iterable} [paramKeys] An iterable of parameter keys for which to load the range data. If not given, loads all range data.
+   * @return {Promise} A Promise object which loads the requested range data and succeeds with a Map object.
+   */
+  loadRanges (paramKeys) {
+    if (paramKeys === undefined) paramKeys = this.parameters.keys()
+    paramKeys = Array.from(paramKeys)
+    return Promise.all(paramKeys.map(this.loadRange)).then(ranges => {
+      let map = new Map()
+      for (let i=0; i < paramKeys.length; i++) {
+        map.set(paramKeys[i], ranges[i])
+      }
+      return map
+    })
+  }
+  
 }
 
 /**
