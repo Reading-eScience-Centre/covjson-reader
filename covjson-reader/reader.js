@@ -348,7 +348,7 @@ export class Coverage {
   loadRanges (paramKeys) {
     if (paramKeys === undefined) paramKeys = this.parameters.keys()
     paramKeys = Array.from(paramKeys)
-    return Promise.all(paramKeys.map(this.loadRange)).then(ranges => {
+    return Promise.all(paramKeys.map(k => this.loadRange(k))).then(ranges => {
       let map = new Map()
       for (let i=0; i < paramKeys.length; i++) {
         map.set(paramKeys[i], ranges[i])
