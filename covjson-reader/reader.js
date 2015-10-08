@@ -73,10 +73,11 @@ function transformCovJSON (obj) {
     throw new Error('CoverageJSON document must be of *Coverage or CoverageCollection type')
   }
   
+  let cov
   if (endsWith(obj.type, 'Coverage')) {
-    var cov = new Coverage(obj)
+    cov = new Coverage(obj)
   } else { // Collection
-    var cov = []
+    cov = []
     let rootParams = obj.parameters ? obj.parameters : {}
     for (let coverage of obj.coverages) {
       if (coverage.parameters) {
@@ -91,9 +92,7 @@ function transformCovJSON (obj) {
       cov.push(new Coverage(coverage))
     }
   }
-  
-  console.log('reading done:', cov)
-  
+    
   return cov
 }
 
@@ -159,10 +158,10 @@ export function load(url, responseType='arraybuffer') {
           type = MEDIA.COVCBOR
         } 
       }
-      
+      let data
       if (type === MEDIA.COVCBOR) {
         var arrayBuffer = req.response
-        var data = cbor.decode(arrayBuffer)
+        data = cbor.decode(arrayBuffer)
       } else if ([MEDIA.COVJSON, MEDIA.JSONLD, MEDIA.JSON].indexOf(type) > -1) {
         if (responseType === 'arraybuffer') {
           // load again (from cache) to get correct response type
@@ -171,7 +170,7 @@ export function load(url, responseType='arraybuffer') {
           reject({responseType: 'text'})
           return
         }
-        var data = JSON.parse(req.response)
+        data = JSON.parse(req.response)
         
       } else {
         reject(new Error('Unsupported media type: ' + type))
@@ -246,12 +245,13 @@ export class Coverage {
     console.log('loading domain')
     let domainOrUrl = this._covjson.domain
     if (this._domainPromise) return this._domainPromise
+    let promise
     if (typeof domainOrUrl === 'object') {
       transformDomain(domainOrUrl)
       console.log('loading domain: done (inline)')
-      var promise = Promise.resolve(domainOrUrl)
+      promise = Promise.resolve(domainOrUrl)
     } else { // URL
-      var promise = load(domainOrUrl).then(domain => {
+      promise = load(domainOrUrl).then(domain => {
         transformDomain(domain)
         this._covjson.domain = domain
         console.log('loading domain: done (URL)')
@@ -339,7 +339,8 @@ export class Coverage {
  * This determines the best array type for categorical data which
  * doesn't have missing values.
  */
-function arrayType(validMin, validMax) {
+/*
+function arrayType (validMin, validMax) {
   let type
   if (validMin !== undefined) {
     if (validMin >= 0) {
@@ -369,6 +370,7 @@ function arrayType(validMin, validMax) {
   }
   return type
 }
+*/
 
 /**
  * Transforms a CoverageJSON parameter to the Coverage API format, that is,
@@ -485,7 +487,7 @@ function transformRange (range, shape, isCategorical) {
   }
   
   if (validMin === undefined) {
-    [min,max] = minMax(vals)
+    let [min,max] = minMax(vals)
     if (min !== null) {
       range.validMin = min
       range.validMax = max
@@ -585,6 +587,7 @@ function transformDomain (domain) {
   }
   
   domain.shape = shape
+  domain.names = names
   
   // replace 1D numeric axis arrays with typed arrays for efficiency
   for (let field of ['x', 'y', 'z', 't']) {
