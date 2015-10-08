@@ -214,56 +214,31 @@ export class Coverage {
     /** @type {boolean} */
     this.cacheRanges = cacheRanges
     
-    this._params = new Map()
+    /** @type {Map} */
+    this.parameters = new Map()
     for (let key of Object.keys(covjson.parameters)) {
       transformParameter(covjson.parameters, key)
-      this._params.set(key, covjson.parameters[key])
+      this.parameters.set(key, covjson.parameters[key])
     }
-  }
-  
-  /**
-   * @type {string}
-   */
-  get type () {
-    return PREFIX + this._covjson.type
-  }
-  
-  /**
-   * @type {string}
-   */
-  get domainType () {
+    
+    /** @type {string} */
+    this.type = PREFIX + this._covjson.type
+    
     // we extract the domain type from the coverage type
     // this is possible with CoverageJSON since there is a 1:1 relationship
     let withoutSuffix = this._covjson.type.substr(0, this._covjson.type.length - 'Coverage'.length)
-    return PREFIX + withoutSuffix
+    /** @type {string} */
+    this.domainType = PREFIX + withoutSuffix
+    
+    /**
+     * A bounding box array with elements [westLon, southLat, eastLon, northLat].
+     * 
+     * @type {Array|undefined}
+     */
+    this.bbox = this._covjson.bbox
+    
   }
-  
-  /**
-   * A bounding box array with elements [westLon, southLat, eastLon, northLat].
-   * 
-   * @type {Array|undefined}
-   */
-  get bbox () {
-    return this._covjson.bbox
-  }
-  
-  get timeExtent () {
-    // TODO not done in CovJSON spec yet
-    return null    
-  }
-  
-  get verticalExtent () {
-    // TODO not done in CovJSON spec yet
-    return null    
-  }
-  
-  /**
-   * @type {Map}
-   */
-  get parameters () {
-    return this._params
-  }
-  
+    
   /**
    * @return {Promise}
    */
