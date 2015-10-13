@@ -426,11 +426,13 @@ export class Coverage {
       
       // subset the axis arrays of the domain (immediately + cached)
       let newdomain = shallowcopy(domain)
+      newdomain.shape = domain.shape.slice() // deep copy
       
       for (let axisName of Object.keys(constraints)) {
         if (!(axisName in domain)) {
           continue // empty varying axis, nothing to do
         }
+        // TODO if a typed array was used, use one of the same type again
         let coords = domain[axisName]
         let constraint = constraints[axisName]
         let newcoords
@@ -451,6 +453,7 @@ export class Coverage {
           }
         }
         newdomain[axisName] = newcoords
+        newdomain.shape[domain.names.indexOf(axisName)] = newcoords.length
       }
             
       // subset the ndarrays of the ranges (on request)
@@ -722,7 +725,7 @@ function transformDomain (domain) {
   const T = 't'
   const Z = 'z'
   const Y = 'y'
-  const X = 'z'
+  const X = 'x'
   const P = 'p'
   const SEQ = 'seq'
     
