@@ -6,7 +6,7 @@ import {PREFIX} from 'covjson-reader/reader'
 const FIXTURES = {
     ProfileURL: 'base/test/fixtures/Coverage-Profile-standalone.covjson',
     CollectionURL: 'base/test/fixtures/CoverageCollection-Point-param_in_collection-standalone.covjson',
-    Profile: {
+    Profile: () => ({
       "type" : "ProfileCoverage",
       "domain" : {
         "type" : "Profile",
@@ -32,14 +32,14 @@ const FIXTURES = {
         "type" : "RangeSet",
         "PSAL" : {
           "type" : "Range",
-          "values" : [ 43.9599, 43.9599 ]
+          "values" : [ 43.9599, 43.3599 ]
         }
       }
-    },
-    CollectionEmpty: {
+    }),
+    CollectionEmpty: () => ({
       "type" : "CoverageCollection",
       "coverages": []
-    }
+    })
 }
 
 function readall(input) {
@@ -55,8 +55,6 @@ function readall(input) {
 }
 
 describe('reader methods', () => {
-  let server
-
   describe('#read', () => {
     // The following tests only check for basic reading errors.
     // This is done by returning the Promise directly to Mocha which can handle it.
@@ -68,20 +66,82 @@ describe('reader methods', () => {
       return readall(FIXTURES.CollectionURL)
     })
     it('should read a CoverageJSON Coverage in object format', () => {
-      return readall(FIXTURES.Profile)
+      return readall(FIXTURES.Profile())
     })
     it('should read a CoverageJSON CoverageCollection in object format', () => {
-      return readall(FIXTURES.CollectionEmpty)
+      return readall(FIXTURES.CollectionEmpty())
     })
-    it('Coverage should have correct properties', done => {
-      read(FIXTURES.Profile).then(cov => {
-        assert.equal(cov.type, PREFIX + FIXTURES.Profile.type)
-        assert.equal(cov.domainType, PREFIX + FIXTURES.Profile.domain.type)
+    it('Coverage should have correct properties', () => {
+      return read(FIXTURES.Profile()).then(cov => {
+        assert.equal(cov.type, PREFIX + FIXTURES.Profile().type)
+        assert.equal(cov.domainType, PREFIX + FIXTURES.Profile().domain.type)
         let label = cov.parameters.get('PSAL').observedProperty.label
-        assert(label.has('en'))
+        assert(label.has('en'), 'en label missing')
         assert.equal(label.get('en'), 'Sea Water Salinity')
-        done()
       })
     })
+  })
+})
+
+describe('Coverage methods', () => {
+  describe('#subsetByIndex', () => {
+    it('should not modify the original coverage', () => {
+      return read(FIXTURES.Profile()).then(cov => {
+        return cov.subsetByIndex({z: 0}).then(subset => {
+          return Promise.all([cov.loadDomain(), cov.loadRange('PSAL')]).then(([domain,range]) => {
+            assert.equal(domain.z.length, 2)
+            assert.deepEqual(range.values.shape, [2])
+          })
+        })
+      })
+    })
+    let vals = FIXTURES.Profile().ranges.PSAL.values
+    it('should subset correctly, variant 1', () => {
+      return read(FIXTURES.Profile()).then(cov => {
+        return cov.subsetByIndex({z: 1}).then(subset => {
+          return Promise.all([subset.loadDomain(), subset.loadRange('PSAL')]).then(([domain,range]) => {
+            assert.strictEqual(domain.z.length, 1)
+            assert.deepEqual(range.values.shape, [1])
+            assert.strictEqual(range.values.get(0), vals[1])
+          })
+        })
+      })
+    })
+    it('should subset correctly, variant 2', () => {
+      return read(FIXTURES.Profile()).then(cov => {
+        return cov.subsetByIndex({z: {start: 0, stop: 1}}).then(subset => {
+          return Promise.all([subset.loadDomain(), subset.loadRange('PSAL')]).then(([domain,range]) => {
+            assert.strictEqual(domain.z.length, 1)
+            assert.deepEqual(range.values.shape, [1])
+            assert.strictEqual(range.values.get(0), vals[0])
+          })
+        })
+      })
+    })
+    it('should subset correctly, variant 3', () => {
+      return read(FIXTURES.Profile()).then(cov => {
+        return cov.subsetByIndex({z: [0]}).then(subset => {
+          return Promise.all([subset.loadDomain(), subset.loadRange('PSAL')]).then(([domain,range]) => {
+            assert.strictEqual(domain.z.length, 1)
+            assert.deepEqual(range.values.shape, [1])
+            assert.strictEqual(range.values.get(0), vals[0])
+          })
+        })
+      })
+    })
+    it('should subset correctly, variant 3', () => {
+      return read(FIXTURES.Profile()).then(cov => {
+        return cov.subsetByIndex({z: [0,1]}).then(subset => {
+          return Promise.all([subset.loadDomain(), subset.loadRange('PSAL')]).then(([domain,range]) => {
+            assert.strictEqual(domain.z.length, 2)
+            assert.deepEqual(range.values.shape, [2])
+            assert.strictEqual(range.values.get(0), vals[0])
+            assert.strictEqual(range.values.get(1), vals[1])
+          })
+        })
+      })
+    })
+    // TODO write more tests which cover things like {z: [0,2]} and real multidim domains
+    
   })
 })

@@ -332,6 +332,186 @@ export class Coverage {
     })
   }
   
+  /**
+   * Returns a Promise object which provides a copy of this Coverage object
+   * with the domain subsetted by the given indices specification.
+   * 
+   * Note that the coverage type and/or domain type of the resulting coverage
+   * may be different than in the original coverage.
+   * 
+   * Note that the subsetted ranges are a view over the original ranges, meaning
+   * that no copying is done but also no memory is released if the original
+   * coverage is garbage collected.
+   * 
+   * @example
+   * cov.subsetByIndex({t: 4, z: {start: 10, stop: 20}, x: [0,1,2] }).then(function(subsetCov) {
+   *   // work with subsetted coverage
+   * })
+   * @param {Object} constraints An object which describes the subsetting constraints.
+   *   Every property of it refers to an axis name as defined in Domain.names,
+   *   and its value must either be an integer, an array of integers,
+   *   or an object with start, stop, and optionally step (defaults to 1) properties
+   *   whose values are integers. All integers must be non-negative, step must not be zero.
+   *   A simple integer constrains the axis to the given index, an array to a list of indices,
+   *   and a start/stop/step object to a range of indices:
+   *   If step=1, this includes all indices starting at start and ending at stop (exclusive);
+   *   if step>1, all indices start, start + step, ..., start + (q + r - 1) step where 
+   *   q and r are the quotient and remainder obtained by dividing stop - start by step.
+   * @returns {Promise} A Promise object with the subsetted coverage object as result.
+   */
+  subsetByIndex (constraints) {
+    return this.loadDomain().then(domain => {
+      if ('sequence' in domain) {
+        // TODO supporting this case would be much easier if axes were explicit in CoverageJSON
+        //  -> see also https://github.com/Reading-eScience-Centre/coveragejson/issues/24
+        throw new Error('sequence-type domains currently not supported for subsetting')
+      }
+      
+      // check and normalize constraints to simplify code and to allow more optimization
+      constraints = shallowcopy(constraints)
+      let isConsecutive = arr => {
+        let last = arr[0] - 1
+        for (let el of arr) {
+          if (el !== last + 1) {
+            return false
+          }
+          last = el
+        }
+        return true
+      }
+      for (let axisName in constraints) {
+        // TODO rethink this check after integrating an axes structure into CoverageJSON
+        //      should not fail for empty varying axes (which are currently not persisted)
+        if (!(axisName in domain)) {
+          throw new Error('Coverage domain has no "' + axisName + '" axis to be used for subsetting')
+        }
+        if (typeof domain[axisName] === 'number') {
+          delete constraints[axisName]
+          continue
+        }
+        if (Array.isArray(constraints[axisName])) {
+          let constraint = constraints[axisName]
+          // range subsetting can be done with fast ndarray views if single indices or slicing objects are used
+          // therefore, we try to transform some common cases into those forms
+          if (constraint.length === 1) {
+            // transform 1-element arrays into a number
+            constraints[axisName] = constraint[0]
+          } else if (isConsecutive(constraint)) {
+            // transform arrays of consecutive indices into start, stop object
+            constraints[axisName] = {start: constraint[0], stop: constraint[constraint.length-1] + 1}
+          }
+        }
+        if (typeof constraints[axisName] === 'number') {
+          let constraint = constraints[axisName]
+          constraints[axisName] = {start: constraint, stop: constraint + 1}
+        }
+        if (!Array.isArray(constraints[axisName])) {
+          let {start = 0, stop = domain[axisName].length, step = 1} = constraints[axisName]
+          if (step <= 0) {
+            throw new Error(`Invalid constraint for ${axisName}: step=${step} must be > 0`)
+          }
+          if (start >= stop || start < 0) {
+            throw new Error(`Invalid constraint for ${axisName}: stop=${stop} must be > start=${start} and both >= 0`)
+          }
+          constraints[axisName] = {start, stop, step}
+        }
+      }
+      for (let axisName of domain.names) {
+        // domain.names currently has all varying axes
+        // TODO need to rework the naming/structure of domain.names, axes etc.
+        if (typeof domain[axisName] !== 'number' && !(axisName in constraints)) {
+          let len = axisName in domain ? domain[axisName].length : 1
+          constraints[axisName] = {start: 0, stop: len, step: 1}
+        }
+      }
+      
+      // After normalization, all constraints are either arrays or start,stop,step objects.
+      // For all start,stop,step objects, it holds that stop > start, step > 0, start >= 0, stop >= 1.
+      // No constraints for non-varying axes exist.
+      // Constraints for varying axes which are empty (no matching domain member) exist (length 1 subset).
+      
+      // subset the axis arrays of the domain (immediately + cached)
+      let newdomain = shallowcopy(domain)
+      
+      for (let axisName of Object.keys(constraints)) {
+        if (!(axisName in domain)) {
+          continue // empty varying axis, nothing to do
+        }
+        let coords = domain[axisName]
+        let constraint = constraints[axisName]
+        let newcoords
+        if (Array.isArray(constraint)) {
+          newcoords = constraint.map(i => coords[i])
+        } else {
+          let {start, stop, step} = constraint
+          if (start === 0 && stop === coords.length && step === 1) {
+            newcoords = coords
+          } else {
+            let q = Math.trunc((stop - start) / step)
+            let r = (stop - start) % step
+            let len = start + (q + r - 1)
+            newcoords = new Array(len)
+            for (let i=start, j=0; i < stop; i += step, j++) {
+              newcoords[j] = coords[i]
+            }
+          }
+        }
+        newdomain[axisName] = newcoords
+      }
+            
+      // subset the ndarrays of the ranges (on request)
+      let axisNames = domain.names // names of varying axes in correct order
+      let isSciJSndarray = arr => ['hi', 'lo', 'step'].every(p => p in arr)
+      
+      let rangeWrapper = range => {
+        let vals = range.values
+        
+        let newvals
+        if (!isSciJSndarray(vals) || Object.keys(constraints).some(ax => Array.isArray(constraints[ax]))) {
+          // Either there is a list of indices for at least one axis,
+          // or the array is not a SciJS ndarray (could be overriden from the outside).
+          // In those cases we cannot directly use SciJS's slicing operations.
+          
+          // TODO implement
+          throw new Error('not implemented yet')
+          
+        } else {
+          // fast ndarray view
+          let los = axisNames.map(name => constraints[name].start)
+          let his = axisNames.map(name => constraints[name].stop)
+          let steps = axisNames.map(name => constraints[name].steps)
+          newvals = vals.hi(...his).lo(...los).step(...steps)
+        }
+        
+        let newrange = shallowcopy(range)
+        newrange.values = newvals
+        return newrange
+      }
+      
+      let loadRange = key => this.loadRange(key).then(rangeWrapper)
+      
+      // we wrap loadRanges as well in case it was overridden from the outside
+      // (in which case we could not be sure that it invokes loadRange() and uses the wrapper)
+      let loadRanges = keys => this.loadRanges(keys).then(ranges => 
+        new Map([...ranges].map(([key, range]) => [key, rangeWrapper(range)]))
+      )
+      
+      // assemble everything to a new coverage
+      let newcov = shallowcopy(this)
+      newcov.loadDomain = () => Promise.resolve(newdomain)
+      newcov.loadRange = loadRange
+      newcov.loadRanges = loadRanges
+      return newcov
+    })
+  }
+}
+
+function shallowcopy (obj) {
+  let copy = {}
+  for (let prop in obj) {
+    copy[prop] = obj[prop]
+  }
+  return copy
 }
 
 /**
