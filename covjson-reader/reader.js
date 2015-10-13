@@ -432,21 +432,30 @@ export class Coverage {
         if (!(axisName in domain)) {
           continue // empty varying axis, nothing to do
         }
-        // TODO if a typed array was used, use one of the same type again
         let coords = domain[axisName]
+        let isTypedArray = ArrayBuffer.isView(coords)
         let constraint = constraints[axisName]
         let newcoords
         if (Array.isArray(constraint)) {
-          newcoords = constraint.map(i => coords[i])
+          if (isTypedArray) {
+            newcoords = new coords.constructor(constraint.length)
+            for (let i=0; i < constraint.length; i++) {
+              newcoords[i] = coords[constraint[i]]
+            }
+          } else {
+            newcoords = constraint.map(i => coords[i])
+          }
         } else {
           let {start, stop, step} = constraint
           if (start === 0 && stop === coords.length && step === 1) {
             newcoords = coords
+          } else if (step === 1 && isTypedArray) {
+            newcoords = coords.subarray(start, stop)
           } else {
             let q = Math.trunc((stop - start) / step)
             let r = (stop - start) % step
             let len = start + (q + r - 1)
-            newcoords = new Array(len)
+            newcoords = new coords.constructor(len) // array or typed array
             for (let i=start, j=0; i < stop; i += step, j++) {
               newcoords[j] = coords[i]
             }
