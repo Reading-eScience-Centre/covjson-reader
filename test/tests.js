@@ -1,7 +1,7 @@
 import assert from 'assert'
 
 import {read} from 'covjson-reader/reader'
-import {PREFIX} from 'covjson-reader/reader'
+import {PREFIX} from 'covjson-reader/util'
 
 const FIXTURES = {
     ProfileURL: 'base/test/fixtures/Coverage-Profile-standalone.covjson',
