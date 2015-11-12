@@ -399,7 +399,7 @@ function transformParameter (params, key) {
 }
 
 function transformLanguageMap (obj, key) {
-  if (!obj || !(key in obj)) {
+  if (!obj || !(key in obj) || obj[key] instanceof Map) {
     return    
   }
   var map = new Map()

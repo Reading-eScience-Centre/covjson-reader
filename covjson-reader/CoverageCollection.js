@@ -19,6 +19,9 @@ export default class CoverageCollection {
       covs.push(new Coverage(coverage))
     }
     this.coverages = covs
+    if (covjson.parameters) {
+      this.parameters = covjson.parameters
+    }
   }
   
   _exposeLd (covjson) {
