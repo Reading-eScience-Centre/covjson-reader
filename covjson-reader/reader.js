@@ -209,6 +209,7 @@ export class Coverage {
    */
   constructor(covjson, cacheRanges = false) {
     this._covjson = covjson
+    this._exposeLd(covjson)
     
     /** @type {boolean} */
     this.cacheRanges = cacheRanges
@@ -235,7 +236,20 @@ export class Coverage {
      * @type {Array|undefined}
      */
     this.bbox = this._covjson.bbox
-    
+  }
+  
+  _exposeLd (covjson) {
+    if (!covjson['@context']) {
+      // no LD love here...
+      this.ld = {}
+      return
+    }
+    // make a deep copy since the object gets modified in-place later
+    // but first, remove domain and range which may be embedded
+    let copy = shallowcopy(covjson)
+    delete copy.domain
+    delete copy.ranges
+    this.ld = JSON.parse(JSON.stringify(copy))
   }
     
   /**
@@ -573,7 +587,7 @@ function transformParameter (params, key) {
               [param.observedProperty, 'description'],
               [param.unit, 'label']
              ]
-  for (let cat of param.categories || []) {
+  for (let cat of param.observedProperty.categories || []) {
     maps.push([cat, 'label'])
     maps.push([cat, 'description'])
   }
