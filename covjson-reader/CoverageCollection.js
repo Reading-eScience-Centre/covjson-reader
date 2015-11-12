@@ -4,6 +4,7 @@ import {shallowcopy} from './util.js'
 export default class CoverageCollection {
   constructor(covjson) {
     this._exposeLd(covjson)
+    this.id = covjson.id
     let covs = []
     let rootParams = covjson.parameters ? covjson.parameters : {}
     for (let coverage of covjson.coverages) {

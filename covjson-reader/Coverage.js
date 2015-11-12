@@ -24,6 +24,8 @@ export default class Coverage {
     /** @type {boolean} */
     this.cacheRanges = cacheRanges
     
+    this.id = covjson.id
+    
     /** @type {Map} */
     this.parameters = new Map()
     for (let key of Object.keys(covjson.parameters)) {
