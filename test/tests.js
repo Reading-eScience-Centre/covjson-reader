@@ -80,7 +80,7 @@ function readall(input) {
     input = JSON.parse(JSON.stringify(input))
   }
   return read(input).then(cov => {
-    if (!Array.isArray(cov)) {
+    if (!cov.coverages) {
       return cov.loadDomain()
     }
   })
