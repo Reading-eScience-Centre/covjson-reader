@@ -208,7 +208,7 @@ export default class Coverage {
         return true
       }
       for (let axisName in constraints) {
-        if (!domain.axes.has(axisName))) {
+        if (!domain.axes.has(axisName)) {
           // TODO clarify this behaviour in the JS API spec
           delete constraints[axisName]
           continue
