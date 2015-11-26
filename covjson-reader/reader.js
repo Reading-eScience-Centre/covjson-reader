@@ -32,8 +32,8 @@ export {load} from './ajax.js'
  *    Either a URL pointing to a CoverageJSON Coverage or Coverage Collection document
  *    or a CoverageJSON Coverage or Coverage Collection object.
  * @return {Promise} 
- *    A promise object having a {@link Coverage} or {@link CoverageCollection} object as result.
- *    In the error case, an {@link Error} object is supplied from the {@link Promise}.
+ *    A promise object succeeding with a {@link Coverage} or {@link CoverageCollection} object,
+ *    and failing with an {@link Error} object.
  */
 export function read (input) {
   if (typeof input === 'object') {
@@ -53,12 +53,12 @@ export function read (input) {
  */
 function transformCovJSON (obj, headers) {
   checkValidCovJSON(obj)
-  if (!endsWith(obj.type, 'Coverage') && obj.type !== 'CoverageCollection') {
-    throw new Error('CoverageJSON document must be of *Coverage or CoverageCollection type')
+  if (obj.type !== 'Coverage' && obj.type !== 'CoverageCollection') {
+    throw new Error('CoverageJSON document must be of Coverage or CoverageCollection type')
   }
   
   let result
-  if (endsWith(obj.type, 'Coverage')) {
+  if (obj.type === 'Coverage') {
     result = new Coverage(obj)
   } else {
     result = new CoverageCollection(obj)
@@ -88,7 +88,7 @@ function addLinkRelations (cov, headers) {
  */
 function checkValidCovJSON (obj) {
   assert('type' in obj, '"type" missing')
-  if (endsWith(obj.type, 'Coverage')) {
+  if (obj.type === 'Coverage') {
     assert('parameters' in obj, '"parameters" missing')
     assert('domain' in obj, '"domain" missing')
     assert('ranges' in obj, '"ranges" missing')

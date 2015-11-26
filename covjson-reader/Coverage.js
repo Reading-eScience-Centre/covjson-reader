@@ -33,14 +33,27 @@ export default class Coverage {
       this.parameters.set(key, covjson.parameters[key])
     }
     
-    /** @type {string} */
-    this.type = PREFIX + this._covjson.type
+    let profile = this._covjson.profile || 'Coverage'
+    if (!profile.startsWith('http')) {
+      profile = PREFIX + profile
+    }
     
-    // we extract the domain type from the coverage type
-    // this is possible with CoverageJSON since there is a 1:1 relationship
-    let withoutSuffix = this._covjson.type.substr(0, this._covjson.type.length - 'Coverage'.length)
     /** @type {string} */
-    this.domainType = PREFIX + withoutSuffix
+    this.type = profile
+    
+    let domainProfile
+    if (typeof this._covjson.domain === 'string') {
+      domainProfile = this._covjson.domainProfile || 'Domain'
+    } else {
+      domainProfile = this._covjson.domain.profile || 'Domain'
+    }
+
+    if (!domainProfile.startsWith('http')) {
+      domainProfile = PREFIX + domainProfile
+    }
+    
+    /** @type {string} */
+    this.domainType = domainProfile
     
     /**
      * A bounding box array with elements [westLon, southLat, eastLon, northLat].
@@ -108,13 +121,12 @@ export default class Coverage {
     // Since the shape of the range array is derived from the domain, it has to be loaded as well.
     return this.loadDomain().then(domain => {
       let rangeOrUrl = this._covjson.ranges[paramKey]
-      let isCategorical = 'categories' in this.parameters.get(paramKey)
       if (typeof rangeOrUrl === 'object') {
-        transformRange(rangeOrUrl, domain.shape, isCategorical)
+        transformRange(rangeOrUrl, domain)
         return Promise.resolve(rangeOrUrl)
       } else { // URL
         return load(rangeOrUrl).then(range => {
-          transformRange(range, domain.shape, isCategorical)
+          transformRange(range, domain)
           if (this.cacheRanges) {
             this._covjson.ranges[paramKey] = range
           }
@@ -180,13 +192,9 @@ export default class Coverage {
    * @returns {Promise} A Promise object with the subsetted coverage object as result.
    */
   subsetByIndex (constraints) {
-    return this.loadDomain().then(domain => {
-      if ('sequence' in domain) {
-        // TODO supporting this case would be much easier if axes were explicit in CoverageJSON
-        //  -> see also https://github.com/Reading-eScience-Centre/coveragejson/issues/24
-        throw new Error('sequence-type domains currently not supported for subsetting')
-      }
-      
+    // FIXME rework
+    
+    return this.loadDomain().then(domain => {      
       // check and normalize constraints to simplify code and to allow more optimization
       constraints = shallowcopy(constraints)
       let isConsecutive = arr => {
@@ -200,12 +208,8 @@ export default class Coverage {
         return true
       }
       for (let axisName in constraints) {
-        // TODO rethink this check after integrating an axes structure into CoverageJSON
-        //      should not fail for empty varying axes (which are currently not persisted)
-        if (!(axisName in domain)) {
-          throw new Error('Coverage domain has no "' + axisName + '" axis to be used for subsetting')
-        }
-        if (typeof domain[axisName] === 'number') {
+        if (!domain.axes.has(axisName))) {
+          // TODO clarify this behaviour in the JS API spec
           delete constraints[axisName]
           continue
         }
@@ -226,7 +230,9 @@ export default class Coverage {
           constraints[axisName] = {start: constraint, stop: constraint + 1}
         }
         if (!Array.isArray(constraints[axisName])) {
-          let {start = 0, stop = domain[axisName].length, step = 1} = constraints[axisName]
+          let {start = 0, 
+               stop = domain.axes.get(axisName).values.length, 
+               step = 1} = constraints[axisName]
           if (step <= 0) {
             throw new Error(`Invalid constraint for ${axisName}: step=${step} must be > 0`)
           }
@@ -236,29 +242,24 @@ export default class Coverage {
           constraints[axisName] = {start, stop, step}
         }
       }
-      for (let axisName of domain.names) {
-        // domain.names currently has all varying axes
-        // TODO need to rework the naming/structure of domain.names, axes etc.
-        if (typeof domain[axisName] !== 'number' && !(axisName in constraints)) {
-          let len = axisName in domain ? domain[axisName].length : 1
+      for (let axisName of domain.axes.keys()) {
+        if (!(axisName in constraints)) {
+          let len = domain.axes.get(axisName).values.length
           constraints[axisName] = {start: 0, stop: len, step: 1}
         }
       }
       
       // After normalization, all constraints are either arrays or start,stop,step objects.
       // For all start,stop,step objects, it holds that stop > start, step > 0, start >= 0, stop >= 1.
-      // No constraints for non-varying axes exist.
-      // Constraints for varying axes which are empty (no matching domain member) exist (length 1 subset).
+      // For each axis, a constraint exists.
       
       // subset the axis arrays of the domain (immediately + cached)
       let newdomain = shallowcopy(domain)
-      newdomain.shape = domain.shape.slice() // deep copy
-      
+      newdomain.axes = new Map(newdomain.axes)
+      newdomain._rangeShape = domain._rangeShape.slice() // deep copy
+
       for (let axisName of Object.keys(constraints)) {
-        if (!(axisName in domain)) {
-          continue // empty varying axis, nothing to do
-        }
-        let coords = domain[axisName]
+        let coords = domain.get(axisName).values
         let isTypedArray = ArrayBuffer.isView(coords)
         let constraint = constraints[axisName]
         let newcoords
@@ -287,36 +288,37 @@ export default class Coverage {
             }
           }
         }
-        newdomain[axisName] = newcoords
-        newdomain.shape[domain.names.indexOf(axisName)] = newcoords.length
+        let newaxis = shallowcopy(domain.axes.get(axisName))
+        newaxis.values = newcoords
+        newdomain.axes.set(axisName, newaxis)
+        newdomain._rangeShape[domain._rangeAxisOrder.indexOf(axisName)] = newcoords.length
       }
             
       // subset the ndarrays of the ranges (on request)
-      let axisNames = domain.names // names of varying axes in correct order
-      let isSciJSndarray = arr => ['hi', 'lo', 'step'].every(p => p in arr)
-      
       let rangeWrapper = range => {
-        let vals = range.values
+        let ndarr = range._ndarr
         
-        let newvals
-        if (!isSciJSndarray(vals) || Object.keys(constraints).some(ax => Array.isArray(constraints[ax]))) {
-          // Either there is a list of indices for at least one axis,
-          // or the array is not a SciJS ndarray (could be overriden from the outside).
-          // In those cases we cannot directly use SciJS's slicing operations.
+        let newndarr
+        if (Object.keys(constraints).some(ax => Array.isArray(constraints[ax]))) {
+          // There is a list of indices for at least one axis.
+          // In that case we cannot directly use SciJS's slicing operations.
           
           // TODO implement
           throw new Error('not implemented yet')
           
         } else {
           // fast ndarray view
+          let axisNames = domain._rangeAxisOrder
           let los = axisNames.map(name => constraints[name].start)
           let his = axisNames.map(name => constraints[name].stop)
           let steps = axisNames.map(name => constraints[name].steps)
-          newvals = vals.hi(...his).lo(...los).step(...steps)
+          newndarr = ndarr.hi(...his).lo(...los).step(...steps)
         }
         
         let newrange = shallowcopy(range)
-        newrange.values = newvals
+        newrange._ndarr = newndarr
+        newrange.get = createRangeGetFunction(newndarr, domain._rangeAxisOrder)
+        
         return newrange
       }
       
@@ -416,16 +418,14 @@ function transformLanguageMap (obj, key) {
  * no special encoding etc. is left. Transformation is made in-place.
  * 
  * @param {Object} range The original range.
- * @param {Array} shape The array shape of the range values as determined by the domain. 
- * @param {bool} isCategorical
- *    Whether the range represents categories and should be treated as integers.
- *    This hint is currently not used. It may come in handy for typed arrays later.  
+ * @param {Object} domain The CoverageJSON domain object. 
  * @return {Object} The transformed range.
  */
-function transformRange (range, shape, isCategorical) {
+function transformRange (range, domain) {
   if ('__transformDone' in range) return
   
   const values = range.values
+  const targetDataType = range.dataType // 'integer', 'float', 'string'
   const isTyped = ArrayBuffer.isView(values)
   const missingIsEncoded = range.missing === 'nonvalid'
   const hasOffsetFactor = 'offset' in range
@@ -498,10 +498,35 @@ function transformRange (range, shape, isCategorical) {
     }
   }
   
-  range.values = ndarray(vals, shape)  
-  range.__transformDone = true
+  let size = new Map() // axis name -> axis size (value count)
+  for (let axisName of domain.axes.keys()) {
+    size.set(axisName, domain.axes.get(axisName).values.length)
+  }
+  range.size = size
   
+  let ndarr = ndarray(vals, domain._rangeShape)
+  range._ndarr = ndarr
+  range.get = createRangeGetFunction(ndarr, domain._rangeAxisOrder)
+  
+  range.__transformDone = true  
   return range
+}
+
+/**
+ * 
+ * @param axisOrder An array of axis names.
+ * @returns Function
+ */
+function createRangeGetFunction (ndarr, axisOrder) {
+  const axisCount = axisOrder.length
+  return obj => {
+    // TODO optimize this via pre-compilation (benchmark!)
+    let indices = new Array(axisCount)
+    for (let i=0; i < axisCount; i++) {
+      indices[i] = axisOrder[i] in obj ? obj[axisOrder[i]] : 0
+    }
+    return ndarr.get(...indices)
+  }
 }
 
 /**
@@ -513,90 +538,39 @@ function transformRange (range, shape, isCategorical) {
  */
 function transformDomain (domain) {
   if ('__transformDone' in domain) return
-   
-  let type = domain.type
-  let x = axisSize(domain.x) 
-  let y = axisSize(domain.y)
-  let z = axisSize(domain.z)
-  let t = axisSize(domain.t)
   
-  domain.type = PREFIX + type
-  
-  const T = 't'
-  const Z = 'z'
-  const Y = 'y'
-  const X = 'x'
-  const P = 'p'
-  const SEQ = 'seq'
-    
-  let shape
-  let names
-  switch (type) {
-  case 'Grid': 
-    shape = [t,z,y,x]; names = [T,Z,Y,X]; break
-  case 'Profile': 
-    shape = [z]; names = [Z]; break
-  case 'PointSeries':
-    shape = [t]; names = [T]; break
-  case 'Point':
-    shape = [1]; names = [P]; break
-  case 'Trajectory':
-    assert(x === y && y === t, 'Trajectory cannot have x, y, t arrays of different lengths')
-    assert(!Array.isArray(domain.z) || x === z, 'Trajectory z array must be of same length as x, y, t arrays')
-    let seq = domain.sequence.join('')
-    assert((Array.isArray(domain.z) && seq === 'xyzt') || (!Array.isArray(domain.z) && seq === 'xyt'),
-        'Trajectory must have "sequence" property ["x","y","t"] or ["x","y","z","t"]')
-    shape = [x]; names = [SEQ]; break
-  case 'Section':
-    assert(x === y && y === t, 'Section cannot have x, y, t arrays of different lengths')
-    assert(domain.sequence.join('') === 'xyt', 'Section must have "sequence" property ["x","y","t"]')
-    shape = [z,x]; names = [Z,SEQ]; break
-  case 'Polygon':
-    shape = [1]; names = [P]; break
-  case 'PolygonSeries':
-    shape = [t]; names = [T]; break
-  case 'MultiPolygon':
-    shape = [axisSize(domain.polygon)]; names = [P]; break
-  case 'MultiPolygonSeries':
-    shape = [t,axisSize(domain.polygon)]; names = [T,P]; break
-  default:
-    throw new Error('Unknown domain type: ' + type)
+  let profile = domain.profile || 'Domain'
+  if (!profile.startsWith('http')) {
+    profile = PREFIX + profile
   }
+  domain.type = profile
+
+  let axes = new Map() // axis name -> axis object
   
-  domain.shape = shape
-  domain.names = names
+  for (let axisName of Object.keys(domain.axes)) {
+    axes.set(axisName, domain.axes[axisName])
+  }
+  domain.axes = axes
+  
+  domain._rangeAxisOrder = domain.rangeAxisOrder || [...axes.keys()]
+  domain._rangeShape = domain._rangeAxisOrder.map(k => axes.get(k).values.length)
   
   // replace 1D numeric axis arrays with typed arrays for efficiency
-  for (let field of ['x', 'y', 'z', 't']) {
-    if (field in domain) {
-      let axis = domain[field]
-      if (ArrayBuffer.isView(axis)) {
-        // already a typed array
-        continue
+  for (let axis of axes.values()) {
+    if (ArrayBuffer.isView(axis.values)) {
+      // already a typed array
+      continue
+    }
+    if (Array.isArray(axis.values) && typeof axis.values[0] === 'number') {
+      let arr = new Float64Array(axis.values.length)
+      for (let i=0; i < axis.values.length; i++) {
+        arr[i] = axis.values[i]
       }
-      if (Array.isArray(axis) && typeof axis[0] === 'number') {
-        let arr = new Float64Array(axis.length)
-        for (let i=0; i < axis.length; i++) {
-          arr[i] = axis[i]
-        }
-        domain[field] = arr
-      }
+      axis.values = arr
     }
   }
   
   domain.__transformDone = true
   
   return domain
-}
-
-/**
- * 
- * @param {Array|scalar|undefined} axis
- * @returns the elements within the axis or 1 if not defined
- */
-function axisSize(axis) {
-  if (Array.isArray(axis)) {
-    return axis.length
-  }
-  return 1  
 }

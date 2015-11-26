@@ -30,7 +30,7 @@ const EXT = {
  *   and headers are the HTTP response headers. The promise fails if the resource at
  *   the given URL is not a valid JSON or CBOR document. 
  */
-export function load(url, responseType='arraybuffer') {
+export function load (url, responseType='arraybuffer') {
   if (['arraybuffer', 'text'].indexOf(responseType) === -1) {
     throw new Error()
   }

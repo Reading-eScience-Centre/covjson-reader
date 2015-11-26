@@ -7,13 +7,17 @@ const FIXTURES = {
     ProfileURL: 'base/test/fixtures/Coverage-Profile-standalone.covjson',
     CollectionURL: 'base/test/fixtures/CoverageCollection-Point-param_in_collection-standalone.covjson',
     Profile: () => ({
-      "type" : "ProfileCoverage",
+      "type" : "Coverage",
+      "profile" : "VerticalProfileCoverage",
       "domain" : {
-        "type" : "Profile",
-        "x" : -10.1,
-        "y" : -40.2,
-        "z" : [ 5.4562, 8.9282 ],
-        "t" : "2013-01-13T11:12:20Z"
+        "type" : "Domain",
+        "profile" : "VerticalProfile",
+        "axes": {
+          "x": { "values": [-10.1] },
+          "y": { "values": [-40.2] },
+          "z": { "values": [ 5.4562, 8.9282 ] },
+          "t": { "values": ["2013-01-13T11:12:20Z"] }
+        }
       },
       "parameters" : {
         "PSAL": {
@@ -32,18 +36,24 @@ const FIXTURES = {
         "type" : "RangeSet",
         "PSAL" : {
           "type" : "Range",
+          "dataType": "float",
           "values" : [ 43.9599, 43.3599 ]
         }
       }
     }),
     Grid: () => ({
-      "type" : "GridCoverage",
+      "type" : "Coverage",
+      "profile" : "GridCoverage",
       "domain" : {
-        "type" : "Grid",
-        "x" : [-10,-5,0],
-        "y" : [40,50],
-        "z" : [5],
-        "t" : ["2010-01-01T00:12:20Z"]
+        "type" : "Domain",
+        "profile" : "Grid",
+        "axes": {
+          "x": { "values": [-10,-5,0] },
+          "y": { "values": [40,50] },
+          "z": { "values": [5] },
+          "t": { "values": ["2010-01-01T00:12:20Z"] }
+        },
+        "rangeAxisOrder": ["t","z","y","x"]
       },
       "parameters" : {
         "ICEC": {
@@ -62,6 +72,7 @@ const FIXTURES = {
         "type" : "RangeSet",
         "ICEC" : {
           "type" : "Range",
+          "dataType": "float",
           "values" : [ 0.5, 0.6, 0.4, 0.6, 0.2, null ],
           "validMin" : 0,
           "validMax" : 1
@@ -105,8 +116,8 @@ describe('reader methods', () => {
     })
     it('Coverage should have correct properties', () => {
       return read(FIXTURES.Profile()).then(cov => {
-        assert.equal(cov.type, PREFIX + FIXTURES.Profile().type)
-        assert.equal(cov.domainType, PREFIX + FIXTURES.Profile().domain.type)
+        assert.equal(cov.type, PREFIX + FIXTURES.Profile().profile)
+        assert.equal(cov.domainType, PREFIX + FIXTURES.Profile().domain.profile)
         let label = cov.parameters.get('PSAL').observedProperty.label
         assert(label.has('en'), 'en label missing')
         assert.equal(label.get('en'), 'Sea Water Salinity')
@@ -115,6 +126,7 @@ describe('reader methods', () => {
   })
 })
 
+// FIXME fix tests (replace .shape etc. checks)
 describe('Coverage methods', () => {
   describe('#subsetByIndex', () => {
     it('should not modify the original coverage', () => {
