@@ -37,10 +37,10 @@ export {load} from './ajax.js'
  */
 export function read (input) {
   if (typeof input === 'object') {
-    return new Promise(resolve => resolve(transformCovJSON(input)))
+    return Promise.resolve(transformCovJSON(input))
   } else {
     // it's a URL, load it
-    return load(input).then(transformCovJSON)
+    return load(input).then({data,headers} => transformCovJSON(data, headers))
   }
 }
 
@@ -48,9 +48,10 @@ export function read (input) {
  * Transforms a CoverageJSON object into one or more Coverage objects.
  *  
  * @param obj A CoverageJSON object of type Coverage or CoverageCollection.
+ * @param headers An optional array of HTTP headers.
  * @return {Coverage|Array of Coverage}
  */
-function transformCovJSON (obj) {
+function transformCovJSON (obj, headers) {
   checkValidCovJSON(obj)
   if (!endsWith(obj.type, 'Coverage') && obj.type !== 'CoverageCollection') {
     throw new Error('CoverageJSON document must be of *Coverage or CoverageCollection type')
@@ -62,8 +63,18 @@ function transformCovJSON (obj) {
   } else {
     result = new CoverageCollection(obj)
   }
+  
+  addLinkRelations(result, headers)
     
   return result
+}
+
+/**
+ * Scans the supplied HTTP headers for Link relations and adds them
+ * to the .ld property of the Coverage/CoverageCollection.
+ */    
+function addLinkRelations (cov, headers) {
+  // TODO implement
 }
 
 /**

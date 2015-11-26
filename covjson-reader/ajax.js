@@ -26,7 +26,8 @@ const EXT = {
  * 
  * @param {string} url
  * @return {Promise}
- *   The data is the CoverageJSON object. The promise fails if the resource at
+ *   The result is an object {data, headers} where data is the CoverageJSON object
+ *   and headers are the HTTP response headers. The promise fails if the resource at
  *   the given URL is not a valid JSON or CBOR document. 
  */
 export function load(url, responseType='arraybuffer') {
@@ -73,7 +74,15 @@ export function load(url, responseType='arraybuffer') {
         reject(new Error('Unsupported media type: ' + type))
         return
       }
-      resolve(data)
+      // TODO check if these are the initial response headers
+      //  Mozilla says "For multipart requests, this returns the headers
+      //  from the current part of the request, not from the original channel."
+      // -> is chunked transfer encoding a multipart request?
+      let headers = parseResponseHeaders(req.getAllResponseHeaders())
+      resolve({
+        data: data,
+        headers: headers
+      })
     })
     req.addEventListener('error', () => {
       reject(new Error('Network error loading resource at ' + url))
@@ -87,4 +96,33 @@ export function load(url, responseType='arraybuffer') {
       throw e
     }
   })
+}
+
+/**
+ * XmlHttpRequest's getAllResponseHeaders() method returns a string of response
+ * headers according to the format described here:
+ * http://www.w3.org/TR/XMLHttpRequest/#the-getallresponseheaders-method
+ * This method parses that string into a user-friendly key/value pair object.
+ * 
+ * https://gist.github.com/monsur/706839
+ */
+function parseResponseHeaders (headerStr) {
+  // FIXME check if this swallows repeated headers
+  var headers = {};
+  if (!headerStr) {
+    return headers;
+  }
+  var headerPairs = headerStr.split('\u000d\u000a');
+  for (var i = 0; i < headerPairs.length; i++) {
+    var headerPair = headerPairs[i];
+    // Can't use split() here because it does the wrong thing
+    // if the header value has the string ": " in it.
+    var index = headerPair.indexOf('\u003a\u0020');
+    if (index > 0) {
+      var key = headerPair.substring(0, index);
+      var val = headerPair.substring(index + 2);
+      headers[key] = val;
+    }
+  }
+  return headers;
 }
