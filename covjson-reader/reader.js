@@ -40,7 +40,7 @@ export function read (input) {
     return Promise.resolve(transformCovJSON(input))
   } else {
     // it's a URL, load it
-    return load(input).then({data,headers} => transformCovJSON(data, headers))
+    return load(input).then(({data,headers}) => transformCovJSON(data, headers))
   }
 }
 
