@@ -191,9 +191,7 @@ export default class Coverage {
    *   q and r are the quotient and remainder obtained by dividing stop - start by step.
    * @returns {Promise} A Promise object with the subsetted coverage object as result.
    */
-  subsetByIndex (constraints) {
-    // FIXME rework
-    
+  subsetByIndex (constraints) {    
     return this.loadDomain().then(domain => {      
       // check and normalize constraints to simplify code and to allow more optimization
       constraints = shallowcopy(constraints)
@@ -259,7 +257,7 @@ export default class Coverage {
       newdomain._rangeShape = domain._rangeShape.slice() // deep copy
 
       for (let axisName of Object.keys(constraints)) {
-        let coords = domain.get(axisName).values
+        let coords = domain.axes.get(axisName).values
         let isTypedArray = ArrayBuffer.isView(coords)
         let constraint = constraints[axisName]
         let newcoords
@@ -317,6 +315,11 @@ export default class Coverage {
         
         let newrange = shallowcopy(range)
         newrange._ndarr = newndarr
+        newrange.size = new Map()
+        for (let axisName of domain.axes.keys()) {
+          newrange.size.set(axisName, newdomain.axes.get(axisName).values.length)
+        }
+        
         newrange.get = createRangeGetFunction(newndarr, domain._rangeAxisOrder)
         
         return newrange

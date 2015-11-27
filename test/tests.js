@@ -126,16 +126,15 @@ describe('reader methods', () => {
   })
 })
 
-// FIXME fix tests (replace .shape etc. checks)
 describe('Coverage methods', () => {
   describe('#subsetByIndex', () => {
     it('should not modify the original coverage', () => {
       return read(FIXTURES.Profile()).then(cov => {
         return cov.subsetByIndex({z: 0}).then(subset => {
           return Promise.all([cov.loadDomain(), cov.loadRange('PSAL')]).then(([domain,range]) => {
-            assert.deepEqual(domain.shape, [2])
-            assert.equal(domain.z.length, 2)
-            assert.deepEqual(range.values.shape, [2])
+            assert.strictEqual(domain.axes.size, 4)
+            assert.strictEqual(domain.axes.get('z').values.length, 2)
+            assert.strictEqual(range.size.get('z'), 2)
           })
         })
       })
@@ -145,10 +144,9 @@ describe('Coverage methods', () => {
       return read(FIXTURES.Profile()).then(cov => {
         return cov.subsetByIndex({z: 1}).then(subset => {
           return Promise.all([subset.loadDomain(), subset.loadRange('PSAL')]).then(([domain,range]) => {
-            assert.deepEqual(domain.shape, [1])
-            assert.strictEqual(domain.z.length, 1)
-            assert.deepEqual(range.values.shape, [1])
-            assert.strictEqual(range.values.get(0), vals[1])
+            assert.strictEqual(domain.axes.get('z').values.length, 1)
+            assert.strictEqual(range.size.get('z'), 1)
+            assert.strictEqual(range.get({z: 0}), vals[1])
           })
         })
       })
@@ -157,10 +155,9 @@ describe('Coverage methods', () => {
       return read(FIXTURES.Profile()).then(cov => {
         return cov.subsetByIndex({z: {start: 0, stop: 1}}).then(subset => {
           return Promise.all([subset.loadDomain(), subset.loadRange('PSAL')]).then(([domain,range]) => {
-            assert.deepEqual(domain.shape, [1])
-            assert.strictEqual(domain.z.length, 1)
-            assert.deepEqual(range.values.shape, [1])
-            assert.strictEqual(range.values.get(0), vals[0])
+            assert.strictEqual(domain.axes.get('z').values.length, 1)
+            assert.strictEqual(range.size.get('z'), 1)
+            assert.strictEqual(range.get({z: 0}), vals[0])
           })
         })
       })
@@ -169,10 +166,9 @@ describe('Coverage methods', () => {
       return read(FIXTURES.Profile()).then(cov => {
         return cov.subsetByIndex({z: [0]}).then(subset => {
           return Promise.all([subset.loadDomain(), subset.loadRange('PSAL')]).then(([domain,range]) => {
-            assert.deepEqual(domain.shape, [1])
-            assert.strictEqual(domain.z.length, 1)
-            assert.deepEqual(range.values.shape, [1])
-            assert.strictEqual(range.values.get(0), vals[0])
+            assert.strictEqual(domain.axes.get('z').values.length, 1)
+            assert.strictEqual(range.size.get('z'), 1)
+            assert.strictEqual(range.get({z: 0}), vals[0])
           })
         })
       })
@@ -181,11 +177,10 @@ describe('Coverage methods', () => {
       return read(FIXTURES.Profile()).then(cov => {
         return cov.subsetByIndex({z: [0,1]}).then(subset => {
           return Promise.all([subset.loadDomain(), subset.loadRange('PSAL')]).then(([domain,range]) => {
-            assert.deepEqual(domain.shape, [2])
-            assert.strictEqual(domain.z.length, 2)
-            assert.deepEqual(range.values.shape, [2])
-            assert.strictEqual(range.values.get(0), vals[0])
-            assert.strictEqual(range.values.get(1), vals[1])
+            assert.strictEqual(domain.axes.get('z').values.length, 2)
+            assert.strictEqual(range.size.get('z'), 2)
+            assert.strictEqual(range.get({z: 0}), vals[0])
+            assert.strictEqual(range.get({z: 1}), vals[1])
           })
         })
       })
@@ -196,14 +191,17 @@ describe('Coverage methods', () => {
       return read(FIXTURES.Grid()).then(cov => {
         return cov.subsetByIndex({x: [1,2], y: 1}).then(subset => {
           return Promise.all([subset.loadDomain(), subset.loadRange('ICEC')]).then(([domain,range]) => {
-            assert.deepEqual(domain.x, dom.x.slice(1))
-            assert.deepEqual(domain.y, dom.y.slice(1))
-            assert.deepEqual(domain.z, dom.z)
-            assert.deepEqual(domain.t, dom.t)
-            assert.deepEqual(domain.shape, [1,1,1,2])
-            assert.deepEqual(range.values.shape, [1,1,1,2])
-            assert.strictEqual(range.values.get(0,0,0,0), vals[4])
-            assert.strictEqual(range.values.get(0,0,0,1), vals[5])
+            assert.deepEqual(domain.axes.get('x').values, dom.axes.x.values.slice(1))
+            assert.deepEqual(domain.axes.get('y').values, dom.axes.y.values.slice(1))
+            assert.deepEqual(domain.axes.get('z').values, dom.axes.z.values)
+            assert.deepEqual(domain.axes.get('t').values, dom.axes.t.values)
+            assert.strictEqual(range.size.size, 4)
+            assert.strictEqual(range.size.get('x'), 2)
+            assert.strictEqual(range.size.get('y'), 1)
+            assert.strictEqual(range.size.get('z'), 1)
+            assert.strictEqual(range.size.get('t'), 1)
+            assert.strictEqual(range.get({x: 0, y: 0, t: 0, z: 0}), vals[4])
+            assert.strictEqual(range.get({x: 1, y: 0, t: 0, z: 0}), vals[5])
           })
         })
       })
@@ -214,14 +212,17 @@ describe('Coverage methods', () => {
       return read(FIXTURES.Grid()).then(cov => {
         return cov.subsetByIndex({x: {start: 1, stop: 3}, y: 1}).then(subset => {
           return Promise.all([subset.loadDomain(), subset.loadRange('ICEC')]).then(([domain,range]) => {
-            assert.deepEqual(domain.x, dom.x.slice(1))
-            assert.deepEqual(domain.y, dom.y.slice(1))
-            assert.deepEqual(domain.z, dom.z)
-            assert.deepEqual(domain.t, dom.t)
-            assert.deepEqual(domain.shape, [1,1,1,2])
-            assert.deepEqual(range.values.shape, [1,1,1,2])
-            assert.strictEqual(range.values.get(0,0,0,0), vals[4])
-            assert.strictEqual(range.values.get(0,0,0,1), vals[5])
+            assert.deepEqual(domain.axes.get('x').values, dom.axes.x.values.slice(1))
+            assert.deepEqual(domain.axes.get('y').values, dom.axes.y.values.slice(1))
+            assert.deepEqual(domain.axes.get('z').values, dom.axes.z.values)
+            assert.deepEqual(domain.axes.get('t').values, dom.axes.t.values)
+            assert.strictEqual(range.size.size, 4)
+            assert.strictEqual(range.size.get('x'), 2)
+            assert.strictEqual(range.size.get('y'), 1)
+            assert.strictEqual(range.size.get('z'), 1)
+            assert.strictEqual(range.size.get('t'), 1)
+            assert.strictEqual(range.get({x: 0, y: 0, t: 0, z: 0}), vals[4])
+            assert.strictEqual(range.get({x: 1, y: 0, t: 0, z: 0}), vals[5])
           })
         })
       })

@@ -1,6 +1,6 @@
 import Coverage from './Coverage.js'
 import CoverageCollection from './CoverageCollection.js'
-import {endsWith, assert} from './util.js'
+import {assert} from './util.js'
 import {load} from './ajax.js'
 
 export {load} from './ajax.js'
