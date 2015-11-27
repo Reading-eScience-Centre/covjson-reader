@@ -315,9 +315,9 @@ export default class Coverage {
         
         let newrange = shallowcopy(range)
         newrange._ndarr = newndarr
-        newrange.size = new Map()
+        newrange.shape = new Map()
         for (let axisName of domain.axes.keys()) {
-          newrange.size.set(axisName, newdomain.axes.get(axisName).values.length)
+          newrange.shape.set(axisName, newdomain.axes.get(axisName).values.length)
         }
         
         newrange.get = createRangeGetFunction(newndarr, domain._rangeAxisOrder)
@@ -501,11 +501,11 @@ function transformRange (range, domain) {
     }
   }
   
-  let size = new Map() // axis name -> axis size (value count)
+  let shape = new Map() // axis name -> axis size (value count)
   for (let axisName of domain.axes.keys()) {
-    size.set(axisName, domain.axes.get(axisName).values.length)
+    shape.set(axisName, domain.axes.get(axisName).values.length)
   }
-  range.size = size
+  range.shape = shape
   
   let ndarr = ndarray(vals, domain._rangeShape)
   range._ndarr = ndarr
