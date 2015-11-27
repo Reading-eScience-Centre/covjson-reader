@@ -34,7 +34,7 @@ export default class Coverage {
     }
     
     let profile = this._covjson.profile || 'Coverage'
-    if (!profile.startsWith('http')) {
+    if (profile.substr(0,4) !== 'http') {
       profile = PREFIX + profile
     }
     
@@ -48,7 +48,7 @@ export default class Coverage {
       domainProfile = this._covjson.domain.profile || 'Domain'
     }
 
-    if (!domainProfile.startsWith('http')) {
+    if (domainProfile.substr(0,4) !== 'http') {
       domainProfile = PREFIX + domainProfile
     }
     
@@ -543,7 +543,7 @@ function transformDomain (domain) {
   if ('__transformDone' in domain) return
   
   let profile = domain.profile || 'Domain'
-  if (!profile.startsWith('http')) {
+  if (profile.substr(0,4) !== 'http') {
     profile = PREFIX + profile
   }
   domain.type = profile
