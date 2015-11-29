@@ -183,7 +183,9 @@ export default class Coverage {
    *   Every property of it refers to an axis name as defined in Domain.names,
    *   and its value must either be an integer, an array of integers,
    *   or an object with start, stop, and optionally step (defaults to 1) properties
-   *   whose values are integers. All integers must be non-negative, step must not be zero.
+   *   whose values are integers.
+   *   Properties that have the values undefined or null are ignored. 
+   *   All integers must be non-negative, step must not be zero.
    *   A simple integer constrains the axis to the given index, an array to a list of indices,
    *   and a start/stop/step object to a range of indices:
    *   If step=1, this includes all indices starting at start and ending at stop (exclusive);
@@ -208,6 +210,10 @@ export default class Coverage {
       for (let axisName in constraints) {
         if (!domain.axes.has(axisName)) {
           // TODO clarify this behaviour in the JS API spec
+          delete constraints[axisName]
+          continue
+        }
+        if (constraints[axisName] === undefined || constraints[axisName] === null) {
           delete constraints[axisName]
           continue
         }
