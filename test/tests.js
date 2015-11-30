@@ -128,7 +128,8 @@ describe('reader methods', () => {
       return read(FIXTURES.GridCategoricalURL).then(cov => {
         let param = cov.parameters.get('LC')
         let cats = param.observedProperty.categories
-        let grass = cats.find(c => c.id === 'http://.../landcover1/categories/grass')
+        // cats.find(c => c.id === 'http://.../landcover1/categories/grass')
+        let grass = cats[0] // IE11 compatible
         assert(grass.label.has('en'), 'en label missing')
         assert.equal(grass.label.get('en'), 'Grass')
         assert(grass.description.has('en'), 'en description missing')
