@@ -6,6 +6,7 @@ import {PREFIX} from 'covjson-reader/util'
 const FIXTURES = {
     ProfileURL: 'base/test/fixtures/Coverage-Profile-standalone.covjson',
     CollectionURL: 'base/test/fixtures/CoverageCollection-Point-param_in_collection-standalone.covjson',
+    GridCategoricalURL: 'base/test/fixtures/Coverage-Grid-categorical-standalone.covjson',
     Profile: () => ({
       "type" : "Coverage",
       "profile" : "VerticalProfileCoverage",
@@ -121,6 +122,18 @@ describe('reader methods', () => {
         let label = cov.parameters.get('PSAL').observedProperty.label
         assert(label.has('en'), 'en label missing')
         assert.equal(label.get('en'), 'Sea Water Salinity')
+      })
+    })
+    it('Categorical coverage should have correct properties', () => {
+      return read(FIXTURES.GridCategoricalURL).then(cov => {
+        let param = cov.parameters.get('LC')
+        let cats = param.observedProperty.categories
+        let grass = cats.find(c => c.id === 'http://.../landcover1/categories/grass')
+        assert(grass.label.has('en'), 'en label missing')
+        assert.equal(grass.label.get('en'), 'Grass')
+        assert(grass.description.has('en'), 'en description missing')
+        assert.equal(grass.description.get('en'), 'Very green grass.')
+        assert.deepEqual(param.categoryEncoding.get(grass.id), [1])
       })
     })
   })

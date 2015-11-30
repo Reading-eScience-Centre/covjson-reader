@@ -409,6 +409,17 @@ function transformParameter (params, key) {
   for (let entry of maps) {
     transformLanguageMap(entry[0], entry[1])
   }
+  if (param.categoryEncoding) {
+    let map = new Map()
+    for (let category of Object.keys(param.categoryEncoding)) {
+      let vals = param.categoryEncoding[category]
+      if (!Array.isArray(vals)) {
+        vals = [vals]
+      }
+      map.set(category, vals)
+    }
+    param.categoryEncoding = map
+  }
 }
 
 function transformLanguageMap (obj, key) {
