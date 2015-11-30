@@ -50,7 +50,7 @@ const FIXTURES = {
         "profile" : "Grid",
         "axes": {
           "x": { "values": [-10,-5,0] },
-          "y": { "values": [40,50] },
+          "y": { "values": [40,50] }, 
           "z": { "values": [5] },
           "t": { "values": ["2010-01-01T00:12:20Z"] }
         },
@@ -77,6 +77,42 @@ const FIXTURES = {
           "values" : [ 0.5, 0.6, 0.4, 0.6, 0.2, null ],
           "validMin" : 0,
           "validMax" : 1
+        }
+      }
+    }),
+    GridRegular: () => ({
+      "type" : "Coverage",
+      "profile" : "GridCoverage",
+      "domain" : {
+        "type" : "Domain",
+        "profile" : "Grid",
+        "axes": {
+          "x": { "values": [-10,-5,0] },
+          "y": { "start": 40, "stop": 50, "num": 2 },
+          "z": { "values": [5] },
+          "t": { "values": ["2010-01-01T00:12:20Z"] }
+        },
+        "rangeAxisOrder": ["t","z","y","x"]
+      },
+      "parameters" : {
+        "ICEC": {
+          "type" : "Parameter",
+          "unit" : {
+            "symbol" : "fraction"
+          },
+          "observedProperty" : {
+            "label" : {
+              "en": "Sea Ice Concentration"
+            }
+          }
+        }
+      },
+      "ranges" : {
+        "type" : "RangeSet",
+        "ICEC" : {
+          "type" : "Range",
+          "dataType": "float",
+          "values" : [ 0.5, 0.6, 0.4, 0.6, 0.2, null ]
         }
       }
     }),
@@ -135,6 +171,13 @@ describe('reader methods', () => {
         assert(grass.description.has('en'), 'en description missing')
         assert.equal(grass.description.get('en'), 'Very green grass.')
         assert.deepEqual(param.categoryEncoding.get(grass.id), [1])
+      })
+    })
+    it('Regular axis in coverage should expand correctly', () => {
+      return read(FIXTURES.GridRegular()).then(cov => {
+        return cov.loadDomain().then(domain => {
+          assert.deepEqual(domain.axes.get('y').values, [40, 50])
+        })
       })
     })
   })

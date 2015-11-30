@@ -583,11 +583,30 @@ function transformDomain (domain) {
   }
   domain.axes = axes
   
-  domain._rangeAxisOrder = domain.rangeAxisOrder || [...axes.keys()]
-  domain._rangeShape = domain._rangeAxisOrder.map(k => axes.get(k).values.length)
-  
+  // expand start/stop/num regular axes
   // replace 1D numeric axis arrays with typed arrays for efficiency
   for (let axis of axes.values()) {
+    if ('start' in axis && 'stop' in axis && 'num' in axis) {
+      let arr = new Float64Array(axis.num)
+      let step
+      if (axis.num === 1) {
+        if (axis.start !== axis.stop) {
+          throw new Error('regular axis of length 1 must have equal start/stop values')
+        }
+        step = 0
+      } else {
+        step = (axis.stop - axis.start) / (axis.num - 1)
+      }
+      for (let i=0; i < axis.num; i++) {
+        arr[i] = axis.start + i * step
+      }
+      
+      axis.values = arr
+      delete axis.start
+      delete axis.stop
+      delete axis.num
+    }
+    
     if (ArrayBuffer.isView(axis.values)) {
       // already a typed array
       continue
@@ -600,6 +619,9 @@ function transformDomain (domain) {
       axis.values = arr
     }
   }
+  
+  domain._rangeAxisOrder = domain.rangeAxisOrder || [...axes.keys()]
+  domain._rangeShape = domain._rangeAxisOrder.map(k => axes.get(k).values.length)
   
   domain.__transformDone = true
   
