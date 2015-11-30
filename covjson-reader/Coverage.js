@@ -527,15 +527,26 @@ function transformRange (range, domain) {
  * @returns Function
  */
 function createRangeGetFunction (ndarr, axisOrder) {
+  axisOrder = axisOrder.slice() // help the JIT (possibly..)
   const axisCount = axisOrder.length
   return obj => {
-    // TODO optimize this via pre-compilation (benchmark!)
     let indices = new Array(axisCount)
     for (let i=0; i < axisCount; i++) {
       indices[i] = axisOrder[i] in obj ? obj[axisOrder[i]] : 0
     }
     return ndarr.get(...indices)
   }
+}
+
+// TODO benchmark this against naive function above
+function createRangeGetFunctionPreCompiled (ndarr, axisOrder) {
+  let ndargs = ''
+  for (let i=0; i < axisOrder.length; i++) {
+    if (ndargs) ndargs += ','
+    ndargs += `'${axisOrder[i]}' in obj ? obj['${axisOrder[i]}'] : 0`
+  }
+  let fn = new Function('ndarr', 'obj', `return ndarr.get(${ndargs})`)
+  return fn.bind(undefined, ndarr)
 }
 
 /**
