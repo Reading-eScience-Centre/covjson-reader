@@ -626,6 +626,11 @@ function transformDomain (domain) {
     }
   }
   
+  let needsRangeAxisOrder = [...axes.values()].filter(axis => axis.values.length > 1).length > 1
+  if (needsRangeAxisOrder && !domain.rangeAxisOrder) {
+    throw new Error('Domain requires "rangeAxisOrder"')
+  }
+  
   domain._rangeAxisOrder = domain.rangeAxisOrder || [...axes.keys()]
   domain._rangeShape = domain._rangeAxisOrder.map(k => axes.get(k).values.length)
   
