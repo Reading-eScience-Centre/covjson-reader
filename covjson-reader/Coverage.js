@@ -544,6 +544,21 @@ function transformRange (range, domain) {
  * @returns Function
  */
 function createRangeGetFunction (ndarr, axisOrder) {
+  // see below for slower reference version
+  let ndargs = ''
+  for (let i=0; i < axisOrder.length; i++) {
+    if (ndargs) ndargs += ','
+    ndargs += `'${axisOrder[i]}' in obj ? obj['${axisOrder[i]}'] : 0`
+  }
+  let fn = new Function('ndarr', 'obj', `return ndarr.get(${ndargs})`)
+  return fn.bind(undefined, ndarr)
+}
+
+/*
+ * Reference version of createRangeGetFunction().
+ * Around 50% slower compared to precompiled version.
+ * 
+function createRangeGetFunction (ndarr, axisOrder) {
   axisOrder = axisOrder.slice() // help the JIT (possibly..)
   const axisCount = axisOrder.length
   return obj => {
@@ -554,17 +569,7 @@ function createRangeGetFunction (ndarr, axisOrder) {
     return ndarr.get(...indices)
   }
 }
-
-// TODO benchmark this against naive function above
-function createRangeGetFunctionPreCompiled (ndarr, axisOrder) {
-  let ndargs = ''
-  for (let i=0; i < axisOrder.length; i++) {
-    if (ndargs) ndargs += ','
-    ndargs += `'${axisOrder[i]}' in obj ? obj['${axisOrder[i]}'] : 0`
-  }
-  let fn = new Function('ndarr', 'obj', `return ndarr.get(${ndargs})`)
-  return fn.bind(undefined, ndarr)
-}
+*/
 
 /**
  * Transforms a CoverageJSON domain to the Coverage API format.
