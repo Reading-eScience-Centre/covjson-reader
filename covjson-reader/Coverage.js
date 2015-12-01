@@ -85,10 +85,13 @@ export default class Coverage {
     if (this._domainPromise) return this._domainPromise
     let promise
     if (typeof domainOrUrl === 'object') {
-      transformDomain(domainOrUrl)
-      promise = Promise.resolve(domainOrUrl)
-    } else { // URL
-      promise = load(domainOrUrl).then(domain => {
+      let domain = domainOrUrl
+      transformDomain(domain)
+      promise = Promise.resolve(domain)
+    } else {
+      let url = domainOrUrl
+      promise = load(url).then(result => {
+        let domain = result.data
         transformDomain(domain)
         this._covjson.domain = domain
         return domain
@@ -122,10 +125,13 @@ export default class Coverage {
     return this.loadDomain().then(domain => {
       let rangeOrUrl = this._covjson.ranges[paramKey]
       if (typeof rangeOrUrl === 'object') {
-        transformRange(rangeOrUrl, domain)
-        return Promise.resolve(rangeOrUrl)
-      } else { // URL
-        return load(rangeOrUrl).then(range => {
+        let range = rangeOrUrl
+        transformRange(range, domain)
+        return Promise.resolve(range)
+      } else {
+        let url = rangeOrUrl
+        return load(url).then(result => {
+          let range = result.data
           transformRange(range, domain)
           if (this.cacheRanges) {
             this._covjson.ranges[paramKey] = range
