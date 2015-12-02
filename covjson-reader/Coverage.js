@@ -350,6 +350,7 @@ export default class Coverage {
       newcov.loadDomain = () => Promise.resolve(newdomain)
       newcov.loadRange = loadRange
       newcov.loadRanges = loadRanges
+      // FIXME subsetByIndex does not exist in the subsetted coverage
       return newcov
     })
   }
