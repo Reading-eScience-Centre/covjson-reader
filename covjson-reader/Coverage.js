@@ -556,7 +556,7 @@ function createRangeGetFunction (ndarr, axisOrder) {
 
 /*
  * Reference version of createRangeGetFunction().
- * Around 50% slower compared to precompiled version.
+ * Around 50% slower (on Chrome 46) compared to precompiled version.
  * 
 function createRangeGetFunction (ndarr, axisOrder) {
   axisOrder = axisOrder.slice() // help the JIT (possibly..)
