@@ -62,14 +62,18 @@ export function load (url, responseType='arraybuffer') {
         data = cbor.decode(arrayBuffer)
       } else if ([MEDIA.COVJSON, MEDIA.JSONLD, MEDIA.JSON].indexOf(type) > -1) {
         if (responseType === 'arraybuffer') {
-          // load again (from cache) to get correct response type
-          // Note we use 'text' and not 'json' as we want to throw parsing errors.
-          // With 'json', the response is just 'null'.
-          reject({responseType: 'text'})
-          return
-        }
-        data = JSON.parse(req.response)
-        
+          if (window.TextDecoder) {
+            data = JSON.parse(new TextDecoder().decode(new DataView(req.response)))
+          } else {
+            // load again (from cache) to get correct response type
+            // Note we use 'text' and not 'json' as we want to throw parsing errors.
+            // With 'json', the response is just 'null'.
+            reject({responseType: 'text'})
+            return
+          }
+        } else {
+          data = JSON.parse(req.response)
+        }        
       } else {
         reject(new Error('Unsupported media type: ' + type))
         return
