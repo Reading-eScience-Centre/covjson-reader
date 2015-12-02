@@ -291,7 +291,7 @@ export default class Coverage {
           } else {
             let q = Math.trunc((stop - start) / step)
             let r = (stop - start) % step
-            let len = start + (q + r - 1)
+            let len = q + r
             newcoords = new coords.constructor(len) // array or typed array
             for (let i=start, j=0; i < stop; i += step, j++) {
               newcoords[j] = coords[i]
@@ -321,7 +321,7 @@ export default class Coverage {
           let axisNames = domain._rangeAxisOrder
           let los = axisNames.map(name => constraints[name].start)
           let his = axisNames.map(name => constraints[name].stop)
-          let steps = axisNames.map(name => constraints[name].steps)
+          let steps = axisNames.map(name => constraints[name].step)
           newndarr = ndarr.hi(...his).lo(...los).step(...steps)
         }
         
