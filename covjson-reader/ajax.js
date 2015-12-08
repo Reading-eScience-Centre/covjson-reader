@@ -59,11 +59,15 @@ export function load (url, responseType='arraybuffer') {
       let data
       if (type === MEDIA.COVCBOR) {
         var arrayBuffer = req.response
+        let t0 = new Date()
         data = cbor.decode(arrayBuffer)
+        console.log('CBOR decoding: ' + (new Date()-t0) + 'ms')
       } else if ([MEDIA.COVJSON, MEDIA.JSONLD, MEDIA.JSON].indexOf(type) > -1) {
         if (responseType === 'arraybuffer') {
           if (window.TextDecoder) {
+            let t0 = new Date()
             data = JSON.parse(new TextDecoder().decode(new DataView(req.response)))
+            console.log('JSON decoding: ' + (new Date()-t0) + 'ms')
           } else {
             // load again (from cache) to get correct response type
             // Note we use 'text' and not 'json' as we want to throw parsing errors.
@@ -72,7 +76,9 @@ export function load (url, responseType='arraybuffer') {
             return
           }
         } else {
+          let t0 = new Date()
           data = JSON.parse(req.response)
+          console.log('JSON decoding (slow path): ' + (new Date()-t0) + 'ms')
         }        
       } else {
         reject(new Error('Unsupported media type: ' + type))
