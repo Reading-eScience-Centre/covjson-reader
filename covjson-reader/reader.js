@@ -37,7 +37,7 @@ export {load} from './ajax.js'
  */
 export function read (input) {
   if (typeof input === 'object') {
-    return Promise.resolve(transformCovJSON(input))
+    return Promise.resolve().then(() => transformCovJSON(input))
   } else {
     // it's a URL, load it
     return load(input).then(({data,headers}) => transformCovJSON(data, headers))
