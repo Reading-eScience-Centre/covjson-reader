@@ -41,58 +41,62 @@ export function load (url, responseType='arraybuffer') {
     req.setRequestHeader('Accept', ACCEPT)
 
     req.addEventListener('load', () => {
-      if (!(req.status >= 200 && req.status < 300 || req.status === 304)) { // as in jquery
-        reject(new Error('Resource "' + url + '" not found, HTTP status code: ' + req.status))
-        return
-      }
-      
-      var type = req.getResponseHeader('Content-Type')
-      
-      if (type.indexOf(MEDIA.OCTETSTREAM) === 0 || type.indexOf(MEDIA.TEXT) === 0) {
-        // wrong media type, try to infer type from extension
-        if (endsWith(url, EXT.COVJSON)) {
-          type = MEDIA.COVJSON
-        } else if (endsWith(url, EXT.COVCBOR)) {
-          type = MEDIA.COVCBOR
-        } 
-      }
-      let data
-      if (type === MEDIA.COVCBOR) {
-        var arrayBuffer = req.response
-        let t0 = new Date()
-        data = cbor.decode(arrayBuffer)
-        console.log('CBOR decoding: ' + (new Date()-t0) + 'ms')
-      } else if ([MEDIA.COVJSON, MEDIA.JSONLD, MEDIA.JSON].indexOf(type) > -1) {
-        if (responseType === 'arraybuffer') {
-          if (window.TextDecoder) {
-            let t0 = new Date()
-            data = JSON.parse(new TextDecoder().decode(new DataView(req.response)))
-            console.log('JSON decoding: ' + (new Date()-t0) + 'ms')
-          } else {
-            // load again (from cache) to get correct response type
-            // Note we use 'text' and not 'json' as we want to throw parsing errors.
-            // With 'json', the response is just 'null'.
-            reject({responseType: 'text'})
-            return
-          }
-        } else {
+      try {
+        if (!(req.status >= 200 && req.status < 300 || req.status === 304)) { // as in jquery
+          reject(new Error('Resource "' + url + '" not found, HTTP status code: ' + req.status))
+          return
+        }
+        
+        var type = req.getResponseHeader('Content-Type')
+        
+        if (type.indexOf(MEDIA.OCTETSTREAM) === 0 || type.indexOf(MEDIA.TEXT) === 0) {
+          // wrong media type, try to infer type from extension
+          if (endsWith(url, EXT.COVJSON)) {
+            type = MEDIA.COVJSON
+          } else if (endsWith(url, EXT.COVCBOR)) {
+            type = MEDIA.COVCBOR
+          } 
+        }
+        let data
+        if (type === MEDIA.COVCBOR) {
+          var arrayBuffer = req.response
           let t0 = new Date()
-          data = JSON.parse(req.response)
-          console.log('JSON decoding (slow path): ' + (new Date()-t0) + 'ms')
-        }        
-      } else {
-        reject(new Error('Unsupported media type: ' + type))
-        return
+          data = cbor.decode(arrayBuffer)
+          console.log('CBOR decoding: ' + (new Date()-t0) + 'ms')
+        } else if ([MEDIA.COVJSON, MEDIA.JSONLD, MEDIA.JSON].indexOf(type) > -1) {
+          if (responseType === 'arraybuffer') {
+            if (window.TextDecoder) {
+              let t0 = new Date()
+              data = JSON.parse(new TextDecoder().decode(new DataView(req.response)))
+              console.log('JSON decoding: ' + (new Date()-t0) + 'ms')
+            } else {
+              // load again (from cache) to get correct response type
+              // Note we use 'text' and not 'json' as we want to throw parsing errors.
+              // With 'json', the response is just 'null'.
+              reject({responseType: 'text'})
+              return
+            }
+          } else {
+            let t0 = new Date()
+            data = JSON.parse(req.response)
+            console.log('JSON decoding (slow path): ' + (new Date()-t0) + 'ms')
+          }        
+        } else {
+          reject(new Error('Unsupported media type: ' + type))
+          return
+        }
+        // TODO check if these are the initial response headers
+        //  Mozilla says "For multipart requests, this returns the headers
+        //  from the current part of the request, not from the original channel."
+        // -> is chunked transfer encoding a multipart request?
+        let headers = parseResponseHeaders(req.getAllResponseHeaders())
+        resolve({
+          data: data,
+          headers: headers
+        })
+      } catch (e) {
+        reject(e)
       }
-      // TODO check if these are the initial response headers
-      //  Mozilla says "For multipart requests, this returns the headers
-      //  from the current part of the request, not from the original channel."
-      // -> is chunked transfer encoding a multipart request?
-      let headers = parseResponseHeaders(req.getAllResponseHeaders())
-      resolve({
-        data: data,
-        headers: headers
-      })
     })
     req.addEventListener('error', () => {
       reject(new Error('Network error loading resource at ' + url))
