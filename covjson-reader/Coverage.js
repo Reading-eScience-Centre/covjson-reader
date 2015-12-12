@@ -551,8 +551,8 @@ function createRangeGetFunction (ndarr, axisOrder) {
     if (ndargs) ndargs += ','
     ndargs += `'${axisOrder[i]}' in obj ? obj['${axisOrder[i]}'] : 0`
   }
-  let fn = new Function('ndarr', 'obj', `return ndarr.get(${ndargs})`)
-  return fn.bind(undefined, ndarr)
+  let fn = new Function('ndarr', `return function ndarrget (obj) { return ndarr.get(${ndargs}) }`)(ndarr)
+  return fn
 }
 
 /*
