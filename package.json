@@ -34,7 +34,6 @@
   "standard": {
     "parser": "babel-eslint",
     "ignore": [
-      "config.js",
       "karma.conf.js",
       "karma.conf-ci.js"
     ]
