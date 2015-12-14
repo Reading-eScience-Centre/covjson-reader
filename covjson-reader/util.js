@@ -8,7 +8,7 @@ export function assert (condition, message) {
 }
 
 export function shallowcopy (obj) {
-  let copy = {}
+  let copy = Object.create(Object.getPrototypeOf(obj))
   for (let prop in obj) {
     copy[prop] = obj[prop]
   }

@@ -196,6 +196,13 @@ describe('Coverage methods', () => {
         })
       })
     })
+    it('should return a subsettable coverage again', () => {
+      return read(FIXTURES.Profile()).then(cov => {
+        return cov.subsetByIndex({z: 0}).then(subset => {
+          return subset.subsetByIndex({z: 0})
+        })
+      })
+    })
     let vals = FIXTURES.Profile().ranges.PSAL.values
     it('should subset correctly, variant 1', () => {
       return read(FIXTURES.Profile()).then(cov => {
