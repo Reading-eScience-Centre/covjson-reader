@@ -85,10 +85,6 @@ export function load (url, responseType='arraybuffer') {
           reject(new Error('Unsupported media type: ' + type))
           return
         }
-        // TODO check if these are the initial response headers
-        //  Mozilla says "For multipart requests, this returns the headers
-        //  from the current part of the request, not from the original channel."
-        // -> is chunked transfer encoding a multipart request?
         let headers = parseResponseHeaders(req.getAllResponseHeaders())
         resolve({
           data: data,
