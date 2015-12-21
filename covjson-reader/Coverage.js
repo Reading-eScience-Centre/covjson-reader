@@ -56,9 +56,11 @@ export default class Coverage {
     this.domainType = domainProfile
     
     /**
-     * A bounding box array with elements [westLon, southLat, eastLon, northLat].
+     * A bounding box object with members "box" and "srs".
      * 
-     * @type {Array|undefined}
+     * @type {object|undefined}
+     * @property {array} bbox.box The bounding box coordinates [minx,miny,maxx,maxy].
+     * @property {string} bbox.srs The URI of the spatial CRS.
      */
     this.bbox = this._covjson.bbox
   }
