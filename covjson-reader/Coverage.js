@@ -350,6 +350,9 @@ export default class Coverage {
       newcov.loadDomain = () => Promise.resolve(newdomain)
       newcov.loadRange = loadRange
       newcov.loadRanges = loadRanges
+      // FIXME what about .ld?
+      // -> we don't know if all LD info is valid for the subsetted cov as well
+      //  e.g. index-based subsetting API info would be invalid
       return newcov
     })
   }
