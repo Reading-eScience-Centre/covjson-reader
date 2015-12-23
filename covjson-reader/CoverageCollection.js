@@ -1,4 +1,4 @@
-import Coverage from './Coverage.js'
+import {default as Coverage, transformDomain} from './Coverage.js'
 import {shallowcopy} from './util.js'
 
 export default class CoverageCollection {
@@ -23,6 +23,14 @@ export default class CoverageCollection {
     if (covjson.parameters) {
       this.parameters = covjson.parameters
     }
+    if (covjson.domainTemplate) {
+      transformDomain(covjson.domainTemplate)
+      this.domainTemplate = covjson.domainTemplate
+    }
+  }
+  
+  query () {
+    return new CollectionQuery(this)
   }
   
   _exposeLd (covjson) {
@@ -36,5 +44,131 @@ export default class CoverageCollection {
     let copy = shallowcopy(covjson)
     delete copy.coverages
     this.ld = JSON.parse(JSON.stringify(copy))
+  }
+}
+
+class CollectionQuery {
+  constructor (collection) {
+    this._collection = collection
+    this._filter = {}
+    this._subset = {}
+  }
+  
+  /**
+   * Matching mode: intersect
+   * 
+   * Supports ISO8601 date string axes.
+   * All other string-type axes are compared alphabetically.
+   * 
+   * @example
+   * collection.query().filter({
+   *   't': {start: '2015-01-01T01:00:00', stop: '2015-01-01T02:00:00'}
+   * }).execute().then(filteredCollection => {
+   *   console.log(filteredCollection.coverages.length)
+   * })
+   */
+  filter (spec) {
+    mergeInto(spec, this._filter)
+    return this
+  }
+  
+  /**
+   * Subset coverages by domain values.
+   * 
+   * Equivalent to calling coverage.subsetByValue(spec) on each
+   * coverage in the collection.
+   */
+  subset (spec) {
+    mergeInto(spec, this._subset)
+    return this
+  }
+  
+  embed (spec) {
+    // no-op, not supported
+    return this
+  }
+  
+  /**
+   * Applies the query operators and returns
+   * a Promise that succeeds with a new CoverageCollection.
+   */
+  execute () {
+    let coll = this._collection
+    let newcoll = shallowcopy(coll)
+    newcoll.coverages = []
+    let promises = []
+    for (let cov of coll.coverages) {
+      promises.push(cov.loadDomain().then(domain => {
+        if (!matchesFilter(domain, this._filter)) {
+          return
+        }
+        
+        if (Object.keys(this._subset).length === 0) {
+          newcoll.coverages.push(cov)
+        } else {
+          return cov.subsetByValue(this._subset).then(subsetted => {
+            newcoll.coverages.push(subsetted)
+          })
+        }
+      }))
+    }
+    return Promise.all(promises).then(() => newcoll)
+  }
+}
+
+function matchesFilter (domain, filter) {
+  for (let axisName of Object.keys(filter)) {
+    let condition = filter[axisName]
+    if (!domain.axes.has(axisName)) {
+      throw new Error('Axis "' + axisName + '" does not exist')
+    }
+    let axis = domain.axes.get(axisName)
+    let vals = axis.values
+    
+    let [min,max] = [vals[0],vals[vals.length-1]]
+    if (typeof min !== 'number' && typeof min !== 'string') {
+      throw new Error('Can only filter primitive axis values')
+    }
+    let {start,stop} = condition
+    
+    if (isISODateAxis(domain, axisName)) {
+      [min, max] = [new Date(min).getTime(), new Date(max).getTime()]
+      if (typeof start === 'string') {
+        [start,stop] = [new Date(start), new Date(stop)]
+      }
+      if (start instanceof Date) {
+        [start,stop] = [start.getTime(), stop.getTime()]
+      }
+      if (isNaN(start) || isNaN(stop)) {
+        throw new Error('Invalid start or stop value for time axis filter')
+      }
+    }
+    
+    if (min > max) {
+      [min,max] = [max,min]
+    }
+    if (max < start || stop < min) {
+      return false
+    }
+  }
+  
+  return true
+}
+
+/**
+ * Returns true if the given axis has ISO8601 date strings
+ * as axis values.
+ */
+function isISODateAxis (domain, axisName) {
+  let val = domain.axes.get(axisName).values[0]
+  if (typeof val !== 'string') {
+    return false
+  }
+  return !isNaN(new Date(val).getTime())
+}
+
+function mergeInto (inputObj, targetObj) {
+  for (let k of Object.keys(inputObj)) {
+    targetObj[k] = inputObj[k]
   }
 }
