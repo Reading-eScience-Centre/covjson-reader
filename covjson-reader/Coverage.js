@@ -189,13 +189,13 @@ export default class Coverage {
    * })
    * @param {Object} constraints An object which describes the subsetting constraints.
    *   Every property of it refers to an axis name as defined in Domain.names,
-   *   and its value must either be an integer, an array of integers,
+   *   and its value must either be an integer
    *   or an object with start, stop, and optionally step (defaults to 1) properties
    *   whose values are integers.
    *   Properties that have the values undefined or null are ignored. 
    *   All integers must be non-negative, step must not be zero.
-   *   A simple integer constrains the axis to the given index, an array to a list of indices,
-   *   and a start/stop/step object to a range of indices:
+   *   An integer constrains the axis to the given index,
+   *   a start/stop/step object to a range of indices:
    *   If step=1, this includes all indices starting at start and ending at stop (exclusive);
    *   if step>1, all indices start, start + step, ..., start + (q + r - 1) step where 
    *   q and r are the quotient and remainder obtained by dividing stop - start by step.
@@ -203,18 +203,8 @@ export default class Coverage {
    */
   subsetByIndex (constraints) {    
     return this.loadDomain().then(domain => {      
-      // check and normalize constraints to simplify code and to allow more optimization
+      // check and normalize constraints to simplify code
       constraints = shallowcopy(constraints)
-      let isConsecutive = arr => {
-        let last = arr[0] - 1
-        for (let el of arr) {
-          if (el !== last + 1) {
-            return false
-          }
-          last = el
-        }
-        return true
-      }
       for (let axisName in constraints) {
         if (!domain.axes.has(axisName)) {
           // TODO clarify this behaviour in the JS API spec
@@ -225,34 +215,21 @@ export default class Coverage {
           delete constraints[axisName]
           continue
         }
-        if (Array.isArray(constraints[axisName])) {
-          let constraint = constraints[axisName]
-          // range subsetting can be done with fast ndarray views if single indices or slicing objects are used
-          // therefore, we try to transform some common cases into those forms
-          if (constraint.length === 1) {
-            // transform 1-element arrays into a number
-            constraints[axisName] = constraint[0]
-          } else if (isConsecutive(constraint)) {
-            // transform arrays of consecutive indices into start, stop object
-            constraints[axisName] = {start: constraint[0], stop: constraint[constraint.length-1] + 1}
-          }
-        }
         if (typeof constraints[axisName] === 'number') {
           let constraint = constraints[axisName]
           constraints[axisName] = {start: constraint, stop: constraint + 1}
         }
-        if (!Array.isArray(constraints[axisName])) {
-          let {start = 0, 
-               stop = domain.axes.get(axisName).values.length, 
-               step = 1} = constraints[axisName]
-          if (step <= 0) {
-            throw new Error(`Invalid constraint for ${axisName}: step=${step} must be > 0`)
-          }
-          if (start >= stop || start < 0) {
-            throw new Error(`Invalid constraint for ${axisName}: stop=${stop} must be > start=${start} and both >= 0`)
-          }
-          constraints[axisName] = {start, stop, step}
+
+        let {start = 0, 
+             stop = domain.axes.get(axisName).values.length, 
+             step = 1} = constraints[axisName]
+        if (step <= 0) {
+          throw new Error(`Invalid constraint for ${axisName}: step=${step} must be > 0`)
         }
+        if (start >= stop || start < 0) {
+          throw new Error(`Invalid constraint for ${axisName}: stop=${stop} must be > start=${start} and both >= 0`)
+        }
+        constraints[axisName] = {start, stop, step}
       }
       for (let axisName of domain.axes.keys()) {
         if (!(axisName in constraints)) {
@@ -261,8 +238,8 @@ export default class Coverage {
         }
       }
       
-      // After normalization, all constraints are either arrays or start,stop,step objects.
-      // For all start,stop,step objects, it holds that stop > start, step > 0, start >= 0, stop >= 1.
+      // After normalization, all constraints are start,stop,step objects.
+      // It holds that stop > start, step > 0, start >= 0, stop >= 1.
       // For each axis, a constraint exists.
       
       // subset the axis arrays of the domain (immediately + cached)
@@ -275,31 +252,22 @@ export default class Coverage {
         let isTypedArray = ArrayBuffer.isView(coords)
         let constraint = constraints[axisName]
         let newcoords
-        if (Array.isArray(constraint)) {
-          if (isTypedArray) {
-            newcoords = new coords.constructor(constraint.length)
-            for (let i=0; i < constraint.length; i++) {
-              newcoords[i] = coords[constraint[i]]
-            }
-          } else {
-            newcoords = constraint.map(i => coords[i])
-          }
+
+        let {start, stop, step} = constraint
+        if (start === 0 && stop === coords.length && step === 1) {
+          newcoords = coords
+        } else if (step === 1 && isTypedArray) {
+          newcoords = coords.subarray(start, stop)
         } else {
-          let {start, stop, step} = constraint
-          if (start === 0 && stop === coords.length && step === 1) {
-            newcoords = coords
-          } else if (step === 1 && isTypedArray) {
-            newcoords = coords.subarray(start, stop)
-          } else {
-            let q = Math.trunc((stop - start) / step)
-            let r = (stop - start) % step
-            let len = q + r
-            newcoords = new coords.constructor(len) // array or typed array
-            for (let i=start, j=0; i < stop; i += step, j++) {
-              newcoords[j] = coords[i]
-            }
+          let q = Math.trunc((stop - start) / step)
+          let r = (stop - start) % step
+          let len = q + r
+          newcoords = new coords.constructor(len) // array or typed array
+          for (let i=start, j=0; i < stop; i += step, j++) {
+            newcoords[j] = coords[i]
           }
         }
+        
         let newaxis = shallowcopy(domain.axes.get(axisName))
         newaxis.values = newcoords
         newdomain.axes.set(axisName, newaxis)
@@ -310,22 +278,12 @@ export default class Coverage {
       let rangeWrapper = range => {
         let ndarr = range._ndarr
         
-        let newndarr
-        if (Object.keys(constraints).some(ax => Array.isArray(constraints[ax]))) {
-          // There is a list of indices for at least one axis.
-          // In that case we cannot directly use SciJS's slicing operations.
-          
-          // TODO implement
-          throw new Error('not implemented yet')
-          
-        } else {
-          // fast ndarray view
-          let axisNames = domain._rangeAxisOrder
-          let los = axisNames.map(name => constraints[name].start)
-          let his = axisNames.map(name => constraints[name].stop)
-          let steps = axisNames.map(name => constraints[name].step)
-          newndarr = ndarr.hi(...his).lo(...los).step(...steps)
-        }
+        // fast ndarray view
+        let axisNames = domain._rangeAxisOrder
+        let los = axisNames.map(name => constraints[name].start)
+        let his = axisNames.map(name => constraints[name].stop)
+        let steps = axisNames.map(name => constraints[name].step)
+        let newndarr = ndarr.hi(...his).lo(...los).step(...steps)
         
         let newrange = shallowcopy(range)
         newrange._ndarr = newndarr
@@ -583,7 +541,7 @@ function createRangeGetFunction (ndarr, axisOrder) {
  * @param {Object} domain The original domain object.
  * @return {Object} The transformed domain object.
  */
-function transformDomain (domain) {
+export function transformDomain (domain) {
   if ('__transformDone' in domain) return
   
   let profile = domain.profile || 'Domain'
