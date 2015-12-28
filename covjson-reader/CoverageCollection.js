@@ -1,5 +1,5 @@
 import {default as Coverage, transformDomain} from './Coverage.js'
-import {shallowcopy} from './util.js'
+import {shallowcopy, isISODateAxis, asTime} from './util.js'
 
 export default class CoverageCollection {
   constructor(covjson) {
@@ -132,16 +132,8 @@ function matchesFilter (domain, filter) {
     let {start,stop} = condition
     
     if (isISODateAxis(domain, axisName)) {
-      [min, max] = [new Date(min).getTime(), new Date(max).getTime()]
-      if (typeof start === 'string') {
-        [start,stop] = [new Date(start), new Date(stop)]
-      }
-      if (start instanceof Date) {
-        [start,stop] = [start.getTime(), stop.getTime()]
-      }
-      if (isNaN(start) || isNaN(stop)) {
-        throw new Error('Invalid start or stop value for time axis filter')
-      }
+      [min,max] = [asTime(min), asTime(max)]
+      [start,stop] = [asTime(start), asTime(stop)]
     }
     
     if (min > max) {
@@ -153,18 +145,6 @@ function matchesFilter (domain, filter) {
   }
   
   return true
-}
-
-/**
- * Returns true if the given axis has ISO8601 date strings
- * as axis values.
- */
-function isISODateAxis (domain, axisName) {
-  let val = domain.axes.get(axisName).values[0]
-  if (typeof val !== 'string') {
-    return false
-  }
-  return !isNaN(new Date(val).getTime())
 }
 
 function mergeInto (inputObj, targetObj) {

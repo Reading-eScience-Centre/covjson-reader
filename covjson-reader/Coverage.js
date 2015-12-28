@@ -1,5 +1,6 @@
 import ndarray from 'ndarray'
-import {shallowcopy, minMax, assert, PREFIX} from './util.js'
+import {shallowcopy, minMax, assert, isISODateAxis, asTime,
+  indexOfNearest, indicesOfNearest, PREFIX} from './util.js'
 import {load} from './ajax.js'
 
 /** 
@@ -184,7 +185,7 @@ export default class Coverage {
    * coverage is garbage collected.
    * 
    * @example
-   * cov.subsetByIndex({t: 4, z: {start: 10, stop: 20}, x: [0,1,2] }).then(function(subsetCov) {
+   * cov.subsetByIndex({t: 4, z: {start: 10, stop: 20} }).then(function(subsetCov) {
    *   // work with subsetted coverage
    * })
    * @param {Object} constraints An object which describes the subsetting constraints.
@@ -314,6 +315,106 @@ export default class Coverage {
       // -> we don't know if all LD info is valid for the subsetted cov as well
       //  e.g. index-based subsetting API info would be invalid
       return newcov
+    })
+  }
+  
+  /**
+   * Returns a Promise object which provides a copy of this Coverage object
+   * with the domain subsetted by the given value specification.
+   * 
+   * Note that the coverage type and/or domain type of the resulting coverage
+   * may be different than in the original coverage.
+   * 
+   * Note that the subsetted ranges are a view over the original ranges, meaning
+   * that no copying is done but also no memory is released if the original
+   * coverage is garbage collected.
+   * 
+   * @example
+   * cov.subsetByValue({t: '2015-01-01T01:00:00', z: {start: -10, stop: -5} }).then(function(subsetCov) {
+   *   // work with subsetted coverage
+   * })
+   * @example
+   * cov.subsetByValue({z: {target: -10} }).then(function(subsetCov) {
+   *   // work with subsetted coverage
+   * }
+   * @param {Object} constraints An object which describes the subsetting constraints.
+   *  Every property of it refers to an axis name as defined in Domain.names,
+   *  and its value must either be a number or string, or,
+   *  if the axis has an ordering relation, an object with start and stop properties
+   *  whose values are numbers or strings, or an object with a target property
+   *  whose value is a number or string.
+   *  Properties that have the values undefined or null are ignored.
+   *  A number or string constrains the axis to exactly the given value,
+   *  a start/stop object to the values intersecting the extent,
+   *  and a target object to the value closest to the given value.
+   * @returns {Promise} A Promise object with the subsetted coverage object as result.
+   */
+  subsetByValue (constraints) {    
+    return this.loadDomain().then(domain => {
+      // calculate indices and use subsetByIndex
+      let indexConstraints = {}
+      
+      for (let axisName of Object.keys(constraints)) {
+        let spec = constraints[axisName]
+        if (spec === undefined || spec === null || !domain.axes.has(axisName)) {
+          continue
+        }
+        let axis = domain.axes.get(axisName)
+        let vals = axis.values
+        
+        if (typeof spec === 'number' || typeof spec === 'string') {
+          let match = spec
+          if (isISODateAxis(domain, axisName)) {
+            // convert times to numbers before searching
+            match = asTime(match)
+            vals = vals.map(v => new Date(v).getTime())
+          }
+          let i = vals.indexOf(match)
+          if (i === -1) {
+            throw new Error('Domain value not found: ' + spec)
+          }
+          indexConstraints[axisName] = i
+          
+        } else if ('target' in spec) {
+          // find index of value closest to target
+          let target = spec.target
+          if (isISODateAxis(domain, axisName)) {
+            // convert times to numbers before searching
+            target = asTime(target)
+            vals = vals.map(v => new Date(v).getTime())
+          } else if (typeof vals[0] !== 'number' || typeof target === 'number') {
+            throw new Error('Invalid axis or constraint value type')
+          }
+          let i = indexOfNearest(vals, target)
+          indexConstraints[axisName] = i
+          
+        } else if ('start' in spec && 'stop' in spec) {
+          // TODO what about bounds?
+          
+          let {start,stop} = spec
+          if (isISODateAxis(domain, axisName)) {
+            // convert times to numbers before searching
+            [start, stop] = [asTime(start), asTime(stop)]
+            vals = vals.map(v => new Date(v).getTime())
+          } else if (typeof vals[0] !== 'number' || typeof start !== 'number') {
+            throw new Error('Invalid axis or constraint value type')
+          }
+          
+          let [lo1,hi1] = indicesOfNearest(vals, start)
+          let [lo2,hi2] = indicesOfNearest(vals, stop)
+          
+          // this is a bit arbitrary and may include one or two indices too much
+          // (but since we don't handle bounds it doesn't matter that much)
+          let imin = Math.min(lo1,hi1,lo2,hi2)
+          let imax = Math.max(lo1,hi1,lo2,hi2) + 1 // subsetByIndex is exclusive
+          
+          indexConstraints[axisName] = {start: imin, stop: imax}
+        } else {
+          throw new Error('Invalid subset constraints')
+        }
+      }           
+      
+      return this.subsetByIndex(indexConstraints)
     })
   }
 }
