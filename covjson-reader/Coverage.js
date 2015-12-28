@@ -362,7 +362,7 @@ export default class Coverage {
         let axis = domain.axes.get(axisName)
         let vals = axis.values
         
-        if (typeof spec === 'number' || typeof spec === 'string') {
+        if (typeof spec === 'number' || typeof spec === 'string' || spec instanceof Date) {
           let match = spec
           if (isISODateAxis(domain, axisName)) {
             // convert times to numbers before searching
@@ -382,7 +382,7 @@ export default class Coverage {
             // convert times to numbers before searching
             target = asTime(target)
             vals = vals.map(v => new Date(v).getTime())
-          } else if (typeof vals[0] !== 'number' || typeof target === 'number') {
+          } else if (typeof vals[0] !== 'number' || typeof target !== 'number') {
             throw new Error('Invalid axis or constraint value type')
           }
           let i = indexOfNearest(vals, target)
