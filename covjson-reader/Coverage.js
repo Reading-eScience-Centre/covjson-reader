@@ -369,7 +369,13 @@ export default class Coverage {
             match = asTime(match)
             vals = vals.map(v => new Date(v).getTime())
           }
-          let i = vals.indexOf(match)
+          let i
+          // older browsers don't have TypedArray.prototype.indexOf
+          if (vals.indexOf) {
+            i = vals.indexOf(match)
+          } else {
+            i = Array.prototype.indexOf.call(vals, match)
+          }
           if (i === -1) {
             throw new Error('Domain value not found: ' + spec)
           }
