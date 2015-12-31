@@ -15,12 +15,6 @@ export function shallowcopy (obj) {
   return copy
 }
 
-export function mergeInto (inputObj, targetObj) {
-  for (let k of Object.keys(inputObj)) {
-    targetObj[k] = inputObj[k]
-  }
-}
-
 export function endsWith (subject, search) {
   // IE support
   let position = subject.length - search.length
