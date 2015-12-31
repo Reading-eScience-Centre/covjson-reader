@@ -31,16 +31,17 @@ export {load} from './ajax.js'
  * @param {Object|string} input 
  *    Either a URL pointing to a CoverageJSON Coverage or Coverage Collection document
  *    or a CoverageJSON Coverage or Coverage Collection object.
+ * @param {object} headers Additional HTTP headers to send if input is a URL.
  * @return {Promise} 
  *    A promise object succeeding with a {@link Coverage} or {@link CoverageCollection} object,
  *    and failing with an {@link Error} object.
  */
-export function read (input) {
+export function read (input, headers) {
   if (typeof input === 'object') {
     return Promise.resolve().then(() => transformCovJSON(input))
   } else {
     // it's a URL, load it
-    return load(input).then(({data,headers}) => transformCovJSON(data, headers))
+    return load(input, headers).then(({data,headers}) => transformCovJSON(data, headers))
   }
 }
 
@@ -74,7 +75,40 @@ function transformCovJSON (obj, headers) {
  * to the .ld property of the Coverage/CoverageCollection.
  */    
 function addLinkRelations (cov, headers) {
-  // TODO implement
+  // for registered rel's
+  const IANAPrefix = 'http://www.iana.org/assignments/relation/'
+  
+  if (!headers['Link']) {
+    return
+  }
+  
+  let ld = cov.ld
+  
+  for (let link of headers['Link'].split(',')) {
+    link = link.trim()
+    // FIXME this will fail if the URL contains a ";" which is valid (see RFC5988)
+    let parts = link.split(';')
+    let url = parts[0].substr(1, parts[0].length-2)
+    for (let param of parts.slice(1)) {
+      let relStart = param.indexOf('rel=')
+      if (relStart === -1) {
+        continue
+      }
+      let rel = param.substring(relStart+5, param.length-2)
+      if (!rel.startsWith('http://') && !rel.startsWith('https://')) {
+        rel = IANAPrefix + rel
+      }
+      if (ld[rel]) {
+        if (Array.isArray(ld[rel])) {
+          ld[rel].push(url)
+        } else {
+          ld[rel] = [ld[rel], url]
+        }
+      } else {
+        ld[rel] = url
+      }
+    }
+  }
 }
 
 /**

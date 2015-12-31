@@ -25,12 +25,13 @@ const EXT = {
  * that succeeds with the unmodified CoverageJSON object.
  * 
  * @param {string} url
+ * @param {object} headers Additional HTTP headers to send
  * @return {Promise}
  *   The result is an object {data, headers} where data is the CoverageJSON object
  *   and headers are the HTTP response headers. The promise fails if the resource at
  *   the given URL is not a valid JSON or CBOR document. 
  */
-export function load (url, responseType='arraybuffer') {
+export function load (url, headers, responseType='arraybuffer') {
   if (['arraybuffer', 'text'].indexOf(responseType) === -1) {
     throw new Error()
   }
@@ -39,6 +40,11 @@ export function load (url, responseType='arraybuffer') {
     req.open('GET', url)
     req.responseType = responseType
     req.setRequestHeader('Accept', ACCEPT)
+    if (headers) {
+      for (let header of Object.keys(headers)) {
+        req.setRequestHeader(header, headers[header])
+      }
+    }
 
     req.addEventListener('load', () => {
       try {
@@ -85,10 +91,10 @@ export function load (url, responseType='arraybuffer') {
           reject(new Error('Unsupported media type: ' + type))
           return
         }
-        let headers = parseResponseHeaders(req.getAllResponseHeaders())
+        let responseHeaders = parseResponseHeaders(req.getAllResponseHeaders())
         resolve({
           data: data,
-          headers: headers
+          headers: responseHeaders
         })
       } catch (e) {
         reject(e)
@@ -117,7 +123,6 @@ export function load (url, responseType='arraybuffer') {
  * https://gist.github.com/monsur/706839
  */
 function parseResponseHeaders (headerStr) {
-  // FIXME check if this swallows repeated headers
   var headers = {};
   if (!headerStr) {
     return headers;
