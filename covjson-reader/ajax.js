@@ -107,7 +107,7 @@ export function load (url, headers, responseType='arraybuffer') {
     req.send()
   }).catch(e => {
     if (e.responseType) {
-      return load(url, e.responseType)
+      return load(url, headers, e.responseType)
     } else {
       throw e
     }
