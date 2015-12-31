@@ -78,7 +78,7 @@ function addLinkRelations (cov, headers) {
   // for registered rel's
   const IANAPrefix = 'http://www.iana.org/assignments/relation/'
   
-  if (!headers['Link']) {
+  if (!headers || !headers['Link']) {
     return
   }
   
