@@ -1,9 +1,9 @@
 import assert from 'assert'
 
-import {read} from 'covjson-reader/reader'
-import {PREFIX} from 'covjson-reader/util'
+import {read} from '../src/reader.js'
+import {PREFIX} from '../src/util.js'
 
-import {FIXTURES} from './data'
+import {FIXTURES} from './data.js'
 
 function readall(input) {
   if (typeof input === 'object') {

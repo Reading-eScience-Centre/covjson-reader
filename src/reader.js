@@ -1,10 +1,9 @@
 import Coverage from './Coverage.js'
 import CoverageCollection from './CoverageCollection.js'
 import {assert} from './util.js'
-import {load} from './ajax.js'
+import {load} from './http.js'
 
-export {load} from './ajax.js'
-
+export {load} from './http.js'
 
 /**
  * Reads a CoverageJSON document and returns a {@link Promise} that succeeds with
@@ -28,28 +27,32 @@ export {load} from './ajax.js'
  *   // there was an error when loading the coverage
  *   console.log(e)
  * })
- * @param {Object|string} input 
+ * @param {Object|string} input
  *    Either a URL pointing to a CoverageJSON Coverage or Coverage Collection document
  *    or a CoverageJSON Coverage or Coverage Collection object.
- * @param {object} headers Additional HTTP headers to send if input is a URL.
+ * @property {object} [options.headers]
+ *   Additional HTTP headers to send if input is a URL.
  * @return {Promise} 
  *    A promise object succeeding with a {@link Coverage} or {@link CoverageCollection} object,
  *    and failing with an {@link Error} object.
  */
-export function read (input, headers) {
+export function read (input, options) {
+  options = options || {}
+  let headers = options.headers || {}
   if (typeof input === 'object') {
     return Promise.resolve().then(() => transformCovJSON(input))
   } else {
     // it's a URL, load it
-    return load(input, headers).then(({data,headers}) => transformCovJSON(data, headers))
+    return load(input, headers).then(({data,headers}) => 
+      transformCovJSON(data, headers))
   }
 }
 
 /**
  * Transforms a CoverageJSON object into one or more Coverage objects.
  *  
- * @param obj A CoverageJSON object of type Coverage or CoverageCollection.
- * @param headers An optional array of HTTP headers.
+ * @param {object} obj A CoverageJSON object of type Coverage or CoverageCollection.
+ * @param {array} headers An optional array of HTTP headers.
  * @return {Coverage|Array of Coverage}
  */
 function transformCovJSON (obj, headers) {

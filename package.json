@@ -1,7 +1,7 @@
 {
   "name": "covjson-reader",
-  "version": "0.2.0",
-  "license" : "BSD-3-Clause",
+  "version": "0.3.0",
+  "license": "BSD-3-Clause",
   "description": "A reader for CoverageJSON files.",
   "repository": {
     "type": "git",
@@ -13,59 +13,50 @@
   "author": {
     "name": "Maik Riechert"
   },
-  "files": [
-    "covjson-reader.src.js",
-    "covjson-reader.min.js"
-  ],
-  "registry": "jspm",
-  "format": "esm",
+  "main": "lib/reader.js",
+  "dependencies": {
+    "cbor": "paroga/cbor-js#v0.1.0",
+    "ndarray": "^1.0.18"
+  },
   "scripts": {
     "docs": "esdoc -c esdoc.json",
-    "postinstall": "jspm install --yes",
     "style": "standard",
     "test": "karma start --single-run",
     "karma": "karma start",
     "saucelabs": "karma start karma.conf-ci.js",
-    "build": "npm run build-src && npm run build-min",
-    "build-src": "jspm bundle-sfx covjson-reader/reader covjson-reader.src.js --format global --global-name CovJSON --skip-source-maps",
-    "build-min": "jspm bundle-sfx covjson-reader/reader covjson-reader.min.js --format global --global-name CovJSON --minify --skip-source-maps",
+    "transpile": "babel -d lib/ src/",
+    "browserdist": "browserify src/reader.js -t babelify -s CovJSON -o covjson-reader.src.js",
+    "postbrowserdist": "uglifyjs covjson-reader.src.js -c unused=false -o covjson-reader.min.js --source-map covjson-reader.min.js.map",
+    "build": "npm run transpile && npm run browserdist",
     "prepublish": "npm run build"
+  },
+  "browser": {
+    "./src/http.js": "./src/http-browser.js"
   },
   "standard": {
     "parser": "babel-eslint",
     "ignore": [
       "karma.conf.js",
-      "karma.conf-ci.js"
+      "karma.conf-ci.js",
+      "test/"
     ]
   },
-  "jspm": {
-    "main": "reader",
-    "directories": {
-      "lib": "covjson-reader"
-    },
-    "files": null,
-    "dependencies": {
-      "cbor": "github:paroga/cbor-js@^0.1.0",
-      "ndarray": "npm:ndarray@^1.0.18"
-    },
-    "devDependencies": {
-      "assert": "github:jspm/nodelibs-assert@^0.1.0",
-      "babel": "npm:babel-core@^5.8.22",
-      "babel-runtime": "npm:babel-runtime@^5.8.20",
-      "core-js": "npm:core-js@^1.1.0"
-    }
-  },
   "devDependencies": {
+    "babel-cli": "^6.3.17",
     "babel-eslint": "^4.1.3",
+    "babel-preset-es2015": "^6.3.13",
+    "babelify": "^7.2.0",
+    "browserify": "^11.0.1",
     "esdoc": "^0.3.0",
     "esdoc-importpath-plugin": "0.0.1",
-    "jspm": "^0.16.1",
     "karma": "^0.13.9",
+    "karma-babel-preprocessor": "^6.0.1",
+    "karma-browserify": "^4.4.2",
     "karma-chrome-launcher": "^0.2.0",
-    "karma-jspm": "^2.0.1",
     "karma-mocha": "^0.2.0",
     "karma-sauce-launcher": "^0.2.14",
     "mocha": "^2.2.5",
-    "standard": "^5.1.0"
+    "standard": "^5.1.0",
+    "uglify-js": "^2.4.24"
   }
 }

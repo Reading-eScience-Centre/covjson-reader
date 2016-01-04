@@ -7,19 +7,15 @@ module.exports = function(config) {
     // base path that will be used to resolve all patterns (eg. files, exclude)
     basePath: '',
 
-
     // frameworks to use
     // available frameworks: https://npmjs.org/browse/keyword/karma-adapter
-    frameworks: ['jspm', 'mocha'],
-
-    jspm: {
-      loadFiles: ['test/**/*.js'],
-      serveFiles: ['covjson-reader/**/*.js']
-    },
+    frameworks: ['browserify', 'mocha'],
 
     // list of files / patterns to load and/or serve in the browser
     files: [
-      {pattern: 'test/fixtures/*.covjson', included: false, served: true}
+      {pattern: 'test/fixtures/*.covjson', included: false, served: false},
+      'src/**/*.js',
+      'test/**/*.js'
     ],
 
 
@@ -31,8 +27,15 @@ module.exports = function(config) {
     // preprocess matching files before serving them to the browser
     // available preprocessors: https://npmjs.org/browse/keyword/karma-preprocessor
     preprocessors: {
+      'src/**/*.js': ['browserify'],
+      'test/**/*.js': ['browserify']
     },
-
+    
+    browserify: {
+      transform: [
+        ['babelify', {presets: ['es2015']}]
+      ]
+    },
 
     // test results reporter to use
     // possible values: 'dots', 'progress'

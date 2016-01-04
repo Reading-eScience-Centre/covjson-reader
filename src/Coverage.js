@@ -1,7 +1,7 @@
 import ndarray from 'ndarray'
 import {shallowcopy, minMax, assert, isISODateAxis, asTime,
   indexOfNearest, indicesOfNearest, PREFIX} from './util.js'
-import {load} from './ajax.js'
+import {load} from './http.js'
 
 /** 
  * Wraps a CoverageJSON Coverage object as a Coverage API object.
@@ -13,17 +13,18 @@ export default class Coverage {
   
   /**
    * @param {Object} covjson A CoverageJSON Coverage object.
-   * @param {boolean} cacheRanges
+   * @property {boolean} options.cacheRanges
    *   If true, then any range that was loaded remotely is cached.
-   *   (The domain is always cached.)
-   *                           
+   *   (The domain is always cached.)                        
    */
-  constructor(covjson, cacheRanges = false) {
+  constructor (covjson, options) {
     this._covjson = covjson
     this._exposeLd(covjson)
     
+    options = options || {}
+        
     /** @type {boolean} */
-    this.cacheRanges = cacheRanges
+    this.cacheRanges = options.cacheRanges || false
     
     this.id = covjson.id
     

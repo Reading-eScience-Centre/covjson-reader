@@ -1,8 +1,8 @@
 import assert from 'assert'
 
-import {read} from 'covjson-reader/reader'
+import {read} from '../src/reader.js'
 
-import {FIXTURES} from './data'
+import {FIXTURES} from './data.js'
 
 describe('Coverage methods', () => {
   describe('#subsetByIndex', () => {
