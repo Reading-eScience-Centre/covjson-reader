@@ -41,8 +41,7 @@ module.exports = function(config) {
 
     // list of files / patterns to load and/or serve in the browser
     files: [
-      {pattern: 'test/fixtures/*.covjson', included: false, served: false},
-      'src/**/*.js',
+      {pattern: 'test/fixtures/*.covjson', included: false, served: true},
       'test/**/*.js'
     ],
 
