@@ -6,11 +6,13 @@ A library that reads [CoverageJSON](https://github.com/neothemachine/coveragejso
 
 ## Usage
 
-A minified version of this library is [hosted on the jsDelivr CDN](http://www.jsdelivr.com/projects/covjson-reader).
+covjson-reader can be used both on node.js and browsers.
+
+A minified browser version of this library is [hosted on the jsDelivr CDN](http://www.jsdelivr.com/projects/covjson-reader).
 
 Usage is simple:
 ```html
-<script src="https://cdn.jsdelivr.net/covjson-reader/0.1/covjson-reader.min.js"></script>
+<script src="https://cdn.jsdelivr.net/covjson-reader/0.3/covjson-reader.min.js"></script>
 <script>
 CovJSON.read('http://example.com/coverage.covjson').then(function (cov) {
   // work with Coverage object
@@ -21,16 +23,17 @@ CovJSON.read('http://example.com/coverage.covjson').then(function (cov) {
 </script>
 ```
 
-### ECMAScript module
+Depending on which browsers shall be supported it may be necessary to include polyfills before loading this library. For example, IE11 requires [polyfills](https://github.com/zloirock/core-js) for `Promise`, `Symbol`, `Map`, and `Array`.
 
-This library is written as an [ECMAScript module](http://exploringjs.com/es6/ch_modules.html)
-and uses the [JSPM](http://jspm.io) loader [SystemJS](https://github.com/systemjs/systemjs).
+### browserify/JSPM
 
-Here is how to import the module with SystemJS:
+This library can be used with [browserify](http://browserify.org) and similar tools like [JSPM](http://jspm.io) by importing it via npm.
+
+JSPM example:
 ```html
 <script src="https://jspm.io/system.js"></script>
 <script>
-System.import('github:reading-escience-centre/covjson-reader@0.1', function (CovJSON) {
+System.import('npm:covjson-reader@^0.3', function (CovJSON) {
 
   CovJSON.read('http://example.com/coverage.covjson').then(function (cov) {
     // work with Coverage object
@@ -42,10 +45,6 @@ System.import('github:reading-escience-centre/covjson-reader@0.1', function (Cov
 })
 </script>
 ```
-
-Note that the version hosted on jsDelivr was transpiled from ES6 to ES5 and exposes the module as a
-global object. This is for supporting classic usage and is different from directly using the
-ECMAScript module like above.
 
 ## Acknowledgments
 
