@@ -1,6 +1,12 @@
 import {default as Coverage, transformDomain} from './Coverage.js'
 import {shallowcopy, isISODateAxis, asTime} from './util.js'
 
+/** 
+ * Wraps a CoverageJSON Collection object as a CoverageCollection API object.
+ * 
+ * @see https://github.com/Reading-eScience-Centre/coverage-jsapi
+ * 
+ */
 export default class CoverageCollection {
   /**
    * @param {Object} covjson The CoverageJSON Collection document.

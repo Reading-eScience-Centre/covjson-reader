@@ -1,9 +1,22 @@
 import Coverage from './Coverage.js'
 import CoverageCollection from './CoverageCollection.js'
 import {assert} from './util.js'
-import {load} from './http.js'
+import * as http from './http.js'
 
-export {load} from './http.js'
+/**
+ * Loads a CoverageJSON document from a given URL and returns a {@link Promise} object
+ * that succeeds with the unmodified CoverageJSON object.
+ * 
+ * @param {string} url
+ * @param {Object} headers Additional HTTP headers to send
+ * @return {Promise}
+ *   A Promise succeeding with an object <code>{data, headers}</code> where data is the CoverageJSON object
+ *   and headers are the HTTP response headers. The promise fails if the resource at
+ *   the given URL is not a valid JSON or CBOR document. 
+ */
+export function load (url, headers) {
+  return http.load(url, headers)
+}
 
 /**
  * Reads a CoverageJSON document and returns a {@link Promise} that succeeds with

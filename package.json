@@ -48,7 +48,7 @@
     "babelify": "^7.2.0",
     "browserify": "^11.0.1",
     "core-js": "^2.0.2",
-    "esdoc": "^0.3.0",
+    "esdoc": "^0.4.1",
     "esdoc-importpath-plugin": "0.0.1",
     "karma": "^0.13.9",
     "karma-babel-preprocessor": "^6.0.1",
