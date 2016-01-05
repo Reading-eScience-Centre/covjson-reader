@@ -2,9 +2,26 @@ import {default as Coverage, transformDomain} from './Coverage.js'
 import {shallowcopy, isISODateAxis, asTime} from './util.js'
 
 export default class CoverageCollection {
+  /**
+   * @param {Object} covjson The CoverageJSON Collection document.
+   */
   constructor(covjson) {
+    /**
+     * JSON-LD document
+     * 
+     * @type {Object}
+     */
+    this.ld = {}
+    
     this._exposeLd(covjson)
+    
+    /** 
+     * ID of the coverage collection.
+     * 
+     * @type {string|undefined} 
+     */
     this.id = covjson.id
+    
     let covs = []
     let rootParams = covjson.parameters ? covjson.parameters : {}
     for (let coverage of covjson.coverages) {
@@ -19,8 +36,11 @@ export default class CoverageCollection {
       } 
       covs.push(new Coverage(coverage))
     }
+    
+    /** @type {Array<Coverage>} */
     this.coverages = covs
     if (covjson.parameters) {
+      /** @type {Map} */
       this.parameters = covjson.parameters
     }
     if (covjson.domainTemplate) {
@@ -29,6 +49,10 @@ export default class CoverageCollection {
     }
   }
   
+  /**
+   * 
+   * @return {CollectionQuery}
+   */
   query () {
     return new CollectionQuery(this)
   }
@@ -36,7 +60,6 @@ export default class CoverageCollection {
   _exposeLd (covjson) {
     if (!covjson['@context']) {
       // no LD love here...
-      this.ld = {}
       return
     }
     // make a deep copy since the object gets modified in-place later
@@ -47,7 +70,10 @@ export default class CoverageCollection {
   }
 }
 
-class CollectionQuery {
+export class CollectionQuery {
+  /**
+   * @param {CoverageCollection} collection
+   */
   constructor (collection) {
     this._collection = collection
     this._filter = {}
@@ -66,6 +92,8 @@ class CollectionQuery {
    * }).execute().then(filteredCollection => {
    *   console.log(filteredCollection.coverages.length)
    * })
+   * @param {Object} spec
+   * @return {CollectionQuery}
    */
   filter (spec) {
     mergeInto(spec, this._filter)
@@ -75,22 +103,31 @@ class CollectionQuery {
   /**
    * Subset coverages by domain values.
    * 
-   * Equivalent to calling coverage.subsetByValue(spec) on each
+   * Equivalent to calling {@link Coverage.subsetByValue}(spec) on each
    * coverage in the collection.
+   * 
+   * @param {Object} spec
+   * @return {CollectionQuery}
    */
   subset (spec) {
     mergeInto(spec, this._subset)
     return this
   }
   
+  /**
+   * This query operation is not supported and has no effect.
+   * 
+   * @return {CollectionQuery}
+   */
   embed (spec) {
-    // no-op, not supported
     return this
   }
   
   /**
    * Applies the query operators and returns
    * a Promise that succeeds with a new CoverageCollection.
+   * 
+   * @return {Promise<CoverageCollection>}
    */
   execute () {
     let coll = this._collection

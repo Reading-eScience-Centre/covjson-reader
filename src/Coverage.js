@@ -13,19 +13,35 @@ export default class Coverage {
   
   /**
    * @param {Object} covjson A CoverageJSON Coverage object.
-   * @property {boolean} options.cacheRanges
+   * @param {Object} [options] 
+   * @param {boolean} [options.cacheRanges]
    *   If true, then any range that was loaded remotely is cached.
    *   (The domain is always cached.)                        
    */
   constructor (covjson, options) {
     this._covjson = covjson
+    
+    /**
+     * JSON-LD document
+     * 
+     * @type {Object}
+     */
+    this.ld = {}
+    
     this._exposeLd(covjson)
     
-    options = options || {}
-        
-    /** @type {boolean} */
-    this.cacheRanges = options.cacheRanges || false
+    /**
+     * The options object that was passed in to the constructor. 
+     * 
+     * @type {Object} 
+     */
+    this.options = options ? shallowcopy(options) : {}
     
+    /** 
+     * ID of the coverage.
+     * 
+     * @type {string|undefined} 
+     */
     this.id = covjson.id
     
     /** @type {Map} */
@@ -60,8 +76,8 @@ export default class Coverage {
     /**
      * A bounding box object with members "box" and "srs".
      * 
-     * @type {object|undefined}
-     * @property {array} bbox.box The bounding box coordinates [minx,miny,maxx,maxy].
+     * @type {Object|undefined}
+     * @property {Array} bbox.box The bounding box coordinates [minx,miny,maxx,maxy].
      * @property {string} bbox.srs The URI of the spatial CRS.
      */
     this.bbox = this._covjson.bbox
@@ -70,7 +86,6 @@ export default class Coverage {
   _exposeLd (covjson) {
     if (!covjson['@context']) {
       // no LD love here...
-      this.ld = {}
       return
     }
     // make a deep copy since the object gets modified in-place later
@@ -82,6 +97,8 @@ export default class Coverage {
   }
     
   /**
+   * Returns a Promise succeeding with the domain data.
+   * 
    * @return {Promise}
    */
   loadDomain () {
@@ -110,7 +127,7 @@ export default class Coverage {
   }
   
   /**
-   * Returns the requested range data as a Promise.
+   * Returns a Promise succeeding with the requested range data.
    * 
    * Note that this method implicitly loads the domain as well. 
    * 
@@ -137,7 +154,7 @@ export default class Coverage {
         return load(url).then(result => {
           let range = result.data
           transformRange(range, domain)
-          if (this.cacheRanges) {
+          if (this.options.cacheRanges) {
             this._covjson.ranges[paramKey] = range
           }
           return range
@@ -159,7 +176,7 @@ export default class Coverage {
    *   // there was an error when loading the range data
    *   console.log(e)
    * }) 
-   * @param {iterable} [paramKeys] An iterable of parameter keys for which to load the range data. If not given, loads all range data.
+   * @param {iterable<string>} [paramKeys] An iterable of parameter keys for which to load the range data. If not given, loads all range data.
    * @return {Promise} A Promise object which loads the requested range data and succeeds with a Map object.
    */
   loadRanges (paramKeys) {
@@ -331,7 +348,10 @@ export default class Coverage {
    * coverage is garbage collected.
    * 
    * @example
-   * cov.subsetByValue({t: '2015-01-01T01:00:00', z: {start: -10, stop: -5} }).then(function(subsetCov) {
+   * cov.subsetByValue({
+   *   t: '2015-01-01T01:00:00',
+   *   z: {start: -10, stop: -5} 
+   * }).then(function(subsetCov) {
    *   // work with subsetted coverage
    * })
    * @example
@@ -648,6 +668,7 @@ function createRangeGetFunction (ndarr, axisOrder) {
  * 
  * @param {Object} domain The original domain object.
  * @return {Object} The transformed domain object.
+ * @access private
  */
 export function transformDomain (domain) {
   if ('__transformDone' in domain) return

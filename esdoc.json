@@ -1,13 +1,15 @@
 {
+  "title": "covjson-reader documentation",
   "source": "./src",
   "destination": "./docs",
+  "excludes": ["http-browser.js", "http.js", "util.js"],
   "plugins": [
     {
       "name": "esdoc-importpath-plugin",
       "option": {
         "replaces": [
-          {"from": "^src/", "to": ""},
-          {"from": "reader.js", "to": ""}
+          {"from": "/src/reader.js", "to": ""},
+          {"from": "^src/", "to": "lib/"}
         ]
       }
     }

@@ -13,14 +13,7 @@ export {load} from './http.js'
  * then these are not loaded immediately. 
  * 
  * 
- * @example <caption>ES6 module</caption>
- * read('http://example.com/coverage.covjson').then(cov => {
- *   // work with Coverage object
- * }).catch(e => {
- *   // there was an error when loading the coverage
- *   console.log(e)
- * })
- * @example <caption>ES5 global</caption>
+ * @example
  * CovJSON.read('http://example.com/coverage.covjson').then(function (cov) {
  *   // work with Coverage object
  * }).catch(function (e) {
@@ -30,7 +23,9 @@ export {load} from './http.js'
  * @param {Object|string} input
  *    Either a URL pointing to a CoverageJSON Coverage or Coverage Collection document
  *    or a CoverageJSON Coverage or Coverage Collection object.
- * @property {object} [options.headers]
+ * @param {Object} [options]
+ *   An options object. 
+ * @param {Object} [options.headers]
  *   Additional HTTP headers to send if input is a URL.
  * @return {Promise} 
  *    A promise object succeeding with a {@link Coverage} or {@link CoverageCollection} object,
