@@ -1,24 +1,6 @@
 import cbor from 'cbor'
 import {endsWith} from './util.js'
-
-const MEDIA = {
-    COVCBOR: 'application/prs.coverage+cbor',
-    COVJSON: 'application/prs.coverage+json',
-    JSONLD: 'application/ld+json',
-    JSON: 'application/json',
-    OCTETSTREAM: 'application/octet-stream',
-    TEXT: 'text/plain'
-}
-
-const ACCEPT = MEDIA.COVCBOR + '; q=1.0, ' +
-               MEDIA.COVJSON + '; q=0.5, ' + 
-               MEDIA.JSONLD + '; q=0.1, ' + 
-               MEDIA.JSON + '; q=0.1'
-               
-const EXT = {
-    COVJSON: '.covjson',
-    COVCBOR: '.covcbor'
-}
+import {MEDIATYPE, ACCEPT, EXT} from './http-common.js'
 
 export function load (url, headers, responseType='arraybuffer') {
   if (['arraybuffer', 'text'].indexOf(responseType) === -1) {
@@ -44,21 +26,21 @@ export function load (url, headers, responseType='arraybuffer') {
         
         var type = req.getResponseHeader('Content-Type')
         
-        if (type.indexOf(MEDIA.OCTETSTREAM) === 0 || type.indexOf(MEDIA.TEXT) === 0) {
+        if (type.indexOf(MEDIATYPE.OCTETSTREAM) === 0 || type.indexOf(MEDIATYPE.TEXT) === 0) {
           // wrong media type, try to infer type from extension
           if (endsWith(url, EXT.COVJSON)) {
-            type = MEDIA.COVJSON
+            type = MEDIATYPE.COVJSON
           } else if (endsWith(url, EXT.COVCBOR)) {
-            type = MEDIA.COVCBOR
+            type = MEDIATYPE.COVCBOR
           } 
         }
         let data
-        if (type === MEDIA.COVCBOR) {
+        if (type === MEDIATYPE.COVCBOR) {
           var arrayBuffer = req.response
           let t0 = new Date()
           data = cbor.decode(arrayBuffer)
           console.log('CBOR decoding: ' + (new Date()-t0) + 'ms')
-        } else if ([MEDIA.COVJSON, MEDIA.JSONLD, MEDIA.JSON].indexOf(type) > -1) {
+        } else if ([MEDIATYPE.COVJSON, MEDIATYPE.JSONLD, MEDIATYPE.JSON].indexOf(type) > -1) {
           if (responseType === 'arraybuffer') {
             if (window.TextDecoder) {
               let t0 = new Date()
@@ -82,7 +64,7 @@ export function load (url, headers, responseType='arraybuffer') {
         }
         let responseHeaders = parseResponseHeaders(req.getAllResponseHeaders())
         resolve({
-          data: data,
+          data,
           headers: responseHeaders
         })
       } catch (e) {
@@ -108,6 +90,7 @@ export function load (url, headers, responseType='arraybuffer') {
  * headers according to the format described here:
  * http://www.w3.org/TR/XMLHttpRequest/#the-getallresponseheaders-method
  * This method parses that string into a user-friendly key/value pair object.
+ * Header names are lower-cased.
  * 
  * https://gist.github.com/monsur/706839
  */
@@ -123,7 +106,7 @@ function parseResponseHeaders (headerStr) {
     // if the header value has the string ": " in it.
     var index = headerPair.indexOf('\u003a\u0020');
     if (index > 0) {
-      var key = headerPair.substring(0, index);
+      var key = headerPair.substring(0, index).toLowerCase();
       var val = headerPair.substring(index + 2);
       headers[key] = val;
     }

@@ -8,9 +8,13 @@ import assert from 'assert'
 
 import {read} from '../src/reader.js'
 
+import {runServerIfNode} from './node-setup.js'
 import {FIXTURES} from './data.js'
 
 describe('CoverageCollection methods', () => {
+  
+  runServerIfNode()
+  
   describe('#query', () => {
     it('should query correctly', () => {
       return read(FIXTURES.CollectionURL).then(coll => {

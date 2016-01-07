@@ -1,7 +1,12 @@
+import {PORT} from './node-setup.js'
+
+let browser = typeof window !== 'undefined'
+let base = browser ? 'base/test/fixtures/' : 'http://localhost:' + PORT + '/'
+
 export const FIXTURES = {
-    ProfileURL: 'base/test/fixtures/Coverage-Profile-standalone.covjson',
-    CollectionURL: 'base/test/fixtures/VerticalProfileCoverageCollection-standalone.covjson',
-    GridCategoricalURL: 'base/test/fixtures/Coverage-Grid-categorical-standalone.covjson',
+    ProfileURL: base + 'Coverage-Profile-standalone.covjson',
+    CollectionURL: base + 'VerticalProfileCoverageCollection-standalone.covjson',
+    GridCategoricalURL: base + 'Coverage-Grid-categorical-standalone.covjson',
     Profile: () => ({
       "type" : "Coverage",
       "profile" : "VerticalProfileCoverage",

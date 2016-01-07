@@ -11,8 +11,8 @@ import * as http from './http.js'
  * @param {Object} headers Additional HTTP headers to send
  * @return {Promise}
  *   A Promise succeeding with an object <code>{data, headers}</code> where data is the CoverageJSON object
- *   and headers are the HTTP response headers. The promise fails if the resource at
- *   the given URL is not a valid JSON or CBOR document. 
+ *   and headers are the HTTP response headers with lower-cased header names as object keys.
+ *   The promise fails if the resource at the given URL is not a valid JSON or CBOR document. 
  */
 export function load (url, headers) {
   return http.load(url, headers)
@@ -60,7 +60,7 @@ export function read (input, options) {
  * Transforms a CoverageJSON object into one or more Coverage objects.
  *  
  * @param {object} obj A CoverageJSON object of type Coverage or CoverageCollection.
- * @param {array} headers An optional array of HTTP headers.
+ * @param {array} headers An optional array of HTTP headers. Keys are lower-cased header names.
  * @return {Coverage|Array of Coverage}
  */
 function transformCovJSON (obj, headers) {
@@ -89,13 +89,13 @@ function addLinkRelations (cov, headers) {
   // for registered rel's
   const IANAPrefix = 'http://www.iana.org/assignments/relation/'
   
-  if (!headers || !headers['Link']) {
+  if (!headers || !headers['link']) {
     return
   }
   
   let ld = cov.ld
   
-  for (let link of headers['Link'].split(',')) {
+  for (let link of headers['link'].split(',')) {
     link = link.trim()
     // FIXME this will fail if the URL contains a ";" which is valid (see RFC5988)
     let parts = link.split(';')

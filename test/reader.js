@@ -9,6 +9,7 @@ import assert from 'assert'
 import {read} from '../src/reader.js'
 import {PREFIX} from '../src/util.js'
 
+import {runServerIfNode} from './node-setup.js'
 import {FIXTURES} from './data.js'
 
 function readall(input) {
@@ -24,6 +25,9 @@ function readall(input) {
 }
 
 describe('reader methods', () => {
+  
+  runServerIfNode()
+  
   describe('#read', () => {
     // The following tests only check for basic reading errors.
     // This is done by returning the Promise directly to Mocha which can handle it.
