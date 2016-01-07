@@ -2,7 +2,7 @@
   "title": "covjson-reader documentation",
   "source": "./src",
   "destination": "./docs",
-  "excludes": ["http-browser.js", "http.js", "util.js"],
+  "includes": ["Coverage.js", "CoverageCollection.js", "reader.js"],
   "plugins": [
     {
       "name": "esdoc-importpath-plugin",
