@@ -18,6 +18,10 @@
     "cbor": "paroga/cbor-js#v0.1.0",
     "ndarray": "^1.0.18"
   },
+  "files": [
+    "lib/",
+    "covjson-reader.*"
+  ],
   "scripts": {
     "docs": "esdoc -c esdoc.json",
     "style": "standard",
