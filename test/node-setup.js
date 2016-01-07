@@ -1,13 +1,14 @@
-import finalhandler from 'finalhandler'
-import http from 'http'
-import serveStatic from 'serve-static'
-
 let browser = typeof window !== 'undefined'
   
 export const PORT = 8000
 
 export function runServerIfNode() {
   if (browser) return
+  
+  // lazy load with require() to prevent errors in browser environments
+  let finalhandler = require('finalhandler')
+  let http = require('http')
+  let serveStatic = require('serve-static')
 
   let serve = serveStatic('test/fixtures')
   let server = http.createServer((req, res) => {
