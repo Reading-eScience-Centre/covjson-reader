@@ -1,4 +1,4 @@
-import cbor from 'cbor'
+import cbor from 'cbor-js'
 import {endsWith} from './util.js'
 import {MEDIATYPE, ACCEPT, EXT} from './http-common.js'
 

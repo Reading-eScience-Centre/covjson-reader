@@ -1,4 +1,4 @@
-import cbor from 'cbor'
+import cbor from 'cbor-js'
 import request from 'request-promise'
 
 import {endsWith} from './util.js'
