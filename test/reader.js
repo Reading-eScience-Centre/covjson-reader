@@ -6,8 +6,8 @@ import 'core-js/es6/map'
 
 import assert from 'assert'
 
-import {read} from '../src/reader.js'
-import {PREFIX} from '../src/util.js'
+import {read} from '../lib/reader.js'
+import {PREFIX} from '../lib/util.js'
 
 import {runServerIfNode} from './node-setup.js'
 import {FIXTURES} from './data.js'
