@@ -1,7 +1,10 @@
 import ndarray from 'ndarray'
 import {shallowcopy, minMax, assert, isISODateAxis, asTime,
   indexOfNearest, indicesOfNearest, PREFIX} from './util.js'
-import {load} from './http.js'
+  
+//NO FILE EXTENSION, to work around JSPM bug in handling package.json's "browser" field
+//see https://github.com/jspm/jspm-cli/issues/1062#issuecomment-170342414
+import {load} from './http'
 
 /** 
  * Wraps a CoverageJSON Coverage object as a Coverage API object.

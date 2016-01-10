@@ -1,7 +1,10 @@
 import Coverage from './Coverage.js'
 import CoverageCollection from './CoverageCollection.js'
 import {assert} from './util.js'
-import * as http from './http.js'
+
+// NO FILE EXTENSION, to work around JSPM bug in handling package.json's "browser" field
+// see https://github.com/jspm/jspm-cli/issues/1062#issuecomment-170342414
+import * as http from './http'
 
 /**
  * Loads a CoverageJSON document from a given URL and returns a {@link Promise} object
