@@ -1,4 +1,4 @@
-import {default as Coverage, transformDomain} from './Coverage.js'
+import {default as Coverage, transformDomain, transformParameter} from './Coverage.js'
 import {shallowcopy, isISODateAxis, asTime} from './util.js'
 
 /** 
@@ -47,7 +47,11 @@ export default class CoverageCollection {
     this.coverages = covs
     if (covjson.parameters) {
       /** @type {Map} */
-      this.parameters = covjson.parameters
+      this.parameters = new Map()
+      for (let key of Object.keys(covjson.parameters)) {
+        transformParameter(covjson.parameters, key)
+        this.parameters.set(key, covjson.parameters[key])
+      }
     }
     if (covjson.domainTemplate) {
       transformDomain(covjson.domainTemplate)

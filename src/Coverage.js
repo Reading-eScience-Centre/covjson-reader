@@ -492,8 +492,9 @@ function arrayType (validMin, validMax) {
  * language maps become real Maps. Transformation is made in-place.
  * 
  * @param {Object} param The original parameter.
+ * @access private
  */
-function transformParameter (params, key) {
+export function transformParameter (params, key) {
   let param = params[key]
   param.key = key
   let maps = [
