@@ -489,12 +489,13 @@ function arrayType (validMin, validMax) {
 
 /**
  * Transforms a CoverageJSON parameter to the Coverage API format, that is,
- * language maps become real Maps. Transformation is made in-place.
+ * some elements are converted from objects to Maps. Transformation is made in-place.
  * 
  * @param {Object} param The original parameter.
  * @access private
  */
 export function transformParameter (params, key) {
+  if ('__transformDone' in params[key]) return
   let param = params[key]
   param.key = key
   let maps = [
@@ -521,6 +522,7 @@ export function transformParameter (params, key) {
     }
     param.categoryEncoding = map
   }
+  param.__transformDone = true  
 }
 
 function transformLanguageMap (obj, key) {
