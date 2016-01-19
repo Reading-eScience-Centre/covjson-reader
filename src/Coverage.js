@@ -498,19 +498,6 @@ export function transformParameter (params, key) {
   if ('__transformDone' in params[key]) return
   let param = params[key]
   param.key = key
-  let maps = [
-              [param, 'description'], 
-              [param.observedProperty, 'label'],
-              [param.observedProperty, 'description'],
-              [param.unit, 'label']
-             ]
-  for (let cat of param.observedProperty.categories || []) {
-    maps.push([cat, 'label'])
-    maps.push([cat, 'description'])
-  }
-  for (let entry of maps) {
-    transformLanguageMap(entry[0], entry[1])
-  }
   if (param.categoryEncoding) {
     let map = new Map()
     for (let category of Object.keys(param.categoryEncoding)) {
@@ -523,17 +510,6 @@ export function transformParameter (params, key) {
     param.categoryEncoding = map
   }
   param.__transformDone = true  
-}
-
-function transformLanguageMap (obj, key) {
-  if (!obj || !(key in obj) || obj[key] instanceof Map) {
-    return    
-  }
-  var map = new Map()
-  for (let tag of Object.keys(obj[key])) {
-    map.set(tag, obj[key][tag])
-  }
-  obj[key] = map
 }
 
 /**

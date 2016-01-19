@@ -49,8 +49,8 @@ describe('reader methods', () => {
         assert.equal(cov.type, PREFIX + FIXTURES.Profile().profile)
         assert.equal(cov.domainType, PREFIX + FIXTURES.Profile().domain.profile)
         let label = cov.parameters.get('PSAL').observedProperty.label
-        assert(label.has('en'), 'en label missing')
-        assert.equal(label.get('en'), 'Sea Water Salinity')
+        assert(label.en, 'en label missing')
+        assert.equal(label.en, 'Sea Water Salinity')
       })
     })
     it('Categorical coverage should have correct properties', () => {
@@ -59,10 +59,10 @@ describe('reader methods', () => {
         let cats = param.observedProperty.categories
         // cats.find(c => c.id === 'http://.../landcover1/categories/grass')
         let grass = cats[0] // IE11 compatible
-        assert(grass.label.has('en'), 'en label missing')
-        assert.equal(grass.label.get('en'), 'Grass')
-        assert(grass.description.has('en'), 'en description missing')
-        assert.equal(grass.description.get('en'), 'Very green grass.')
+        assert(grass.label.en, 'en label missing')
+        assert.equal(grass.label.en, 'Grass')
+        assert(grass.description.en, 'en description missing')
+        assert.equal(grass.description.en, 'Very green grass.')
         assert.deepEqual(param.categoryEncoding.get(grass.id), [1])
       })
     })
