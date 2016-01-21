@@ -265,9 +265,12 @@ export default class Coverage {
       // For each axis, a constraint exists.
       
       // subset the axis arrays of the domain (immediately + cached)
-      let newdomain = shallowcopy(domain)
-      newdomain.axes = new Map(newdomain.axes)
-      newdomain._rangeShape = domain._rangeShape.slice() // deep copy
+      let newdomain = {
+        type: domain.type,
+        axes: new Map(domain.axes),
+        _rangeShape: domain._rangeShape.slice(), // copy as we will modify it
+        _rangeAxisOrder: domain._rangeAxisOrder
+      }      
 
       for (let axisName of Object.keys(constraints)) {
         let coords = domain.axes.get(axisName).values
@@ -290,8 +293,10 @@ export default class Coverage {
           }
         }
         
-        let newaxis = shallowcopy(domain.axes.get(axisName))
-        newaxis.values = newcoords
+        // TODO handle bounds
+        let newaxis = {
+          values: newcoords
+        }
         newdomain.axes.set(axisName, newaxis)
         newdomain._rangeShape[domain._rangeAxisOrder.indexOf(axisName)] = newcoords.length
       }
@@ -307,34 +312,38 @@ export default class Coverage {
         let steps = axisNames.map(name => constraints[name].step)
         let newndarr = ndarr.hi(...his).lo(...los).step(...steps)
         
-        let newrange = shallowcopy(range)
-        newrange._ndarr = newndarr
+        let newrange = {
+          dataType: range.dataType,
+          get: createRangeGetFunction(newndarr, domain._rangeAxisOrder),
+          _ndarr: newndarr
+        }
         newrange.shape = new Map()
         for (let axisName of domain.axes.keys()) {
           newrange.shape.set(axisName, newdomain.axes.get(axisName).values.length)
         }
-        
-        newrange.get = createRangeGetFunction(newndarr, domain._rangeAxisOrder)
-        
         return newrange
       }
       
       let loadRange = key => this.loadRange(key).then(rangeWrapper)
       
-      // we wrap loadRanges as well in case it was overridden from the outside
-      // (in which case we could not be sure that it invokes loadRange() and uses the wrapper)
       let loadRanges = keys => this.loadRanges(keys).then(ranges => 
         new Map([...ranges].map(([key, range]) => [key, rangeWrapper(range)]))
       )
       
       // assemble everything to a new coverage
-      let newcov = shallowcopy(this)
-      newcov.loadDomain = () => Promise.resolve(newdomain)
-      newcov.loadRange = loadRange
-      newcov.loadRanges = loadRanges
-      // FIXME what about .ld?
-      // -> we don't know if all LD info is valid for the subsetted cov as well
-      //  e.g. index-based subsetting API info would be invalid
+      let newcov = {
+        id: this.id,
+        type: this.type,
+        domainType: this.domainType,
+        parameters: this.parameters,
+        loadDomain: () => Promise.resolve(newdomain),
+        loadRange,
+        loadRanges
+      }
+      // We reuse the existing functions as-is.
+      // This is possible since we attached the necessary internal properties like range._ndarr.
+      newcov.subsetByIndex = this.subsetByIndex.bind(newcov)
+      newcov.subsetByValue = this.subsetByValue.bind(newcov)
       return newcov
     })
   }

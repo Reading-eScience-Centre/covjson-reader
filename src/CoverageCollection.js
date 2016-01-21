@@ -141,8 +141,13 @@ export class CollectionQuery {
    */
   execute () {
     let coll = this._collection
-    let newcoll = shallowcopy(coll)
-    newcoll.coverages = []
+    let newcoll = {
+      coverages: [],
+      parameters: coll.parameters,
+      // TODO is the domain template still valid in all cases after filtering and subsetting?
+      domainTemplate: coll.domainTemplate
+    }
+    
     let promises = []
     for (let cov of coll.coverages) {
       promises.push(cov.loadDomain().then(domain => {
@@ -159,7 +164,10 @@ export class CollectionQuery {
         }
       }))
     }
-    return Promise.all(promises).then(() => newcoll)
+    return Promise.all(promises).then(() => {
+      newcoll.query = () => new CollectionQuery(newcoll)
+      return newcoll
+    })
   }
 }
 
