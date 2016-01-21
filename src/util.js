@@ -41,7 +41,7 @@ export function minMax (arr) {
   } else if (max === -Infinity) {
     max = min
   }
-  if (min === Infinity) {
+  if (min === Infinity || min === -Infinity) {
     // all values were null
     min = null
     max = null
