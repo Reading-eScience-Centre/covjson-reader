@@ -18,7 +18,36 @@ export const FIXTURES = {
           "y": { "values": [-40.2] },
           "z": { "values": [ 5.4562, 8.9282 ] },
           "t": { "values": ["2013-01-13T11:12:20Z"] }
-        }
+        },
+        "referencing": [{
+          "identifiers": ["x","y"],
+          "srs": {
+            "type": "GeodeticCRS",
+            "id": "http://www.opengis.net/def/crs/OGC/1.3/CRS84"
+          }
+        }, {
+          "identifiers": ["z"],
+          "srs": {
+            "type": "VerticalCRS",
+            "cs": {
+              "axes": [{
+                "name": {
+                  "en": "Pressure"
+                },
+                "direction": "down",
+                "unit": {
+                  "symbol": "Pa"
+                }
+              }]
+            }
+          }
+        }, {
+          "identifiers": ["t"],
+          "trs": {
+            "type": "TemporalRS",
+            "calendar": "Gregorian"
+          }
+        }]
       },
       "parameters" : {
         "PSAL": {
@@ -54,7 +83,20 @@ export const FIXTURES = {
           "z": { "values": [5] },
           "t": { "values": ["2010-01-01T00:12:20Z"] }
         },
-        "rangeAxisOrder": ["t","z","y","x"]
+        "rangeAxisOrder": ["t","z","y","x"],
+        "referencing": [{
+          "identifiers": ["y","x","z"],
+          "srs": {
+            "type": "GeodeticCRS",
+            "id": "http://www.opengis.net/def/crs/EPSG/0/4979"
+          }
+        }, {
+          "identifiers": ["t"],
+          "trs": {
+            "type": "TemporalRS",
+            "calendar": "Gregorian"
+          }
+        }]
       },
       "parameters" : {
         "ICEC": {
@@ -92,7 +134,20 @@ export const FIXTURES = {
           "z": { "values": [5] },
           "t": { "values": ["2010-01-01T00:12:20Z"] }
         },
-        "rangeAxisOrder": ["t","z","y","x"]
+        "rangeAxisOrder": ["t","z","y","x"],
+        "referencing": [{
+          "identifiers": ["y","x","z"],
+          "srs": {
+            "type": "GeodeticCRS",
+            "id": "http://www.opengis.net/def/crs/EPSG/0/4979"
+          }
+        }, {
+          "identifiers": ["t"],
+          "trs": {
+            "type": "TemporalRS",
+            "calendar": "Gregorian"
+          }
+        }]
       },
       "parameters" : {
         "ICEC": {
