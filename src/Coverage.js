@@ -268,12 +268,14 @@ export default class Coverage {
       let newdomain = {
         type: domain.type,
         axes: new Map(domain.axes),
+        referencing: domain.referencing,
         _rangeShape: domain._rangeShape.slice(), // copy as we will modify it
         _rangeAxisOrder: domain._rangeAxisOrder
-      }      
+      }
 
       for (let axisName of Object.keys(constraints)) {
-        let coords = domain.axes.get(axisName).values
+        let axis = domain.axes.get(axisName)
+        let coords = axis.values
         let isTypedArray = ArrayBuffer.isView(coords)
         let constraint = constraints[axisName]
         let newcoords
@@ -295,6 +297,8 @@ export default class Coverage {
         
         // TODO handle bounds
         let newaxis = {
+          dataType: axis.dataType,
+          dimensions: axis.dimensions,
           values: newcoords
         }
         newdomain.axes.set(axisName, newaxis)
@@ -680,6 +684,12 @@ export function transformDomain (domain) {
   // expand start/stop/num regular axes
   // replace 1D numeric axis arrays with typed arrays for efficiency
   for (let axis of axes.values()) {
+    if (axis.dataType === 'Tuple') {
+      axis.dataType = PREFIX + 'Tuple'
+    } else if (axis.dataType === 'Polygon') {
+      axis.dataType = 'http://ld.geojson.org/vocab#Polygon'
+    }
+    
     if ('start' in axis && 'stop' in axis && 'num' in axis) {
       let arr = new Float64Array(axis.num)
       let step
@@ -721,6 +731,14 @@ export function transformDomain (domain) {
   
   domain._rangeAxisOrder = domain.rangeAxisOrder || [...axes.keys()]
   domain._rangeShape = domain._rangeAxisOrder.map(k => axes.get(k).values.length)
+  
+  for (let obj of domain.referencing) {
+    if (obj.system) break // already transformed
+    obj.system = obj.srs || obj.trs || obj.rs
+    delete obj.srs
+    delete obj.trs
+    delete obj.rs
+  }
   
   domain.__transformDone = true
   
