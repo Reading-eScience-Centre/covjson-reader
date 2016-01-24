@@ -61,7 +61,6 @@
     }
   },
   "ranges" : {
-    "type" : "RangeSet",
     "LC" : {
       "type" : "Range",
       "values" : [ 1, 1, null, 2, 1, 2 ],
