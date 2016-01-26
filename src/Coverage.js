@@ -19,7 +19,9 @@ export default class Coverage {
    * @param {Object} [options] 
    * @param {boolean} [options.cacheRanges]
    *   If true, then any range that was loaded remotely is cached.
-   *   (The domain is always cached.)                        
+   *   (The domain is always cached.)
+   * @param {Array} [options.referencing]
+   *   Referencing info to use (e.g. from containing collection).                        
    */
   constructor (covjson, options) {
     this._covjson = covjson
@@ -110,13 +112,13 @@ export default class Coverage {
     let promise
     if (typeof domainOrUrl === 'object') {
       let domain = domainOrUrl
-      transformDomain(domain)
+      transformDomain(domain, this.options.referencing)
       promise = Promise.resolve(domain)
     } else {
       let url = domainOrUrl
       promise = load(url).then(result => {
         let domain = result.data
-        transformDomain(domain)
+        transformDomain(domain, this.options.referencing)
         this._covjson.domain = domain
         return domain
       })
@@ -661,10 +663,11 @@ function createRangeGetFunction (ndarr, axisOrder) {
  * Transformation is made in-place.
  * 
  * @param {Object} domain The original domain object.
+ * @param {Array} [referencing] Referencing info to inject.
  * @return {Object} The transformed domain object.
  * @access private
  */
-export function transformDomain (domain) {
+export function transformDomain (domain, referencing) {
   if ('__transformDone' in domain) return
   
   let profile = domain.profile || 'Domain'
@@ -730,6 +733,10 @@ export function transformDomain (domain) {
   
   domain._rangeAxisOrder = domain.rangeAxisOrder || [...axes.keys()]
   domain._rangeShape = domain._rangeAxisOrder.map(k => axes.get(k).values.length)
+  
+  if (referencing) {
+    domain.referencing = referencing
+  }
   
   for (let obj of domain.referencing) {
     if (obj.system) break // already transformed

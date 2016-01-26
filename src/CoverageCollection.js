@@ -30,6 +30,10 @@ export default class CoverageCollection {
     
     let covs = []
     let rootParams = covjson.parameters ? covjson.parameters : {}
+    let covOptions = {}
+    if (covjson.referencing) {
+      covOptions.referencing = covjson.referencing
+    }
     for (let coverage of covjson.coverages) {
       if (coverage.parameters) {
         for (let key of Object.keys(rootParams)) {
@@ -39,8 +43,8 @@ export default class CoverageCollection {
         }
       } else {
         coverage.parameters = rootParams
-      } 
-      covs.push(new Coverage(coverage))
+      }
+      covs.push(new Coverage(coverage, covOptions))
     }
     
     /** @type {Array<Coverage>} */
