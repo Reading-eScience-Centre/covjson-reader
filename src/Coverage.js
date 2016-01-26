@@ -336,7 +336,6 @@ export default class Coverage {
       
       // assemble everything to a new coverage
       let newcov = {
-        id: this.id,
         type: this.type,
         domainType: this.domainType,
         parameters: this.parameters,
