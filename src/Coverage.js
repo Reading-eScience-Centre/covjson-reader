@@ -225,132 +225,8 @@ export default class Coverage {
    *   q and r are the quotient and remainder obtained by dividing stop - start by step.
    * @returns {Promise} A Promise object with the subsetted coverage object as result.
    */
-  subsetByIndex (constraints) {    
-    return this.loadDomain().then(domain => {      
-      // check and normalize constraints to simplify code
-      constraints = shallowcopy(constraints)
-      for (let axisName in constraints) {
-        if (!domain.axes.has(axisName)) {
-          // TODO clarify this behaviour in the JS API spec
-          delete constraints[axisName]
-          continue
-        }
-        if (constraints[axisName] === undefined || constraints[axisName] === null) {
-          delete constraints[axisName]
-          continue
-        }
-        if (typeof constraints[axisName] === 'number') {
-          let constraint = constraints[axisName]
-          constraints[axisName] = {start: constraint, stop: constraint + 1}
-        }
-
-        let {start = 0, 
-             stop = domain.axes.get(axisName).values.length, 
-             step = 1} = constraints[axisName]
-        if (step <= 0) {
-          throw new Error(`Invalid constraint for ${axisName}: step=${step} must be > 0`)
-        }
-        if (start >= stop || start < 0) {
-          throw new Error(`Invalid constraint for ${axisName}: stop=${stop} must be > start=${start} and both >= 0`)
-        }
-        constraints[axisName] = {start, stop, step}
-      }
-      for (let axisName of domain.axes.keys()) {
-        if (!(axisName in constraints)) {
-          let len = domain.axes.get(axisName).values.length
-          constraints[axisName] = {start: 0, stop: len, step: 1}
-        }
-      }
-      
-      // After normalization, all constraints are start,stop,step objects.
-      // It holds that stop > start, step > 0, start >= 0, stop >= 1.
-      // For each axis, a constraint exists.
-      
-      // subset the axis arrays of the domain (immediately + cached)
-      let newdomain = {
-        type: domain.type,
-        axes: new Map(domain.axes),
-        referencing: domain.referencing,
-        _rangeShape: domain._rangeShape.slice(), // copy as we will modify it
-        _rangeAxisOrder: domain._rangeAxisOrder
-      }
-
-      for (let axisName of Object.keys(constraints)) {
-        let axis = domain.axes.get(axisName)
-        let coords = axis.values
-        let isTypedArray = ArrayBuffer.isView(coords)
-        let constraint = constraints[axisName]
-        let newcoords
-
-        let {start, stop, step} = constraint
-        if (start === 0 && stop === coords.length && step === 1) {
-          newcoords = coords
-        } else if (step === 1 && isTypedArray) {
-          newcoords = coords.subarray(start, stop)
-        } else {
-          let q = Math.trunc((stop - start) / step)
-          let r = (stop - start) % step
-          let len = q + r
-          newcoords = new coords.constructor(len) // array or typed array
-          for (let i=start, j=0; i < stop; i += step, j++) {
-            newcoords[j] = coords[i]
-          }
-        }
-        
-        // TODO handle bounds
-        let newaxis = {
-          dataType: axis.dataType,
-          dimensions: axis.dimensions,
-          values: newcoords
-        }
-        newdomain.axes.set(axisName, newaxis)
-        newdomain._rangeShape[domain._rangeAxisOrder.indexOf(axisName)] = newcoords.length
-      }
-            
-      // subset the ndarrays of the ranges (on request)
-      let rangeWrapper = range => {
-        let ndarr = range._ndarr
-        
-        // fast ndarray view
-        let axisNames = domain._rangeAxisOrder
-        let los = axisNames.map(name => constraints[name].start)
-        let his = axisNames.map(name => constraints[name].stop)
-        let steps = axisNames.map(name => constraints[name].step)
-        let newndarr = ndarr.hi(...his).lo(...los).step(...steps)
-        
-        let newrange = {
-          dataType: range.dataType,
-          get: createRangeGetFunction(newndarr, domain._rangeAxisOrder),
-          _ndarr: newndarr
-        }
-        newrange.shape = new Map()
-        for (let axisName of domain.axes.keys()) {
-          newrange.shape.set(axisName, newdomain.axes.get(axisName).values.length)
-        }
-        return newrange
-      }
-      
-      let loadRange = key => this.loadRange(key).then(rangeWrapper)
-      
-      let loadRanges = keys => this.loadRanges(keys).then(ranges => 
-        new Map([...ranges].map(([key, range]) => [key, rangeWrapper(range)]))
-      )
-      
-      // assemble everything to a new coverage
-      let newcov = {
-        type: this.type,
-        domainType: this.domainType,
-        parameters: this.parameters,
-        loadDomain: () => Promise.resolve(newdomain),
-        loadRange,
-        loadRanges
-      }
-      // We reuse the existing functions as-is.
-      // This is possible since we attached the necessary internal properties like range._ndarr.
-      newcov.subsetByIndex = this.subsetByIndex.bind(newcov)
-      newcov.subsetByValue = this.subsetByValue.bind(newcov)
-      return newcov
-    })
+  subsetByIndex (constraints) {
+    return subsetByIndex(this, constraints)
   }
   
   /**
@@ -387,80 +263,211 @@ export default class Coverage {
    *  and a target object to the value closest to the given value.
    * @returns {Promise} A Promise object with the subsetted coverage object as result.
    */
-  subsetByValue (constraints) {    
-    return this.loadDomain().then(domain => {
-      // calculate indices and use subsetByIndex
-      let indexConstraints = {}
-      
-      for (let axisName of Object.keys(constraints)) {
-        let spec = constraints[axisName]
-        if (spec === undefined || spec === null || !domain.axes.has(axisName)) {
-          continue
-        }
-        let axis = domain.axes.get(axisName)
-        let vals = axis.values
-        
-        if (typeof spec === 'number' || typeof spec === 'string' || spec instanceof Date) {
-          let match = spec
-          if (isISODateAxis(domain, axisName)) {
-            // convert times to numbers before searching
-            match = asTime(match)
-            vals = vals.map(v => new Date(v).getTime())
-          }
-          let i
-          // older browsers don't have TypedArray.prototype.indexOf
-          if (vals.indexOf) {
-            i = vals.indexOf(match)
-          } else {
-            i = Array.prototype.indexOf.call(vals, match)
-          }
-          if (i === -1) {
-            throw new Error('Domain value not found: ' + spec)
-          }
-          indexConstraints[axisName] = i
-          
-        } else if ('target' in spec) {
-          // find index of value closest to target
-          let target = spec.target
-          if (isISODateAxis(domain, axisName)) {
-            // convert times to numbers before searching
-            target = asTime(target)
-            vals = vals.map(v => new Date(v).getTime())
-          } else if (typeof vals[0] !== 'number' || typeof target !== 'number') {
-            throw new Error('Invalid axis or constraint value type')
-          }
-          let i = indexOfNearest(vals, target)
-          indexConstraints[axisName] = i
-          
-        } else if ('start' in spec && 'stop' in spec) {
-          // TODO what about bounds?
-          
-          let {start,stop} = spec
-          if (isISODateAxis(domain, axisName)) {
-            // convert times to numbers before searching
-            [start, stop] = [asTime(start), asTime(stop)]
-            vals = vals.map(v => new Date(v).getTime())
-          } else if (typeof vals[0] !== 'number' || typeof start !== 'number') {
-            throw new Error('Invalid axis or constraint value type')
-          }
-          
-          let [lo1,hi1] = indicesOfNearest(vals, start)
-          let [lo2,hi2] = indicesOfNearest(vals, stop)
-          
-          // this is a bit arbitrary and may include one or two indices too much
-          // (but since we don't handle bounds it doesn't matter that much)
-          let imin = Math.min(lo1,hi1,lo2,hi2)
-          let imax = Math.max(lo1,hi1,lo2,hi2) + 1 // subsetByIndex is exclusive
-          
-          indexConstraints[axisName] = {start: imin, stop: imax}
-        } else {
-          throw new Error('Invalid subset constraints')
-        }
-      }           
-      
-      return this.subsetByIndex(indexConstraints)
-    })
+  subsetByValue (constraints) {
+    return subsetByValue(this, constraints)
   }
+}
+
+function subsetByIndex (cov, constraints) {    
+  return cov.loadDomain().then(domain => {      
+    // check and normalize constraints to simplify code
+    constraints = shallowcopy(constraints)
+    for (let axisName in constraints) {
+      if (!domain.axes.has(axisName)) {
+        // TODO clarify cov behaviour in the JS API spec
+        delete constraints[axisName]
+        continue
+      }
+      if (constraints[axisName] === undefined || constraints[axisName] === null) {
+        delete constraints[axisName]
+        continue
+      }
+      if (typeof constraints[axisName] === 'number') {
+        let constraint = constraints[axisName]
+        constraints[axisName] = {start: constraint, stop: constraint + 1}
+      }
+
+      let {start = 0, 
+           stop = domain.axes.get(axisName).values.length, 
+           step = 1} = constraints[axisName]
+      if (step <= 0) {
+        throw new Error(`Invalid constraint for ${axisName}: step=${step} must be > 0`)
+      }
+      if (start >= stop || start < 0) {
+        throw new Error(`Invalid constraint for ${axisName}: stop=${stop} must be > start=${start} and both >= 0`)
+      }
+      constraints[axisName] = {start, stop, step}
+    }
+    for (let axisName of domain.axes.keys()) {
+      if (!(axisName in constraints)) {
+        let len = domain.axes.get(axisName).values.length
+        constraints[axisName] = {start: 0, stop: len, step: 1}
+      }
+    }
+    
+    // After normalization, all constraints are start,stop,step objects.
+    // It holds that stop > start, step > 0, start >= 0, stop >= 1.
+    // For each axis, a constraint exists.
+    
+    // subset the axis arrays of the domain (immediately + cached)
+    let newdomain = {
+      type: domain.type,
+      axes: new Map(domain.axes),
+      referencing: domain.referencing,
+      _rangeShape: domain._rangeShape.slice(), // copy as we will modify it
+      _rangeAxisOrder: domain._rangeAxisOrder
+    }
+
+    for (let axisName of Object.keys(constraints)) {
+      let axis = domain.axes.get(axisName)
+      let coords = axis.values
+      let isTypedArray = ArrayBuffer.isView(coords)
+      let constraint = constraints[axisName]
+      let newcoords
+
+      let {start, stop, step} = constraint
+      if (start === 0 && stop === coords.length && step === 1) {
+        newcoords = coords
+      } else if (step === 1 && isTypedArray) {
+        newcoords = coords.subarray(start, stop)
+      } else {
+        let q = Math.trunc((stop - start) / step)
+        let r = (stop - start) % step
+        let len = q + r
+        newcoords = new coords.constructor(len) // array or typed array
+        for (let i=start, j=0; i < stop; i += step, j++) {
+          newcoords[j] = coords[i]
+        }
+      }
+      
+      // TODO handle bounds
+      let newaxis = {
+        dataType: axis.dataType,
+        dimensions: axis.dimensions,
+        values: newcoords
+      }
+      newdomain.axes.set(axisName, newaxis)
+      newdomain._rangeShape[domain._rangeAxisOrder.indexOf(axisName)] = newcoords.length
+    }
+          
+    // subset the ndarrays of the ranges (on request)
+    let rangeWrapper = range => {
+      let ndarr = range._ndarr
+      
+      // fast ndarray view
+      let axisNames = domain._rangeAxisOrder
+      let los = axisNames.map(name => constraints[name].start)
+      let his = axisNames.map(name => constraints[name].stop)
+      let steps = axisNames.map(name => constraints[name].step)
+      let newndarr = ndarr.hi(...his).lo(...los).step(...steps)
+      
+      let newrange = {
+        dataType: range.dataType,
+        get: createRangeGetFunction(newndarr, domain._rangeAxisOrder),
+        _ndarr: newndarr
+      }
+      newrange.shape = new Map()
+      for (let axisName of domain.axes.keys()) {
+        let size = newdomain.axes.get(axisName).values.length
+        newrange.shape.set(axisName, size)
+      }
+      return newrange
+    }
+    
+    let loadRange = key => cov.loadRange(key).then(rangeWrapper)
+    
+    let loadRanges = keys => cov.loadRanges(keys).then(ranges => 
+      new Map([...ranges].map(([key, range]) => [key, rangeWrapper(range)]))
+    )
+    
+    // assemble everything to a new coverage
+    let newcov = {
+      type: cov.type,
+      domainType: cov.domainType,
+      parameters: cov.parameters,
+      loadDomain: () => Promise.resolve(newdomain),
+      loadRange,
+      loadRanges
+    }
+    newcov.subsetByIndex = subsetByIndex.bind(null, newcov)
+    newcov.subsetByValue = subsetByValue.bind(null, newcov)
+    return newcov
+  })
+}
+
+function subsetByValue (cov, constraints) {
+  return cov.loadDomain().then(domain => {
+    // calculate indices and use subsetByIndex
+    let indexConstraints = {}
+    
+    for (let axisName of Object.keys(constraints)) {
+      let spec = constraints[axisName]
+      if (spec === undefined || spec === null || !domain.axes.has(axisName)) {
+        continue
+      }
+      let axis = domain.axes.get(axisName)
+      let vals = axis.values
+      
+      if (typeof spec === 'number' || typeof spec === 'string' || spec instanceof Date) {
+        let match = spec
+        if (isISODateAxis(domain, axisName)) {
+          // convert times to numbers before searching
+          match = asTime(match)
+          vals = vals.map(v => new Date(v).getTime())
+        }
+        let i
+        // older browsers don't have TypedArray.prototype.indexOf
+        if (vals.indexOf) {
+          i = vals.indexOf(match)
+        } else {
+          i = Array.prototype.indexOf.call(vals, match)
+        }
+        if (i === -1) {
+          throw new Error('Domain value not found: ' + spec)
+        }
+        indexConstraints[axisName] = i
+        
+      } else if ('target' in spec) {
+        // find index of value closest to target
+        let target = spec.target
+        if (isISODateAxis(domain, axisName)) {
+          // convert times to numbers before searching
+          target = asTime(target)
+          vals = vals.map(v => new Date(v).getTime())
+        } else if (typeof vals[0] !== 'number' || typeof target !== 'number') {
+          throw new Error('Invalid axis or constraint value type')
+        }
+        let i = indexOfNearest(vals, target)
+        indexConstraints[axisName] = i
+        
+      } else if ('start' in spec && 'stop' in spec) {
+        // TODO what about bounds?
+        
+        let {start,stop} = spec
+        if (isISODateAxis(domain, axisName)) {
+          // convert times to numbers before searching
+          [start, stop] = [asTime(start), asTime(stop)]
+          vals = vals.map(v => new Date(v).getTime())
+        } else if (typeof vals[0] !== 'number' || typeof start !== 'number') {
+          throw new Error('Invalid axis or constraint value type')
+        }
+        
+        let [lo1,hi1] = indicesOfNearest(vals, start)
+        let [lo2,hi2] = indicesOfNearest(vals, stop)
+        
+        // cov is a bit arbitrary and may include one or two indices too much
+        // (but since we don't handle bounds it doesn't matter that much)
+        let imin = Math.min(lo1,hi1,lo2,hi2)
+        let imax = Math.max(lo1,hi1,lo2,hi2) + 1 // subsetByIndex is exclusive
+        
+        indexConstraints[axisName] = {start: imin, stop: imax}
+      } else {
+        throw new Error('Invalid subset constraints')
+      }
+    }
+    
+    return cov.subsetByIndex(indexConstraints)
+  })
 }
 
 /**
@@ -685,7 +692,7 @@ export function transformDomain (domain, referencing) {
   
   // expand start/stop/num regular axes
   // replace 1D numeric axis arrays with typed arrays for efficiency
-  for (let [key, axis] of axes.values()) {
+  for (let [key, axis] of axes) {
     if (axis.dataType === 'Tuple') {
       axis.dataType = PREFIX + 'Tuple'
     } else if (axis.dataType === 'Polygon') {
