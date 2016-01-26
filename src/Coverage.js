@@ -685,11 +685,15 @@ export function transformDomain (domain, referencing) {
   
   // expand start/stop/num regular axes
   // replace 1D numeric axis arrays with typed arrays for efficiency
-  for (let axis of axes.values()) {
+  for (let [key, axis] of axes.values()) {
     if (axis.dataType === 'Tuple') {
       axis.dataType = PREFIX + 'Tuple'
     } else if (axis.dataType === 'Polygon') {
       axis.dataType = 'http://ld.geojson.org/vocab#Polygon'
+    }
+    
+    if (!axis.dimensions) {
+      axis.dimensions = [key]
     }
     
     if ('start' in axis && 'stop' in axis && 'num' in axis) {
