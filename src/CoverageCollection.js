@@ -1,5 +1,5 @@
 import {default as Coverage, transformDomain, transformParameter} from './Coverage.js'
-import {shallowcopy, isISODateAxis, asTime} from './util.js'
+import {shallowcopy, isISODateAxis, asTime, PREFIX} from './util.js'
 
 /** 
  * Wraps a CoverageJSON Collection object as a CoverageCollection API object.
@@ -27,6 +27,14 @@ export default class CoverageCollection {
      * @type {string|undefined} 
      */
     this.id = covjson.id
+    
+    let profile = covjson.profile || 'CoverageCollection'
+    if (profile.substr(0,4) !== 'http') {
+      profile = PREFIX + profile
+    }
+    
+    /** @type {string} */
+    this.type = profile
     
     let covs = []
     let rootParams = covjson.parameters ? covjson.parameters : {}
