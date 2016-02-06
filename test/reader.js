@@ -46,8 +46,8 @@ describe('reader methods', () => {
     })
     it('Coverage should have correct properties', () => {
       return read(FIXTURES.Profile()).then(cov => {
-        assert.equal(cov.type, PREFIX + FIXTURES.Profile().profile)
-        assert.equal(cov.domainType, PREFIX + FIXTURES.Profile().domain.profile)
+        assert.deepEqual(cov.profiles, [PREFIX + FIXTURES.Profile().profile])
+        assert.deepEqual(cov.domainProfiles, [PREFIX + FIXTURES.Profile().domain.profile])
         let label = cov.parameters.get('PSAL').observedProperty.label
         assert(label.en, 'en label missing')
         assert.equal(label.en, 'Sea Water Salinity')
