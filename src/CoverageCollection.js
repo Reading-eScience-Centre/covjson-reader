@@ -28,13 +28,16 @@ export default class CoverageCollection {
      */
     this.id = covjson.id
     
-    let profile = covjson.profile || 'CoverageCollection'
-    if (profile.substr(0,4) !== 'http') {
-      profile = PREFIX + profile
-    }
+    /** @type {Array<string>} */
+    this.profiles = []
     
-    /** @type {string} */
-    this.type = profile
+    let profile = covjson.profile
+    if (profile) {
+      if (profile.substr(0,4) !== 'http') {
+        profile = PREFIX + profile
+      }
+      this.profiles.push(profile)
+    }
     
     let covs = []
     let rootParams = covjson.parameters ? covjson.parameters : {}
@@ -157,7 +160,9 @@ export class CollectionQuery {
       coverages: [],
       parameters: coll.parameters,
       // TODO is the domain template still valid in all cases after filtering and subsetting?
-      domainTemplate: coll.domainTemplate
+      domainTemplate: coll.domainTemplate,
+      // TODO are the profiles still valid?
+      profiles: coll.profiles
     }
     
     let promises = []

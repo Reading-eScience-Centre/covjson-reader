@@ -56,27 +56,33 @@ export default class Coverage {
       this.parameters.set(key, covjson.parameters[key])
     }
     
-    let profile = this._covjson.profile || 'Coverage'
-    if (profile.substr(0,4) !== 'http') {
-      profile = PREFIX + profile
+    /** @type {Array<string>} */
+    this.profiles = []
+    
+    let profile = this._covjson.profile
+    if (profile) {
+      if (profile.substr(0,4) !== 'http') {
+        profile = PREFIX + profile
+      }
+      this.profiles.push(profile)
     }
     
-    /** @type {string} */
-    this.type = profile
+    /** @type {Array<string>} */
+    this.domainProfiles = []
     
     let domainProfile
     if (typeof this._covjson.domain === 'string') {
-      domainProfile = this._covjson.domainProfile || 'Domain'
+      domainProfile = this._covjson.domainProfile
     } else {
-      domainProfile = this._covjson.domain.profile || 'Domain'
+      domainProfile = this._covjson.domain.profile
     }
 
-    if (domainProfile.substr(0,4) !== 'http') {
-      domainProfile = PREFIX + domainProfile
+    if (domainProfile) {
+      if (domainProfile.substr(0,4) !== 'http') {
+        domainProfile = PREFIX + domainProfile
+      }
+      this.domainProfiles.push(domainProfile)
     }
-    
-    /** @type {string} */
-    this.domainType = domainProfile
     
     /**
      * A bounding box object with members "box" and "srs".
@@ -311,7 +317,8 @@ function subsetByIndex (cov, constraints) {
     
     // subset the axis arrays of the domain (immediately + cached)
     let newdomain = {
-      type: domain.type,
+      // TODO are the profiles still valid?
+      profiles: domain.profiles,
       axes: new Map(domain.axes),
       referencing: domain.referencing,
       _rangeShape: domain._rangeShape.slice(), // copy as we will modify it
@@ -382,8 +389,9 @@ function subsetByIndex (cov, constraints) {
     
     // assemble everything to a new coverage
     let newcov = {
-      type: cov.type,
-      domainType: cov.domainType,
+      // TODO are the profiles still valid?
+      profiles: cov.profiles,
+      domainProfiles: cov.domainProfiles,
       parameters: cov.parameters,
       loadDomain: () => Promise.resolve(newdomain),
       loadRange,
@@ -677,11 +685,14 @@ function createRangeGetFunction (ndarr, axisOrder) {
 export function transformDomain (domain, referencing) {
   if ('__transformDone' in domain) return
   
-  let profile = domain.profile || 'Domain'
-  if (profile.substr(0,4) !== 'http') {
-    profile = PREFIX + profile
+  domain.profiles = []
+  let profile = domain.profile
+  if (profile) {
+    if (profile.substr(0,4) !== 'http') {
+      profile = PREFIX + profile
+    }
+    domain.profiles.push(profile)
   }
-  domain.type = profile
 
   let axes = new Map() // axis name -> axis object
   
