@@ -555,7 +555,7 @@ function transformRange (range, domain) {
   const values = range.values
   const targetDataType = range.dataType // 'integer', 'float', 'string'
   const isTyped = ArrayBuffer.isView(values)
-  const missingIsEncoded = range.missing === 'nonvalid'
+  const missingIsEncoded = typeof range.validMin === 'number'
   const hasOffsetFactor = 'offset' in range
 
   if ('offset' in range) {
@@ -615,14 +615,15 @@ function transformRange (range, domain) {
         
     delete range.offset
     delete range.factor
-    delete range.missing
+    delete range.validMin
+    delete range.validMax
   }
   
-  if (validMin === undefined) {
+  if (range.actualMin === undefined) {
     let [min,max] = minMax(vals)
     if (min !== null) {
-      range.validMin = min
-      range.validMax = max
+      range.actualMin = min
+      range.actualMax = max
     }
   }
   
