@@ -1,6 +1,8 @@
 import ndarray from 'ndarray'
-import {shallowcopy, minMax, assert, isISODateAxis, asTime,
+import {shallowcopy, minMax, assert, asTime,
   indexOfNearest, indicesOfNearest, PREFIX} from './util.js'
+import {isISODateAxis, isLongitudeComponent, getLongitudeWrapper} from './referencing.js'
+  
   
 //NO FILE EXTENSION, to work around JSPM bug in handling package.json's "browser" field
 //see https://github.com/jspm/jspm-cli/issues/1062#issuecomment-170342414
@@ -416,12 +418,21 @@ function subsetByValue (cov, constraints) {
       let axis = domain.axes.get(axisName)
       let vals = axis.values
       
+      // special-case handling
+      let isISODate = isISODateAxis(domain, axisName)
+      let isLongitude = isLongitudeComponent(domain, axisName)
+      
+      // wrap input longitudes into longitude range of domain axis
+      let lonWrapper = isLongitude ? getLongitudeWrapper(domain, axisName) : undefined
+      
       if (typeof spec === 'number' || typeof spec === 'string' || spec instanceof Date) {
         let match = spec
-        if (isISODateAxis(domain, axisName)) {
+        if (isISODate) {
           // convert times to numbers before searching
           match = asTime(match)
           vals = vals.map(v => new Date(v).getTime())
+        } else if (isLongitude) {
+          match = lonWrapper(match)
         }
         let i
         // older browsers don't have TypedArray.prototype.indexOf
@@ -438,10 +449,12 @@ function subsetByValue (cov, constraints) {
       } else if ('target' in spec) {
         // find index of value closest to target
         let target = spec.target
-        if (isISODateAxis(domain, axisName)) {
+        if (isISODate) {
           // convert times to numbers before searching
           target = asTime(target)
           vals = vals.map(v => new Date(v).getTime())
+        } else if (isLongitude) {
+          target = lonWrapper(target)
         } else if (typeof vals[0] !== 'number' || typeof target !== 'number') {
           throw new Error('Invalid axis or constraint value type')
         }
@@ -452,10 +465,12 @@ function subsetByValue (cov, constraints) {
         // TODO what about bounds?
         
         let {start,stop} = spec
-        if (isISODateAxis(domain, axisName)) {
+        if (isISODate) {
           // convert times to numbers before searching
           [start, stop] = [asTime(start), asTime(stop)]
           vals = vals.map(v => new Date(v).getTime())
+        } else if (isLongitude) {
+          [start, stop] = [lonWrapper(start), lonWrapper(stop)]
         } else if (typeof vals[0] !== 'number' || typeof start !== 'number') {
           throw new Error('Invalid axis or constraint value type')
         }

@@ -109,18 +109,6 @@ export function indexOfNearest (a, x) {
   }
 }
 
-/**
- * Returns true if the given axis has ISO8601 date strings
- * as axis values.
- */
-export function isISODateAxis (domain, axisName) {
-  let val = domain.axes.get(axisName).values[0]
-  if (typeof val !== 'string') {
-    return false
-  }
-  return !isNaN(new Date(val).getTime())
-}
-
 export function asTime (inp) {
   let res
   let err = false
