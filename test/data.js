@@ -20,14 +20,14 @@ export const FIXTURES = {
           "t": { "values": ["2013-01-13T11:12:20Z"] }
         },
         "referencing": [{
-          "identifiers": ["x","y"],
-          "srs": {
+          "components": ["x","y"],
+          "system": {
             "type": "GeodeticCRS",
             "id": "http://www.opengis.net/def/crs/OGC/1.3/CRS84"
           }
         }, {
-          "identifiers": ["z"],
-          "srs": {
+          "components": ["z"],
+          "system": {
             "type": "VerticalCRS",
             "cs": {
               "axes": [{
@@ -42,8 +42,8 @@ export const FIXTURES = {
             }
           }
         }, {
-          "identifiers": ["t"],
-          "trs": {
+          "components": ["t"],
+          "system": {
             "type": "TemporalRS",
             "calendar": "Gregorian"
           }
@@ -85,14 +85,14 @@ export const FIXTURES = {
         },
         "rangeAxisOrder": ["t","z","y","x"],
         "referencing": [{
-          "identifiers": ["y","x","z"],
-          "srs": {
+          "components": ["y","x","z"],
+          "system": {
             "type": "GeodeticCRS",
             "id": "http://www.opengis.net/def/crs/EPSG/0/4979"
           }
         }, {
-          "identifiers": ["t"],
-          "trs": {
+          "components": ["t"],
+          "system": {
             "type": "TemporalRS",
             "calendar": "Gregorian"
           }
@@ -116,9 +116,7 @@ export const FIXTURES = {
         "ICEC" : {
           "type" : "Range",
           "dataType": "float",
-          "values" : [ 0.5, 0.6, 0.4, 0.6, 0.2, null ],
-          "validMin" : 0,
-          "validMax" : 1
+          "values" : [ 0.5, 0.6, 0.4, 0.6, 0.2, null ]
         }
       }
     }),
@@ -136,14 +134,14 @@ export const FIXTURES = {
         },
         "rangeAxisOrder": ["t","z","y","x"],
         "referencing": [{
-          "identifiers": ["y","x","z"],
-          "srs": {
+          "components": ["y","x","z"],
+          "system": {
             "type": "GeodeticCRS",
             "id": "http://www.opengis.net/def/crs/EPSG/0/4979"
           }
         }, {
-          "identifiers": ["t"],
-          "trs": {
+          "components": ["t"],
+          "system": {
             "type": "TemporalRS",
             "calendar": "Gregorian"
           }

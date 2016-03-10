@@ -12,14 +12,14 @@
     },
     "rangeAxisOrder": ["t","z","y","x"],
     "referencing": [{
-      "dimensions": ["y","x","z"],
-      "srs": {
+      "components": ["y","x","z"],
+      "system": {
         "type": "GeodeticCRS",
         "id": "http://www.opengis.net/def/crs/EPSG/0/4979"
       }
     }, {
-      "dimensions": ["t"],
-      "trs": {
+      "components": ["t"],
+      "system": {
         "type": "TemporalRS",
         "calendar": "Gregorian"
       }
@@ -63,9 +63,7 @@
   "ranges" : {
     "LC" : {
       "type" : "Range",
-      "values" : [ 1, 1, null, 2, 1, 2 ],
-      "validMin" : 1,
-      "validMax" : 2
+      "values" : [ 1, 1, null, 2, 1, 2 ]
     }
   }
 }

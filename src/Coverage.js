@@ -711,9 +711,18 @@ export function transformDomain (domain, referencing) {
       axis.dataType = 'http://ld.geojson.org/vocab#Polygon'
     }
     
-    if (!axis.dimensions) {
-      axis.dimensions = [key]
+    // TODO remove this if-block later, just here for backwards-compatibility 
+    if (axis.dimensions) {
+      axis.components = axis.dimensions
     }
+    
+    if (!axis.components) {
+      axis.components = [key]
+    }
+    
+    // TODO remove this line later, just here for backwards-compatibility 
+    axis.dimensions = axis.components
+    
     
     if ('start' in axis && 'stop' in axis && 'num' in axis) {
       let arr = new Float64Array(axis.num)
@@ -761,6 +770,7 @@ export function transformDomain (domain, referencing) {
     domain.referencing = referencing
   }
   
+  // TODO remove this later, just here for backwards-compatibility 
   for (let obj of domain.referencing) {
     if (obj.system) break // already transformed
     obj.system = obj.srs || obj.trs || obj.rs
