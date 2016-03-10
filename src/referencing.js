@@ -68,8 +68,8 @@ export function getLongitudeWrapper (domain, axisName) {
  * 
  * @ignore
  */
-export function isLongitudeComponent (domain, component) {
-  let ref = getReferenceObject(domain, [component])
+export function isLongitudeAxis (domain, axisName) {
+  let ref = getReferenceObject(domain, [axisName])
   if (!ref) {
     return false
   }

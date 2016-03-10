@@ -1,7 +1,7 @@
 import ndarray from 'ndarray'
 import {shallowcopy, minMax, assert, asTime,
   indexOfNearest, indicesOfNearest, PREFIX} from './util.js'
-import {isISODateAxis, isLongitudeComponent, getLongitudeWrapper} from './referencing.js'
+import {isISODateAxis, isLongitudeAxis, getLongitudeWrapper} from './referencing.js'
   
   
 //NO FILE EXTENSION, to work around JSPM bug in handling package.json's "browser" field
@@ -420,7 +420,7 @@ function subsetByValue (cov, constraints) {
       
       // special-case handling
       let isISODate = isISODateAxis(domain, axisName)
-      let isLongitude = isLongitudeComponent(domain, axisName)
+      let isLongitude = isLongitudeAxis(domain, axisName)
       
       // wrap input longitudes into longitude range of domain axis
       let lonWrapper = isLongitude ? getLongitudeWrapper(domain, axisName) : undefined

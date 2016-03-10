@@ -1,5 +1,6 @@
 import {default as Coverage, transformDomain, transformParameter} from './Coverage.js'
-import {shallowcopy, isISODateAxis, asTime, PREFIX} from './util.js'
+import {shallowcopy, asTime, PREFIX} from './util.js'
+import {isISODateAxis, isLongitudeAxis, getLongitudeWrapper} from './referencing.js'
 
 /** 
  * Wraps a CoverageJSON Collection object as a CoverageCollection API object.
@@ -203,9 +204,13 @@ function matchesFilter (domain, filter) {
     }
     let {start,stop} = condition
     
+    // special handling
     if (isISODateAxis(domain, axisName)) {
       [min,max] = [asTime(min), asTime(max)]
       [start,stop] = [asTime(start), asTime(stop)]
+    } else if (isLongitudeAxis(domain, axisName)) {
+      let lonWrapper = getLongitudeWrapper(domain, axisName)
+      [start,stop] = [lonWrapper(start), lonWrapper(stop)]
     }
     
     if (min > max) {
