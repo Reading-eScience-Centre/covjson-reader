@@ -39,7 +39,7 @@ const LongitudeAxisIndex = {
  */
 export function getLongitudeWrapper (domain, axisName) {
   // for primitive axes, the axis identifier = component identifier
-  if (!isLongitudeComponent(domain, axisName)) {
+  if (!isLongitudeAxis(domain, axisName)) {
     throw new Error(`'${axisName}' is not a longitude axis`)
   }
   
@@ -61,10 +61,11 @@ export function getLongitudeWrapper (domain, axisName) {
     } else {
       return ((lon - x_min) % 360 + 360) % 360 + x_min
     }
+  }
 }
 
 /**
- * Return whether the given domain component represents longitudes.
+ * Return whether the given domain axis represents longitudes.
  * 
  * @ignore
  */
@@ -81,7 +82,7 @@ export function isLongitudeAxis (domain, axisName) {
     return false
   }
   
-  let compIdx = ref.components.indexOf(component)
+  let compIdx = ref.components.indexOf(axisName)
   let isLongitude = LongitudeAxisIndex[crsId] === compIdx
   return isLongitude
 }
