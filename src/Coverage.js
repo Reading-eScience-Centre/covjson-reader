@@ -720,6 +720,8 @@ export function transformDomain (domain, referencing) {
   // expand start/stop/num regular axes
   // replace 1D numeric axis arrays with typed arrays for efficiency
   for (let [key, axis] of axes) {
+    axis.key = key
+    
     if (axis.dataType === 'Tuple' || axis.dataType === 'Polygon') {
       axis.dataType = PREFIX + axis.dataType
     }
