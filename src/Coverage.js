@@ -720,10 +720,8 @@ export function transformDomain (domain, referencing) {
   // expand start/stop/num regular axes
   // replace 1D numeric axis arrays with typed arrays for efficiency
   for (let [key, axis] of axes) {
-    if (axis.dataType === 'Tuple') {
-      axis.dataType = PREFIX + 'Tuple'
-    } else if (axis.dataType === 'Polygon') {
-      axis.dataType = 'http://ld.geojson.org/vocab#Polygon'
+    if (axis.dataType === 'Tuple' || axis.dataType === 'Polygon') {
+      axis.dataType = PREFIX + axis.dataType
     }
     
     // TODO remove this if-block later, just here for backwards-compatibility 
