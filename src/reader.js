@@ -108,7 +108,7 @@ function addLinkRelations (cov, headers) {
       if (relStart === -1) {
         continue
       }
-      let rel = param.substring(relStart+5, param.length-2)
+      let rel = param.substring(relStart+5, param.length-1)
       if (!rel.startsWith('http://') && !rel.startsWith('https://')) {
         rel = IANAPrefix + rel
       }
