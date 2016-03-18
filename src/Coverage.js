@@ -352,7 +352,7 @@ function subsetByIndex (cov, constraints) {
       // TODO handle bounds
       let newaxis = {
         dataType: axis.dataType,
-        dimensions: axis.dimensions,
+        components: axis.components,
         values: newcoords
       }
       newdomain.axes.set(axisName, newaxis)
@@ -789,6 +789,9 @@ export function transformDomain (domain, referencing) {
   for (let obj of domain.referencing) {
     if (obj.system) break // already transformed
     obj.system = obj.srs || obj.trs || obj.rs
+    if (obj.dimensions) {
+      obj.components = obj.components
+    }
     delete obj.srs
     delete obj.trs
     delete obj.rs
