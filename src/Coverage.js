@@ -790,7 +790,7 @@ export function transformDomain (domain, referencing) {
     if (obj.system) break // already transformed
     obj.system = obj.srs || obj.trs || obj.rs
     if (obj.dimensions) {
-      obj.components = obj.components
+      obj.components = obj.dimensions
     }
     delete obj.srs
     delete obj.trs
