@@ -56,6 +56,9 @@ export default class CoverageCollection {
       } else {
         coverage.parameters = rootParams
       }
+      if (covjson['@context']) {
+        coverage['@context'] = covjson['@context']
+      }
       covs.push(new Coverage(coverage, covOptions))
     }
     
