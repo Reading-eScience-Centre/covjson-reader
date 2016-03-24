@@ -11,14 +11,16 @@ import * as http from './http'
  * that succeeds with the unmodified CoverageJSON object.
  * 
  * @param {string} url
- * @param {Object} headers Additional HTTP headers to send
+ * @param {Object} [options] An options object. 
+ * @param {Object} [options.headers] Additional HTTP headers to send if input is a URL.
+ * @param {Object} [options.eagerload] Request stand-alone CoverageJSON profile if input is a URL.
  * @return {Promise}
  *   A Promise succeeding with an object <code>{data, headers}</code> where data is the CoverageJSON object
  *   and headers are the HTTP response headers with lower-cased header names as object keys.
  *   The promise fails if the resource at the given URL is not a valid JSON or CBOR document. 
  */
-export function load (url, headers) {
-  return http.load(url, headers)
+export function load (url, options) {
+  return http.load(url, options)
 }
 
 /**
@@ -43,19 +45,17 @@ export function load (url, headers) {
  *   An options object. 
  * @param {Object} [options.headers]
  *   Additional HTTP headers to send if input is a URL.
+ * @param {Object} [options.eagerload]
+ *   Request stand-alone CoverageJSON profile if input is a URL. 
  * @return {Promise} 
  *    A promise object succeeding with a {@link Coverage} or {@link CoverageCollection} object,
  *    and failing with an {@link Error} object.
  */
-export function read (input, options) {
-  options = options || {}
-  let headers = options.headers || {}
+export function read (input, options = {}) {
   if (typeof input === 'object') {
     return Promise.resolve().then(() => transformCovJSON(input))
   } else {
-    // it's a URL, load it
-    return load(input, headers).then(({data,headers}) => 
-      transformCovJSON(data, headers))
+    return load(input, options).then(({data,headers}) => transformCovJSON(data, headers))
   }
 }
 

@@ -1,16 +1,18 @@
 import cbor from 'cbor-js'
 import {endsWith} from './util.js'
-import {MEDIATYPE, ACCEPT, EXT} from './http-common.js'
+import {MEDIATYPE, getAcceptHeader, EXT} from './http-common.js'
 
-export function load (url, headers, responseType='arraybuffer') {
+export function load (url, options = {}, responseType='arraybuffer') {
   if (['arraybuffer', 'text'].indexOf(responseType) === -1) {
     throw new Error()
   }
+  let headers = options.headers || {}
   return new Promise((resolve, reject) => {
     var req = new XMLHttpRequest()
     req.open('GET', url)
     req.responseType = responseType
-    req.setRequestHeader('Accept', ACCEPT)
+    let accept = getAcceptHeader(options.eagerload)
+    req.setRequestHeader('Accept', accept)
     if (headers) {
       for (let header of Object.keys(headers)) {
         req.setRequestHeader(header, headers[header])

@@ -2,11 +2,13 @@ import cbor from 'cbor-js'
 import request from 'request-promise'
 
 import {endsWith} from './util.js'
-import {MEDIATYPE, ACCEPT, EXT} from './http-common.js'
+import {MEDIATYPE, getAcceptHeader, EXT} from './http-common.js'
 
-export function load (url, headers) {
+export function load (url, options = {}) {
+  let headers = options.headers || {}
+  let accept = getAcceptHeader(options.eagerload)
   let mergedHeaders = {
-    Accept: ACCEPT
+    Accept: accept
   }
   for (let header of Object.keys(headers)) {
     mergedHeaders[header] = headers[header]

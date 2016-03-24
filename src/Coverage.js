@@ -85,15 +85,7 @@ export default class Coverage {
       }
       this.domainProfiles.push(domainProfile)
     }
-    
-    /**
-     * A bounding box object with members "box" and "srs".
-     * 
-     * @type {Object|undefined}
-     * @property {Array} bbox.box The bounding box coordinates [minx,miny,maxx,maxy].
-     * @property {string} bbox.srs The URI of the spatial CRS.
-     */
-    this.bbox = this._covjson.bbox
+
   }
   
   _exposeLd (covjson) {
@@ -277,7 +269,7 @@ export default class Coverage {
 }
 
 function subsetByIndex (cov, constraints) {    
-  return cov.loadDomain().then(domain => {      
+  return cov.loadDomain().then(domain => {
     // check and normalize constraints to simplify code
     constraints = shallowcopy(constraints)
     for (let axisName in constraints) {
