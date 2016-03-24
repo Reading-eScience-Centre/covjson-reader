@@ -13,7 +13,9 @@ import * as http from './http'
  * @param {string} url
  * @param {Object} [options] An options object. 
  * @param {Object} [options.headers] Additional HTTP headers to send if input is a URL.
- * @param {Object} [options.eagerload] Request stand-alone CoverageJSON profile if input is a URL.
+ * @param {Object} [options.eagerload]
+ *   Request a stand-alone CoverageJSON document (with domain and ranges embedded) if input is a URL.
+ *   Note that the server may ignore that preference.
  * @return {Promise}
  *   A Promise succeeding with an object <code>{data, headers}</code> where data is the CoverageJSON object
  *   and headers are the HTTP response headers with lower-cased header names as object keys.
@@ -46,7 +48,8 @@ export function load (url, options) {
  * @param {Object} [options.headers]
  *   Additional HTTP headers to send if input is a URL.
  * @param {Object} [options.eagerload]
- *   Request stand-alone CoverageJSON profile if input is a URL. 
+ *   Request a stand-alone CoverageJSON document (with domain and ranges embedded) if input is a URL.
+ *   Note that the server may ignore that preference.
  * @return {Promise} 
  *    A promise object succeeding with a {@link Coverage} or {@link CoverageCollection} object,
  *    and failing with an {@link Error} object.
