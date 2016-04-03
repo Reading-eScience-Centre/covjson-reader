@@ -47,14 +47,13 @@ export default class CoverageCollection {
       covOptions.referencing = covjson.referencing
     }
     for (let coverage of covjson.coverages) {
-      if (coverage.parameters) {
-        for (let key of Object.keys(rootParams)) {
-          if (key in coverage.ranges) {
-            coverage.parameters[key] = rootParams[key]
-          }
+      if (!coverage.parameters) {
+        coverage.parameters = {}
+      }
+      for (let key of Object.keys(rootParams)) {
+        if (key in coverage.ranges) {
+          coverage.parameters[key] = rootParams[key]
         }
-      } else {
-        coverage.parameters = rootParams
       }
       if (covjson['@context']) {
         coverage['@context'] = covjson['@context']
