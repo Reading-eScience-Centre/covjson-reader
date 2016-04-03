@@ -86,6 +86,14 @@ export default class Coverage {
       this.domainProfiles.push(domainProfile)
     }
 
+    this._updateLoadStatus()
+  }
+  
+  _updateLoadStatus () {
+    let isLoaded = prop => typeof prop === 'object' 
+    let domainLoaded = isLoaded(this._covjson.domain)
+    let rangesLoaded = Object.keys(this._covjson.ranges).every(key => isLoaded(this._covjson.ranges[key]))
+    this.loaded = domainLoaded && rangesLoaded
   }
   
   _exposeLd (covjson) {
@@ -120,6 +128,7 @@ export default class Coverage {
         let domain = result.data
         transformDomain(domain, this.options.referencing)
         this._covjson.domain = domain
+        this._updateLoadStatus()
         return domain
       })
     }
@@ -161,6 +170,7 @@ export default class Coverage {
           transformRange(range, domain)
           if (this.options.cacheRanges) {
             this._covjson.ranges[paramKey] = range
+            this._updateLoadStatus()
           }
           return range
         })
