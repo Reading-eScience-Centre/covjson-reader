@@ -41,18 +41,6 @@
     "build": "npm run transpile && npm run browserdist",
     "prepublish": "npm run build"
   },
-  "jspm": {
-    "registry": "npm",
-    "format": "esm",
-    "main": "src/reader.js",
-    "files": [
-      "src/"
-    ],
-    "browser": {
-      "./src/http.js": "./src/http-browser.js",
-      "request-promise": false
-    }
-  },
   "standard": {
     "parser": "babel-eslint",
     "ignore": [
