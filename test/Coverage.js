@@ -63,6 +63,7 @@ describe('Coverage methods', () => {
             assert.deepEqual(domain.axes.get('y').values, dom.axes.y.values.slice(1))
             assert.deepEqual(domain.axes.get('z').values, dom.axes.z.values)
             assert.deepEqual(domain.axes.get('t').values, dom.axes.t.values)
+            assert.deepEqual(domain.axes.get('y').bounds.get(0), [dom.axes.y.bounds[2],dom.axes.y.bounds[3]])
             assert.strictEqual(range.shape.size, 4)
             assert.strictEqual(range.shape.get('x'), 2)
             assert.strictEqual(range.shape.get('y'), 1)

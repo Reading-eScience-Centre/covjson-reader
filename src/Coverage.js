@@ -322,15 +322,23 @@ function subsetByIndex (cov, constraints) {
     for (let axisName of Object.keys(constraints)) {
       let axis = domain.axes.get(axisName)
       let coords = axis.values
+      let bounds = axis.bounds
       let isTypedArray = ArrayBuffer.isView(coords)
       let constraint = constraints[axisName]
       let newcoords
+      let newbounds
 
       let {start, stop, step} = constraint
       if (start === 0 && stop === coords.length && step === 1) {
         newcoords = coords
+        newbounds = bounds
       } else if (step === 1 && isTypedArray) {
         newcoords = coords.subarray(start, stop)
+        if (bounds) {
+          newbounds = {
+            get: i => bounds.get(start + i)
+          }
+        }
       } else {
         let q = Math.trunc((stop - start) / step)
         let r = (stop - start) % step
@@ -339,13 +347,18 @@ function subsetByIndex (cov, constraints) {
         for (let i=start, j=0; i < stop; i += step, j++) {
           newcoords[j] = coords[i]
         }
+        if (bounds) {
+          newbounds = {
+            get: i => bounds.get(start + i*step)
+          }
+        }
       }
       
-      // TODO handle bounds
       let newaxis = {
         dataType: axis.dataType,
         components: axis.components,
-        values: newcoords
+        values: newcoords,
+        bounds: newbounds
       }
       newdomain.axes.set(axisName, newaxis)
       newdomain._rangeShape[domain._rangeAxisOrder.indexOf(axisName)] = newcoords.length
@@ -763,6 +776,8 @@ export function transformDomain (domain, referencing) {
       }
       axis.values = arr
     }
+    
+    axis.bounds = wrapBounds(axis)
   }
   
   let needsRangeAxisOrder = [...axes.values()].filter(axis => axis.values.length > 1).length > 1
@@ -792,4 +807,13 @@ export function transformDomain (domain, referencing) {
   domain.__transformDone = true
   
   return domain
+}
+
+function wrapBounds (axis) {
+  if (axis.bounds) {
+    let bounds = axis.bounds
+    return {
+      get: i => [bounds[2*i], bounds[2*i + 1]]
+    }
+  }
 }

@@ -63,7 +63,6 @@ export const FIXTURES = {
         }
       },
       "ranges" : {
-        "type" : "RangeSet",
         "PSAL" : {
           "type" : "Range",
           "dataType": "float",
@@ -78,8 +77,8 @@ export const FIXTURES = {
         "type" : "Domain",
         "profile" : "Grid",
         "axes": {
-          "x": { "values": [-10,-5,0] },
-          "y": { "values": [40,50] }, 
+          "x": { "values": [-10,-5,0], "bounds": [-12.5,-7.5, -7.5,-2.5, -2.5,2.5] },
+          "y": { "values": [40,50], "bounds": [35,45, 45,55] }, 
           "z": { "values": [5] },
           "t": { "values": ["2010-01-01T00:12:20Z"] }
         },
@@ -112,7 +111,6 @@ export const FIXTURES = {
         }
       },
       "ranges" : {
-        "type" : "RangeSet",
         "ICEC" : {
           "type" : "Range",
           "dataType": "float",
@@ -161,7 +159,6 @@ export const FIXTURES = {
         }
       },
       "ranges" : {
-        "type" : "RangeSet",
         "ICEC" : {
           "type" : "Range",
           "dataType": "float",
