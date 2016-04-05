@@ -35,6 +35,7 @@ describe('CoverageCollection methods', () => {
           .filter({z: {start: 0, stop: 4}})
           .subset({z: {start: 4, stop: 7}})
           .execute().then(newcoll => {
+            assert.equal(coll.type, COVERAGECOLLECTION)
             assert.strictEqual(newcoll.coverages.length, 1)
             let cov = newcoll.coverages[0]
             return cov.loadDomain().then(domain => {

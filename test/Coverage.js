@@ -25,6 +25,7 @@ describe('Coverage methods', () => {
     it('should not modify the original coverage', () => {
       return read(FIXTURES.Profile()).then(cov => {
         return cov.subsetByIndex({z: 0}).then(subset => {
+          assert.equal(subset.type, COVERAGE)
           return Promise.all([cov.loadDomain(), cov.loadRange('PSAL')]).then(([domain,range]) => {
             assert.strictEqual(domain.axes.size, 4)
             assert.strictEqual(domain.axes.get('z').values.length, 2)

@@ -163,6 +163,7 @@ export class CollectionQuery {
   execute () {
     let coll = this._collection
     let newcoll = {
+      type: COVERAGECOLLECTION,
       coverages: [],
       parameters: coll.parameters,
       // TODO is the domain template still valid in all cases after filtering and subsetting?

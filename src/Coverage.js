@@ -410,6 +410,7 @@ function subsetByIndex (cov, constraints) {
     
     // assemble everything to a new coverage
     let newcov = {
+      type: COVERAGE,
       // TODO are the profiles still valid?
       profiles: cov.profiles,
       domainProfiles: cov.domainProfiles,
