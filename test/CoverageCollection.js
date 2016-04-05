@@ -7,9 +7,22 @@ import 'core-js/es6/map'
 import assert from 'assert'
 
 import {read} from '../lib/reader.js'
+import {COVERAGECOLLECTION} from '../lib/constants.js'
 
 import {runServerIfNode} from './node-setup.js'
 import {FIXTURES} from './data.js'
+
+describe('CoverageCollection structure', () => {
+  
+  runServerIfNode()
+  
+  it('should have correct structure', () => {
+    return read(FIXTURES.CollectionURL).then(coll => {
+      assert.equal(coll.type, COVERAGECOLLECTION)
+    })
+  })
+
+})
 
 describe('CoverageCollection methods', () => {
   

@@ -1,4 +1,6 @@
 import ndarray from 'ndarray'
+
+import {COVERAGE} from './constants.js'
 import {shallowcopy, minMax, assert, asTime,
   indexOfNearest, indicesOfNearest, PREFIX} from './util.js'
 import {isISODateAxis, isLongitudeAxis, getLongitudeWrapper} from './referencing.js'
@@ -27,6 +29,8 @@ export default class Coverage {
    */
   constructor (covjson, options) {
     this._covjson = covjson
+    
+    this.type = COVERAGE
     
     /**
      * JSON-LD document

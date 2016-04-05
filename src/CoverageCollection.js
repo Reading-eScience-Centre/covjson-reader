@@ -1,3 +1,4 @@
+import {COVERAGECOLLECTION} from './constants.js'
 import {default as Coverage, transformDomain, transformParameter} from './Coverage.js'
 import {shallowcopy, asTime, PREFIX} from './util.js'
 import {isISODateAxis, isLongitudeAxis, getLongitudeWrapper} from './referencing.js'
@@ -13,6 +14,8 @@ export default class CoverageCollection {
    * @param {Object} covjson The CoverageJSON Collection document.
    */
   constructor(covjson) {
+    this.type = COVERAGECOLLECTION
+    
     /**
      * JSON-LD document
      * 

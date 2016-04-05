@@ -1,6 +1,8 @@
 import Coverage from './Coverage.js'
+import {transformDomain} from './Coverage.js'
 import CoverageCollection from './CoverageCollection.js'
 import {assert} from './util.js'
+import {COVERAGE, COVERAGECOLLECTION, DOMAIN, LINKRELPREFIX} from './constants.js'
 
 // NO FILE EXTENSION, to work around JSPM bug in handling package.json's "browser" field
 // see https://github.com/jspm/jspm-cli/issues/1062#issuecomment-170342414
@@ -27,7 +29,7 @@ export function load (url, options) {
 
 /**
  * Reads a CoverageJSON document and returns a {@link Promise} that succeeds with
- * a {@link Coverage} or {@link CoverageCollection} object.
+ * a Domain, {@link Coverage}, or {@link CoverageCollection} object.
  * 
  * Note that if the document references external domain or range documents,
  * then these are not loaded immediately. 
@@ -35,23 +37,22 @@ export function load (url, options) {
  * 
  * @example
  * CovJSON.read('http://example.com/coverage.covjson').then(function (cov) {
- *   // work with Coverage object
+ *   // work with Coverage data object
  * }).catch(function (e) {
- *   // there was an error when loading the coverage
+ *   // there was an error when loading the coverage data
  *   console.log(e)
  * })
  * @param {Object|string} input
- *    Either a URL pointing to a CoverageJSON Coverage or Coverage Collection document
- *    or a CoverageJSON Coverage or Coverage Collection object.
+ *    A CoverageJSON Domain, Coverage, or Coverage Collection document, as URL or object,
  * @param {Object} [options]
  *   An options object. 
  * @param {Object} [options.headers]
  *   Additional HTTP headers to send if input is a URL.
  * @param {Object} [options.eagerload]
  *   Request a stand-alone CoverageJSON document (with domain and ranges embedded) if input is a URL.
- *   Note that the server may ignore that preference.
+ *   Note that the server may ignore that preference. 
  * @return {Promise} 
- *    A promise object succeeding with a {@link Coverage} or {@link CoverageCollection} object,
+ *    A promise object succeeding with a Domain, {@link Coverage}, or {@link CoverageCollection} object,
  *    and failing with an {@link Error} object.
  */
 export function read (input, options = {}) {
@@ -71,18 +72,23 @@ export function read (input, options = {}) {
  */
 function transformCovJSON (obj, headers) {
   checkValidCovJSON(obj)
-  if (obj.type !== 'Coverage' && obj.type !== 'CoverageCollection') {
-    throw new Error('CoverageJSON document must be of Coverage or CoverageCollection type')
+  if ([COVERAGE, COVERAGECOLLECTION, DOMAIN].indexOf(obj.type) === -1) {
+    throw new Error('CoverageJSON document must be of Coverage, CoverageCollection, or Domain type')
   }
   
   let result
-  if (obj.type === 'Coverage') {
+  if (obj.type === DOMAIN) {
+    transformDomain(obj)
+    result = obj
+  } else  if (obj.type === COVERAGE) {
     result = new Coverage(obj)
   } else {
     result = new CoverageCollection(obj)
   }
   
-  addLinkRelations(result, headers)
+  if (obj.type === COVERAGE || obj.type === COVERAGECOLLECTION) {
+    addLinkRelations(result, headers)
+  }
     
   return result
 }
@@ -91,10 +97,7 @@ function transformCovJSON (obj, headers) {
  * Scans the supplied HTTP headers for Link relations and adds them
  * to the .ld property of the Coverage/CoverageCollection.
  */    
-function addLinkRelations (cov, headers) {
-  // for registered rel's
-  const IANAPrefix = 'http://www.iana.org/assignments/relation/'
-  
+function addLinkRelations (cov, headers) {  
   if (!headers || !headers['link']) {
     return
   }
@@ -113,7 +116,7 @@ function addLinkRelations (cov, headers) {
       }
       let rel = param.substring(relStart+5, param.length-1)
       if (!rel.startsWith('http://') && !rel.startsWith('https://')) {
-        rel = IANAPrefix + rel
+        rel = LINKRELPREFIX + rel
       }
       if (ld[rel]) {
         if (Array.isArray(ld[rel])) {
@@ -139,11 +142,11 @@ function addLinkRelations (cov, headers) {
  */
 function checkValidCovJSON (obj) {
   assert('type' in obj, '"type" missing')
-  if (obj.type === 'Coverage') {
+  if (obj.type === COVERAGE) {
     assert('parameters' in obj, '"parameters" missing')
     assert('domain' in obj, '"domain" missing')
     assert('ranges' in obj, '"ranges" missing')
-  } else if (obj.type === 'CoverageCollection') {
+  } else if (obj.type === COVERAGECOLLECTION) {
     assert(Array.isArray(obj.coverages), '"coverages" must be an array')
   }
 }

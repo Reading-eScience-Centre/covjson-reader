@@ -7,14 +7,23 @@ import 'core-js/es6/map'
 import assert from 'assert'
 
 import {read} from '../lib/reader.js'
+import {COVERAGE} from '../lib/constants.js'
 
 import {FIXTURES} from './data.js'
+
+describe('Coverage structure', () => {
+  it('should have loaded=true and type=Coverage', () => {
+    return read(FIXTURES.Profile()).then(cov => {
+      assert.equal(cov.loaded, true)
+      assert.equal(cov.type, COVERAGE)
+    })
+  })
+})
 
 describe('Coverage methods', () => {
   describe('#subsetByIndex', () => {
     it('should not modify the original coverage', () => {
       return read(FIXTURES.Profile()).then(cov => {
-        assert.equal(cov.loaded, true)
         return cov.subsetByIndex({z: 0}).then(subset => {
           return Promise.all([cov.loadDomain(), cov.loadRange('PSAL')]).then(([domain,range]) => {
             assert.strictEqual(domain.axes.size, 4)

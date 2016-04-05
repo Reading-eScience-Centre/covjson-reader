@@ -166,6 +166,30 @@ export const FIXTURES = {
         }
       }
     }),
+    GridRegularDomain: () => ({
+      "type" : "Domain",
+      "profile" : "Grid",
+      "axes": {
+        "x": { "values": [-10,-5,0] },
+        "y": { "start": 40, "stop": 50, "num": 2 },
+        "z": { "values": [5] },
+        "t": { "values": ["2010-01-01T00:12:20Z"] }
+      },
+      "rangeAxisOrder": ["t","z","y","x"],
+      "referencing": [{
+        "components": ["y","x","z"],
+        "system": {
+          "type": "GeodeticCRS",
+          "id": "http://www.opengis.net/def/crs/EPSG/0/4979"
+        }
+      }, {
+        "components": ["t"],
+        "system": {
+          "type": "TemporalRS",
+          "calendar": "Gregorian"
+        }
+      }]
+    }),
     CollectionEmpty: () => ({
       "type" : "CoverageCollection",
       "coverages": []
