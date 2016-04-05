@@ -1,6 +1,6 @@
 import ndarray from 'ndarray'
 
-import {COVERAGE} from './constants.js'
+import {COVERAGE, DOMAIN} from './constants.js'
 import {shallowcopy, minMax, assert, asTime,
   indexOfNearest, indicesOfNearest, PREFIX} from './util.js'
 import {isISODateAxis, isLongitudeAxis, getLongitudeWrapper} from './referencing.js'
@@ -325,6 +325,7 @@ function subsetByIndex (cov, constraints) {
     
     // subset the axis arrays of the domain (immediately + cached)
     let newdomain = {
+      type: DOMAIN,
       // TODO are the profiles still valid?
       profiles: domain.profiles,
       axes: new Map(domain.axes),
