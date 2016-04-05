@@ -1,6 +1,6 @@
 {
   "name": "covjson-reader",
-  "version": "0.9.1",
+  "version": "0.9.3",
   "license": "BSD-3-Clause",
   "description": "A reader for CoverageJSON files.",
   "repository": {
@@ -15,7 +15,7 @@
   },
   "main": "lib/reader.js",
   "dependencies": {
-    "covutils": "0.1.0-alpha.5",
+    "covutils": "^0.1.0",
     "cbor-js": "^0.1.0",
     "ndarray": "^1.0.18",
     "request-promise": "^1.0.2"
