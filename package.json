@@ -15,6 +15,7 @@
   },
   "main": "lib/reader.js",
   "dependencies": {
+    "covutils": "0.1.0-alpha.3",
     "cbor-js": "^0.1.0",
     "ndarray": "^1.0.18",
     "request-promise": "^1.0.2"
