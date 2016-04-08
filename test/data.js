@@ -190,6 +190,55 @@ export const FIXTURES = {
         }
       }]
     }),
+    GridNewRange: () => ({
+      "type" : "Coverage",
+      "profile" : "GridCoverage",
+      "domain" : {
+        "type" : "Domain",
+        "profile" : "Grid",
+        "axes": {
+          "x": { "values": [-10,-5,0] },
+          "y": { "values": [40,50] },
+          "z": { "values": [5] },
+          "t": { "values": ["2010-01-01T00:12:20Z"] }
+        },
+        "referencing": [{
+          "components": ["y","x","z"],
+          "system": {
+            "type": "GeodeticCRS",
+            "id": "http://www.opengis.net/def/crs/EPSG/0/4979"
+          }
+        }, {
+          "components": ["t"],
+          "system": {
+            "type": "TemporalRS",
+            "calendar": "Gregorian"
+          }
+        }]
+      },
+      "parameters" : {
+        "ICEC": {
+          "type" : "Parameter",
+          "unit" : {
+            "symbol" : "fraction"
+          },
+          "observedProperty" : {
+            "label" : {
+              "en": "Sea Ice Concentration"
+            }
+          }
+        }
+      },
+      "ranges" : {
+        "ICEC" : {
+          "type" : "NdArray",
+          "dataType": "float",
+          "axisNames": ["t","z","y","x"],
+          "shape": [1, 1, 2, 3],
+          "values" : [ 0.5, 0.6, 0.4, 0.6, 0.2, null ]
+        }
+      }
+    }),
     CollectionEmpty: () => ({
       "type" : "CoverageCollection",
       "coverages": []

@@ -86,6 +86,27 @@ describe('Coverage methods', () => {
         })
       })
     })
+    it('should subset correctly, new range encoding', () => {
+      let dom = FIXTURES.GridNewRange().domain
+      let vals = FIXTURES.GridNewRange().ranges.ICEC.values
+      return read(FIXTURES.GridNewRange()).then(cov => {
+        return cov.subsetByIndex({x: {start: 1, stop: 3}, y: 1}).then(subset => {
+          return Promise.all([subset.loadDomain(), subset.loadRange('ICEC')]).then(([domain,range]) => {
+            assert.deepEqual(domain.axes.get('x').values, dom.axes.x.values.slice(1))
+            assert.deepEqual(domain.axes.get('y').values, dom.axes.y.values.slice(1))
+            assert.deepEqual(domain.axes.get('z').values, dom.axes.z.values)
+            assert.deepEqual(domain.axes.get('t').values, dom.axes.t.values)
+            assert.strictEqual(range.shape.size, 4)
+            assert.strictEqual(range.shape.get('x'), 2)
+            assert.strictEqual(range.shape.get('y'), 1)
+            assert.strictEqual(range.shape.get('z'), 1)
+            assert.strictEqual(range.shape.get('t'), 1)
+            assert.strictEqual(range.get({x: 0, y: 0, t: 0, z: 0}), vals[4])
+            assert.strictEqual(range.get({x: 1, y: 0, t: 0, z: 0}), vals[5])
+          })
+        })
+      })
+    })
   })
   describe('#subsetByValue', () => {
     let vals = FIXTURES.Grid().domain.axes.x.values

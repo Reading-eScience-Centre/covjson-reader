@@ -284,24 +284,48 @@ export default class Coverage {
   }
 }
 
+function getRangeAxisOrder (domain, range) {
+  // backwards-compatibility, in the future the range always has an explicit axis ordering
+  let needsRangeAxisOrder = [...domain.axes.values()].filter(axis => axis.values.length > 1).length > 1
+  
+  // domain is checked for backwards-compatibility
+  let axisOrder = domain._rangeAxisOrder || range._axisNames
+  if (needsRangeAxisOrder && !axisOrder) {
+    throw new Error('Range axis order missing')
+  }
+  axisOrder = axisOrder || [...domain.axes.keys()]
+  return axisOrder
+}
+
+function getRangeShapeArray (domain, range) {
+  // mostly backwards-compatibility, in the future this just returns range._shape
+  let axisOrder = getRangeAxisOrder(domain, range)
+  let shape = axisOrder.map(k => domain.axes.get(k).values.length)
+  if (range._shape) {
+    let matchesDomain = range._shape.length === shape.length && range._shape.every((v,i) => v === shape[i])
+    if (!matchesDomain) {
+      throw new Error('range.shape must match domain axis sizes')
+    }
+  }
+  return shape
+}
+
 function subsetByIndex (cov, constraints) {
   return cov.loadDomain().then(domain => {
     constraints = normalizeIndexSubsetConstraints(domain, constraints)
     let newdomain = subsetDomainByIndex(domain, constraints)
-
-    // set internal properties for dealing with the ndarrays in range data
-    newdomain._rangeAxisOrder = domain._rangeAxisOrder
-    newdomain._rangeShape = {}
-    for (let [axisName, axis] of newdomain.axes) {
-      newdomain._rangeShape[domain._rangeAxisOrder.indexOf(axisName)] = axis.values.length
+    
+    // backwards-compatibility
+    if (domain._rangeAxisOrder) {
+      newdomain._rangeAxisOrder = domain._rangeAxisOrder
     }
           
     // subset the ndarrays of the ranges (on request)
     let rangeWrapper = range => {
       let ndarr = range._ndarr
-      
+            
       // fast ndarray view
-      let axisNames = domain._rangeAxisOrder
+      let axisNames = getRangeAxisOrder(domain, range)
       let los = axisNames.map(name => constraints[name].start)
       let his = axisNames.map(name => constraints[name].stop)
       let steps = axisNames.map(name => constraints[name].step)
@@ -309,11 +333,13 @@ function subsetByIndex (cov, constraints) {
       
       let newrange = {
         dataType: range.dataType,
-        get: createRangeGetFunction(newndarr, domain._rangeAxisOrder),
-        _ndarr: newndarr
+        get: createRangeGetFunction(newndarr, axisNames),
+        _ndarr: newndarr,
+        _axisNames: axisNames,
+        _shape: axisNames.map(axisName => newdomain.axes.get(axisName).values.length)
       }
       newrange.shape = new Map()
-      for (let axisName of domain.axes.keys()) {
+      for (let axisName of axisNames) {
         let size = newdomain.axes.get(axisName).values.length
         newrange.shape.set(axisName, size)
       }
@@ -492,15 +518,28 @@ function transformRange (range, domain) {
     }
   }
   
-  let shape = new Map() // axis name -> axis size (value count)
-  for (let axisName of domain.axes.keys()) {
-    shape.set(axisName, domain.axes.get(axisName).values.length)
+  // store the array as we will expose a Map on range.shape in the next step
+  if (range.shape) {
+    range._shape = range.shape
   }
-  range.shape = shape
+  if (range.axisNames) {
+    // not part of public API
+    range._axisNames = range.axisNames
+    delete range.axisNames
+  }
   
-  let ndarr = ndarray(vals, domain._rangeShape)
+  let axisNames = getRangeAxisOrder(domain, range)
+  let shapeArr = getRangeShapeArray(domain, range)
+  
+  let ndarr = ndarray(vals, shapeArr)
   range._ndarr = ndarr
-  range.get = createRangeGetFunction(ndarr, domain._rangeAxisOrder)
+  range.get = createRangeGetFunction(ndarr, axisNames)
+  
+  let shapeMap = new Map()
+  for (let [axisName, axis] of domain.axes) {
+    shapeMap.set(axisName, axis.values.length)
+  }  
+  range.shape = shapeMap
   
   range.__transformDone = true  
   return range
@@ -625,14 +664,6 @@ export function transformDomain (domain, referencing) {
     axis.bounds = wrapBounds(axis)
   }
   
-  let needsRangeAxisOrder = [...axes.values()].filter(axis => axis.values.length > 1).length > 1
-  if (needsRangeAxisOrder && !domain.rangeAxisOrder) {
-    throw new Error('Domain requires "rangeAxisOrder"')
-  }
-  
-  domain._rangeAxisOrder = domain.rangeAxisOrder || [...axes.keys()]
-  domain._rangeShape = domain._rangeAxisOrder.map(k => axes.get(k).values.length)
-  
   if (referencing) {
     domain.referencing = referencing
   }
@@ -647,6 +678,11 @@ export function transformDomain (domain, referencing) {
     delete obj.srs
     delete obj.trs
     delete obj.rs
+  }
+  
+  if (domain.rangeAxisOrder) {
+    domain._rangeAxisOrder = domain.rangeAxisOrder
+    delete domain.rangeAxisOrder
   }
   
   domain.__transformDone = true
