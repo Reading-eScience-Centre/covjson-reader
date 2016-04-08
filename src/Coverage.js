@@ -418,6 +418,14 @@ export function transformParameter (params, key) {
   if ('__transformDone' in params[key]) return
   let param = params[key]
   param.key = key
+  if (param.unit) {
+    if (typeof param.unit.symbol === 'string') {
+      param.unit.symbol = {
+        value: param.unit.symbol
+        // no type member, since the scheme is unknown
+      }
+    }
+  }
   if (param.categoryEncoding) {
     let map = new Map()
     for (let category of Object.keys(param.categoryEncoding)) {
