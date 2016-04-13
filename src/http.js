@@ -2,7 +2,7 @@ import cbor from 'cbor-js'
 import request from 'request-promise'
 
 import {endsWith} from './util.js'
-import {MEDIATYPE, getAcceptHeader, EXT} from './http-common.js'
+import {MEDIATYPE, matchesMediaTypes, getAcceptHeader, EXT} from './http-common.js'
 
 export function load (url, options = {}) {
   let headers = options.headers || {}
@@ -21,7 +21,7 @@ export function load (url, options = {}) {
     resolveWithFullResponse: true
   }).then(response => {
     let type = response.headers['content-type']
-    if (type.indexOf(MEDIATYPE.OCTETSTREAM) === 0 || type.indexOf(MEDIATYPE.TEXT) === 0) {
+    if (matchesMediaTypes(type, [MEDIATYPE.OCTETSTREAM, MEDIATYPE.TEXT])) {
       // wrong media type, try to infer type from extension
       if (endsWith(url, EXT.COVJSON)) {
         type = MEDIATYPE.COVJSON
@@ -33,11 +33,11 @@ export function load (url, options = {}) {
     let nodeBuffer = response.body
     
     let data
-    if (type === MEDIATYPE.COVCBOR) {
+    if (matchesMediaTypes(type, MEDIATYPE.COVCBOR)) {
       // see http://stackoverflow.com/a/19544002
       let arrayBuffer = new Uint8Array(nodeBuffer).buffer
       data = cbor.decode(arrayBuffer)
-    } else if ([MEDIATYPE.COVJSON, MEDIATYPE.JSONLD, MEDIATYPE.JSON].indexOf(type) > -1) {
+    } else if (matchesMediaTypes(type, [MEDIATYPE.COVJSON, MEDIATYPE.JSONLD, MEDIATYPE.JSON])) {
       data = JSON.parse(nodeBuffer.toString())
     } else {
       throw new Error('Unsupported media type: ' + type)

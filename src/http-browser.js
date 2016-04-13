@@ -1,6 +1,6 @@
 import cbor from 'cbor-js'
 import {endsWith} from './util.js'
-import {MEDIATYPE, getAcceptHeader, EXT} from './http-common.js'
+import {MEDIATYPE, matchesMediaTypes, getAcceptHeader, EXT} from './http-common.js'
 
 export function load (url, options = {}, responseType='arraybuffer') {
   if (['arraybuffer', 'text'].indexOf(responseType) === -1) {
@@ -28,7 +28,7 @@ export function load (url, options = {}, responseType='arraybuffer') {
         
         var type = req.getResponseHeader('Content-Type')
         
-        if (type.indexOf(MEDIATYPE.OCTETSTREAM) === 0 || type.indexOf(MEDIATYPE.TEXT) === 0) {
+        if (matchesMediaTypes(type, [MEDIATYPE.OCTETSTREAM, MEDIATYPE.TEXT])) {
           // wrong media type, try to infer type from extension
           if (endsWith(url, EXT.COVJSON)) {
             type = MEDIATYPE.COVJSON
@@ -37,12 +37,12 @@ export function load (url, options = {}, responseType='arraybuffer') {
           } 
         }
         let data
-        if (type === MEDIATYPE.COVCBOR) {
+        if (matchesMediaTypes(type, MEDIATYPE.COVCBOR)) {
           var arrayBuffer = req.response
           let t0 = new Date()
           data = cbor.decode(arrayBuffer)
           console.log('CBOR decoding: ' + (new Date()-t0) + 'ms')
-        } else if ([MEDIATYPE.COVJSON, MEDIATYPE.JSONLD, MEDIATYPE.JSON].indexOf(type) > -1) {
+        } else if (matchesMediaTypes(type, [MEDIATYPE.COVJSON, MEDIATYPE.JSONLD, MEDIATYPE.JSON])) {
           if (responseType === 'arraybuffer') {
             if (window.TextDecoder) {
               let t0 = new Date()

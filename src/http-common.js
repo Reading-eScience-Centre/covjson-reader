@@ -18,6 +18,16 @@ export function getAcceptHeader (standalone) {
   return accept
 }
 
+/**
+ * Checks if a media type matches any given media types, ignoring any parameters. 
+ */
+export function matchesMediaTypes (mediaType, matchingMediaTypes) {
+  if (!Array.isArray(matchingMediaTypes)) {
+    matchingMediaTypes = [matchingMediaTypes]
+  }
+  return matchingMediaTypes.some(t => mediaType.indexOf(t) === 0)
+}
+
                
 export const EXT = {
     COVJSON: '.covjson',
