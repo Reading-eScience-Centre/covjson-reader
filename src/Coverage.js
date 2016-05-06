@@ -83,7 +83,8 @@ export default class Coverage {
     if (typeof this._covjson.domain === 'string') {
       domainProfile = this._covjson.domainProfile || this._covjson.domainType
     } else {
-      domainProfile = this._covjson.domain.profile || this._covjson.domain.domainType
+      domainProfile = this._covjson.domain.profile || this._covjson.domain.domainType ||
+                      this._covjson.domainProfile || this._covjson.domainType
     }
 
     if (domainProfile) {
