@@ -70,6 +70,63 @@ export const FIXTURES = {
         }
       }
     }),
+    ProfileNdArrayOnlyZ: () => ({
+      "type" : "Coverage",
+      "domain" : {
+        "type" : "Domain",
+        "profile" : "VerticalProfile",
+        "axes": {
+          "x": { "values": [-10.1] },
+          "y": { "values": [-40.2] },
+          "z": { "values": [ 5.4562, 8.9282 ] }
+        },
+        "referencing": [{
+          "components": ["x","y"],
+          "system": {
+            "type": "GeodeticCRS",
+            "id": "http://www.opengis.net/def/crs/OGC/1.3/CRS84"
+          }
+        }, {
+          "components": ["z"],
+          "system": {
+            "type": "VerticalCRS",
+            "cs": {
+              "axes": [{
+                "name": {
+                  "en": "Pressure"
+                },
+                "direction": "down",
+                "unit": {
+                  "symbol": "Pa"
+                }
+              }]
+            }
+          }
+        }]
+      },
+      "parameters" : {
+        "PSAL": {
+          "type" : "Parameter",
+          "unit" : {
+            "symbol" : "psu"
+          },
+          "observedProperty" : {
+            "label" : {
+              "en": "Sea Water Salinity"
+            }
+          }
+        }
+      },
+      "ranges" : {
+        "PSAL" : {
+          "type" : "NdArray",
+          "dataType": "float",
+          "shape": [2],
+          "axisNames": ['z'],
+          "values" : [ 43.9599, 43.3599 ]
+        }
+      }
+    }),
     Grid: () => ({
       "type" : "Coverage",
       "profile" : "GridCoverage",

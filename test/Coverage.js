@@ -19,10 +19,21 @@ describe('Coverage structure', () => {
     })
   })
   it('should support 0D NdArrays', () => {
+    let vals = FIXTURES.Point().ranges.PSAL.values
     return read(FIXTURES.Point()).then(cov => {
       return Promise.all([cov.loadDomain(), cov.loadRange('PSAL')]).then(([domain,range]) => {
         assert.strictEqual(domain.axes.size, 2)
-        assert.strictEqual(range.get({}), 43.9599)
+        assert.strictEqual(range.get({}), vals[0])
+      })
+    })
+  })
+  it('should support leaving out fixed axes in NdArrays', () => {
+    let vals = FIXTURES.ProfileNdArrayOnlyZ().ranges.PSAL.values
+    return read(FIXTURES.ProfileNdArrayOnlyZ()).then(cov => {
+      return Promise.all([cov.loadDomain(), cov.loadRange('PSAL')]).then(([domain,range]) => {
+        assert.strictEqual(domain.axes.size, 3)
+        assert.strictEqual(range.get({z: 0}), vals[0])
+        assert.strictEqual(range.get({z: 1}), vals[1])
       })
     })
   })
@@ -111,6 +122,22 @@ describe('Coverage methods', () => {
             assert.strictEqual(range.shape.get('t'), 1)
             assert.strictEqual(range.get({x: 0, y: 0, t: 0, z: 0}), vals[4])
             assert.strictEqual(range.get({x: 1, y: 0, t: 0, z: 0}), vals[5])
+          })
+        })
+      })
+    })
+    it('should subset correctly, new range encoding (leaving out fixed axes)', () => {
+      let dom = FIXTURES.ProfileNdArrayOnlyZ().domain
+      let vals = FIXTURES.ProfileNdArrayOnlyZ().ranges.PSAL.values
+      return read(FIXTURES.ProfileNdArrayOnlyZ()).then(cov => {
+        // the subset doesn't do anything here, it should just not fail!
+        return cov.subsetByIndex({x: 0, y: 0}).then(subset => {
+          return Promise.all([subset.loadDomain(), subset.loadRange('PSAL')]).then(([domain,range]) => {
+            assert.deepEqual(domain.axes.get('x').values, dom.axes.x.values)
+            assert.deepEqual(domain.axes.get('y').values, dom.axes.y.values)
+            assert.deepEqual(domain.axes.get('z').values, dom.axes.z.values)
+            assert.strictEqual(range.get({x: 0, y: 0, z: 0}), vals[0])
+            assert.strictEqual(range.get({x: 0, y: 0, z: 1}), vals[1])
           })
         })
       })
