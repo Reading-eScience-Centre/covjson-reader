@@ -18,6 +18,14 @@ describe('Coverage structure', () => {
       assert.equal(cov.type, COVERAGE)
     })
   })
+  it('should support 0D NdArrays', () => {
+    return read(FIXTURES.Point()).then(cov => {
+      return Promise.all([cov.loadDomain(), cov.loadRange('PSAL')]).then(([domain,range]) => {
+        assert.strictEqual(domain.axes.size, 2)
+        assert.strictEqual(range.get({}), 43.9599)
+      })
+    })
+  })
 })
 
 describe('Coverage methods', () => {

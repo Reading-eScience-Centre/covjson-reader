@@ -239,6 +239,44 @@ export const FIXTURES = {
         }
       }
     }),
+    Point: () => ({
+      "type" : "Coverage",
+      "domain" : {
+        "type" : "Domain",
+        "profile" : "Point",
+        "axes": {
+          "x": { "values": [-10.1] },
+          "y": { "values": [-40.2] }
+        },
+        "referencing": [{
+          "components": ["x","y"],
+          "system": {
+            "type": "GeodeticCRS",
+            "id": "http://www.opengis.net/def/crs/OGC/1.3/CRS84"
+          }
+        }]
+      },
+      "parameters" : {
+        "PSAL": {
+          "type" : "Parameter",
+          "unit" : {
+            "symbol" : "psu"
+          },
+          "observedProperty" : {
+            "label" : {
+              "en": "Sea Water Salinity"
+            }
+          }
+        }
+      },
+      "ranges" : {
+        "PSAL" : {
+          "type" : "NdArray",
+          "dataType": "float",
+          "values" : [ 43.9599 ]
+        }
+      }
+    }),
     CollectionEmpty: () => ({
       "type" : "CoverageCollection",
       "coverages": []
