@@ -75,6 +75,7 @@ export default class Coverage {
       this.profiles.push(profile)
     }
     
+    // TODO remove .domainProfiles in favour of .domainType at some point
     /** @type {Array<string>} */
     this.domainProfiles = []
     
@@ -89,9 +90,16 @@ export default class Coverage {
       if (domainProfile.substr(0,4) !== 'http') {
         domainProfile = PREFIX + domainProfile
       }
+      this.domainType = domainProfile
       this.domainProfiles.push(domainProfile)
     }
-
+    
+    // backwards-compatibility
+    if (!profile && domainProfile) {
+      profile = domainProfile + COVERAGE
+      this.profiles.push(profile)
+    }
+    
     this._updateLoadStatus()
   }
   
@@ -126,13 +134,13 @@ export default class Coverage {
     let promise
     if (typeof domainOrUrl === 'object') {
       let domain = domainOrUrl
-      transformDomain(domain, this.options.referencing)
+      transformDomain(domain, this.options.referencing, this.domainType)
       promise = Promise.resolve(domain)
     } else {
       let url = domainOrUrl
       promise = load(url).then(result => {
         let domain = result.data
-        transformDomain(domain, this.options.referencing)
+        transformDomain(domain, this.options.referencing, this.domainType)
         this._covjson.domain = domain
         this._updateLoadStatus()
         return domain
@@ -356,8 +364,8 @@ function subsetByIndex (cov, constraints) {
     let newcov = {
       type: COVERAGE,
       // TODO are the profiles still valid?
-      profiles: cov.profiles,
       domainProfiles: cov.domainProfiles,
+      domainType: cov.domainType,
       parameters: cov.parameters,
       loadDomain: () => Promise.resolve(newdomain),
       loadRange,
@@ -595,16 +603,21 @@ function createRangeGetFunction (ndarr, axisOrder) {
  * @return {Object} The transformed domain object.
  * @access private
  */
-export function transformDomain (domain, referencing) {
+export function transformDomain (domain, referencing, domainType) {
   if ('__transformDone' in domain) return
   
+  // TODO remove .profiles in favour .domainType at some point
   domain.profiles = []
   let profile = domain.profile
   if (profile) {
     if (profile.substr(0,4) !== 'http') {
       profile = PREFIX + profile
     }
+    domain.domainType = profile
     domain.profiles.push(profile)
+  }
+  if (!domain.domainType) {
+    domain.domainType = domainType
   }
 
   let axes = new Map() // axis name -> axis object

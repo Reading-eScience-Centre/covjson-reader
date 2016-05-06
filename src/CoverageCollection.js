@@ -1,6 +1,6 @@
 import {COVERAGECOLLECTION} from './constants.js'
 import {default as Coverage, transformDomain, transformParameter} from './Coverage.js'
-import {shallowcopy, asTime, PREFIX} from './util.js'
+import {shallowcopy, asTime, endsWith, PREFIX} from './util.js'
 import {isISODateAxis, isLongitudeAxis, getLongitudeWrapper} from 'covutils/lib/referencing.js'
 
 /** 
@@ -36,10 +36,28 @@ export default class CoverageCollection {
     this.profiles = []
     
     let profile = covjson.profile
+    let domainType
     if (profile) {
       if (profile.substr(0,4) !== 'http') {
+        if (endsWith(profile, COVERAGECOLLECTION)) {
+          domainType = profile.substr(0, profile.length - COVERAGECOLLECTION.length)
+        }
         profile = PREFIX + profile
       }
+      this.profiles.push(profile)
+    }
+    
+    if (!domainType) {
+      domainType = covjson.domainType
+    }
+    if (domainType && domainType.substr(0,4) !== 'http') {
+      domainType = PREFIX + domainType
+    }
+    this.domainType = domainType
+    
+    // backwards-compatibility
+    if (!profile && domainType) {
+      profile = domainType + COVERAGECOLLECTION
       this.profiles.push(profile)
     }
     
@@ -50,6 +68,11 @@ export default class CoverageCollection {
       covOptions.referencing = covjson.referencing
     }
     for (let coverage of covjson.coverages) {
+      // the Coverage class transforms domainProfile to domainType
+      // all the profile stuff should be removed eventually
+      if (!coverage.domainProfile) {
+        coverage.domainProfile = domainType
+      }
       if (!coverage.parameters) {
         coverage.parameters = {}
       }

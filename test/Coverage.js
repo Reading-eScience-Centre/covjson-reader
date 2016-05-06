@@ -8,6 +8,7 @@ import assert from 'assert'
 
 import {read} from '../lib/reader.js'
 import {COVERAGE} from '../lib/constants.js'
+import {PREFIX} from '../lib/util.js'
 
 import {FIXTURES} from './data.js'
 
@@ -16,6 +17,7 @@ describe('Coverage structure', () => {
     return read(FIXTURES.Profile()).then(cov => {
       assert.equal(cov.loaded, true)
       assert.equal(cov.type, COVERAGE)
+      assert.equal(cov.domainType, PREFIX + 'VerticalProfile')
     })
   })
   it('should support 0D NdArrays', () => {
