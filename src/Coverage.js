@@ -81,9 +81,9 @@ export default class Coverage {
     
     let domainProfile
     if (typeof this._covjson.domain === 'string') {
-      domainProfile = this._covjson.domainProfile
+      domainProfile = this._covjson.domainProfile || this._covjson.domainType
     } else {
-      domainProfile = this._covjson.domain.profile
+      domainProfile = this._covjson.domain.profile || this._covjson.domain.domainType
     }
 
     if (domainProfile) {
@@ -608,16 +608,13 @@ export function transformDomain (domain, referencing, domainType) {
   
   // TODO remove .profiles in favour .domainType at some point
   domain.profiles = []
-  let profile = domain.profile
+  let profile = domain.profile || domain.domainType || domainType
   if (profile) {
     if (profile.substr(0,4) !== 'http') {
       profile = PREFIX + profile
     }
     domain.domainType = profile
     domain.profiles.push(profile)
-  }
-  if (!domain.domainType) {
-    domain.domainType = domainType
   }
 
   let axes = new Map() // axis name -> axis object

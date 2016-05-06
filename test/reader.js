@@ -48,9 +48,20 @@ describe('reader methods', () => {
       return read(FIXTURES.Profile()).then(cov => {
         assert.deepEqual(cov.profiles, [PREFIX + FIXTURES.Profile().profile])
         assert.deepEqual(cov.domainProfiles, [PREFIX + FIXTURES.Profile().domain.profile])
+        assert.strictEqual(cov.domainType, PREFIX + FIXTURES.Profile().domain.profile)
         let label = cov.parameters.get('PSAL').observedProperty.label
         assert(label.en, 'en label missing')
         assert.equal(label.en, 'Sea Water Salinity')
+      })
+    })
+    it('Coverage should have correct properties (domainType)', () => {
+      return read(FIXTURES.ProfileWithDomainType()).then(cov => {
+        assert.deepEqual(cov.domainProfiles, [PREFIX + FIXTURES.Profile().domain.profile])
+        assert.strictEqual(cov.domainType, PREFIX + FIXTURES.Profile().domain.profile)
+        return cov.loadDomain().then(domain => {
+          assert.strictEqual(domain.domainType, PREFIX + FIXTURES.Profile().domain.profile)
+          assert.deepEqual(domain.profiles, [PREFIX + FIXTURES.Profile().domain.profile])
+        })
       })
     })
     it('Categorical coverage should have correct properties', () => {
