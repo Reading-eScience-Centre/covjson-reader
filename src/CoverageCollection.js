@@ -63,6 +63,16 @@ export default class CoverageCollection {
     
     let covs = []
     let rootParams = covjson.parameters ? covjson.parameters : {}
+    // generate local parameter IDs if not existing
+    // this is to keep track of same parameters when copied into the coverages
+    // (e.g. to synchronize legends etc.)
+    for (let key of Object.keys(rootParams)) {
+      let param = rootParams[key]
+      if (!param.id) {
+        param.id = new Date().getTime().toString()
+      }
+    }
+    
     let covOptions = {}
     if (covjson.referencing) {
       covOptions.referencing = covjson.referencing

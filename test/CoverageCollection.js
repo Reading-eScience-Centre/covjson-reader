@@ -19,6 +19,11 @@ describe('CoverageCollection structure', () => {
   it('should have correct structure', () => {
     return read(FIXTURES.CollectionURL).then(coll => {
       assert.equal(coll.type, COVERAGECOLLECTION)
+      let paramId = coll.parameters.get('PSAL').id
+      assert(paramId) // not empty
+      for (let cov of coll.coverages) {
+        assert.strictEqual(cov.parameters.get('PSAL').id, paramId)
+      }
     })
   })
 
