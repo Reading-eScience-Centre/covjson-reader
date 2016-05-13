@@ -69,7 +69,7 @@ export default class CoverageCollection {
     for (let key of Object.keys(rootParams)) {
       let param = rootParams[key]
       if (!param.id) {
-        param.id = new Date().getTime().toString()
+        param.id = Math.round(new Date().getTime() * Math.random()).toString()
       }
     }
     
