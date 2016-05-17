@@ -1,6 +1,7 @@
 import ndarray from 'ndarray'
 
-import {subsetCoverageByValue, subsetDomainByIndex, normalizeIndexSubsetConstraints} from 'covutils/lib/subset.js'
+import {subsetByIndex as subsetDomainByIndex, normalizeIndexSubsetConstraints} from 'covutils/lib/domain/subset.js'
+import {subsetByValue as subsetCoverageByValue} from 'covutils/lib/coverage/subset.js'
 import {minMax} from 'covutils/lib/array.js'
 
 import {COVERAGE} from './constants.js'

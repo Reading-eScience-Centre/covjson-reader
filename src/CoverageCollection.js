@@ -1,7 +1,7 @@
 import {COVERAGECOLLECTION} from './constants.js'
 import {default as Coverage, transformDomain, transformParameter} from './Coverage.js'
 import {shallowcopy, asTime, endsWith, PREFIX} from './util.js'
-import {isISODateAxis, isLongitudeAxis, getLongitudeWrapper} from 'covutils/lib/referencing.js'
+import {isISODateAxis, isLongitudeAxis, getLongitudeWrapper} from 'covutils/lib/domain/referencing.js'
 
 /** 
  * Wraps a CoverageJSON Collection object as a CoverageCollection API object.
