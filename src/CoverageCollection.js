@@ -179,15 +179,6 @@ export class CollectionQuery {
   }
   
   /**
-   * This query operation is not supported and has no effect.
-   * 
-   * @return {CollectionQuery}
-   */
-  embed (spec) {
-    return this
-  }
-  
-  /**
    * Applies the query operators and returns
    * a Promise that succeeds with a new CoverageCollection.
    * 
