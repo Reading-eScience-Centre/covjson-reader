@@ -8,11 +8,11 @@ A library that reads [CoverageJSON](https://github.com/reading-escience-centre/c
 
 covjson-reader can be used both on node.js and browsers.
 
-A minified browser version of this library is [hosted on the jsDelivr CDN](http://www.jsdelivr.com/projects/covjson-reader).
+A browser version of this library is hosted on both [jsDelivr](http://www.jsdelivr.com/projects/covjson-reader) and [cdnjs](https://cdnjs.com/libraries/covjson-reader), where the latter also hosts the unminified version together with source maps.
 
 Usage is simple:
 ```html
-<script src="https://cdn.jsdelivr.net/covjson-reader/0.10/covjson-reader.min.js"></script>
+<script src="https://cdn.jsdelivr.net/covjson-reader/0.11/covjson-reader.min.js"></script>
 <script>
 CovJSON.read('http://example.com/coverage.covjson').then(function (cov) {
   // work with Coverage object
