@@ -1,6 +1,6 @@
 let browser = typeof window !== 'undefined'
   
-export const PORT = 8000
+export const PORT = 9876 // same as in karma.conf.js
 
 export function runServerIfNode() {
   if (browser) return
@@ -10,7 +10,7 @@ export function runServerIfNode() {
   let http = require('http')
   let serveStatic = require('serve-static')
 
-  let serve = serveStatic('test/fixtures')
+  let serve = serveStatic('test')
   let server = http.createServer((req, res) => {
     serve(req, res, finalhandler(req, res))
   })

@@ -13,10 +13,13 @@ module.exports = function(config) {
 
     // list of files / patterns to load and/or serve in the browser
     files: [
-      {pattern: 'test/fixtures/*.covjson', included: false, served: true},
+      {pattern: 'test/fixtures/**/*.covjson', included: false, served: true},
       'test/**/*.js'
     ],
 
+    proxies: {
+      '/fixtures/': 'http://localhost:9876/base/test/fixtures/'
+    },
 
     // list of files to exclude
     exclude: [

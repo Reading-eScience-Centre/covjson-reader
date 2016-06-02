@@ -5,14 +5,33 @@ import 'core-js/es6/symbol'
 import 'core-js/es6/map'
 
 import assert from 'assert'
+import xndarray from 'xndarray'
 
 import {read} from '../lib/reader.js'
 import {COVERAGE} from '../lib/constants.js'
 import {PREFIX} from '../lib/util.js'
 
+import {runServerIfNode} from './node-setup.js'
 import {FIXTURES} from './data.js'
 
+// copy of grid-tiled/c/all.covjson 
+let tiledAllVals = xndarray([
+   1,  2,  3,  4,  5,  6,  7,  8,  9, 10,
+   11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
+   21, 22, 23, 24, 25, 26, 27, 28, 29, 30,
+   31, 32, 33, 34, 35, 36, 37, 38, 39, 40,
+   41, 42, 43, 44, 45, 46, 47, 48, 49, 50,
+   
+   51, 52, 53, 54, 55, 56, 57, 58, 59, 60,
+   61, 62, 63, 64, 65, 66, 67, 68, 69, 70,
+   71, 72, 73, 74, 75, 76, 77, 78, 79, 80,
+   81, 82, 83, 84, 85, 86, 87, 88, 89, 90,
+   91, 92, 93, 94, 95, 96, 97, 98, 99, 100], 
+   {names: ['t','y','x'], shape: [2, 5, 10]})
+
 describe('Coverage structure', () => {
+  runServerIfNode()
+  
   it('should have loaded=true and type=Coverage', () => {
     return read(FIXTURES.Profile()).then(cov => {
       assert.equal(cov.loaded, true)
@@ -36,6 +55,20 @@ describe('Coverage structure', () => {
         assert.strictEqual(domain.axes.size, 3)
         assert.strictEqual(range.get({z: 0}), vals[0])
         assert.strictEqual(range.get({z: 1}), vals[1])
+      })
+    })
+  })
+  it('should support loading a tiled range', () => {
+    return read(FIXTURES.GridTiledURL).then(cov => {
+      // TODO how to check which tileset was loaded?
+      return cov.loadRange('FOO').then(range => {
+        for (let t=0; t < tiledAllVals.shape[0]; t++) {
+          for (let y=0; y < tiledAllVals.shape[1]; y++) {
+            for (let x=0; x < tiledAllVals.shape[2]; x++) {
+              assert.strictEqual(range.get({t, y, x}), tiledAllVals.xget({t, y, x}))
+            }
+          }
+        }
       })
     })
   })

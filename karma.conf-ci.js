@@ -44,6 +44,10 @@ module.exports = function(config) {
       {pattern: 'test/fixtures/*.covjson', included: false, served: true},
       'test/**/*.js'
     ],
+    
+    proxies: {
+      '/fixtures/': 'http://localhost:9876/base/test/fixtures/'
+    },
 
 
     // list of files to exclude

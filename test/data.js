@@ -1,12 +1,12 @@
 import {PORT} from './node-setup.js'
 
-let browser = typeof window !== 'undefined'
-let base = browser ? 'base/test/fixtures/' : 'http://localhost:' + PORT + '/'
+let base = 'http://localhost:' + PORT + '/fixtures/'
 
 export const FIXTURES = {
     ProfileURL: base + 'Coverage-Profile-standalone.covjson',
     CollectionURL: base + 'VerticalProfileCoverageCollection-standalone.covjson',
     GridCategoricalURL: base + 'Coverage-Grid-categorical-standalone.covjson',
+    GridTiledURL: base + 'Coverage-Grid-tiled.covjson',
     Profile: () => ({
       "type" : "Coverage",
       "profile" : "VerticalProfileCoverage",

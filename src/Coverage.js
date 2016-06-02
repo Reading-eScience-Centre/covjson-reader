@@ -172,26 +172,7 @@ export default class Coverage {
    * @return {Promise} A Promise object which loads the requested range data and succeeds with a Range object.
    */
   loadRange (paramKey) {
-    // Since the shape of the range array is derived from the domain, it has to be loaded as well.
-    return this.loadDomain().then(domain => {
-      let rangeOrUrl = this._covjson.ranges[paramKey]
-      if (typeof rangeOrUrl === 'object') {
-        let range = rangeOrUrl
-        transformRange(range, domain)
-        return Promise.resolve(range)
-      } else {
-        let url = rangeOrUrl
-        return load(url).then(result => {
-          let range = result.data
-          transformRange(range, domain)
-          if (this.options.cacheRanges) {
-            this._covjson.ranges[paramKey] = range
-            this._updateLoadStatus()
-          }
-          return range
-        })
-      }
-    })    
+    return loadRangeFn(this)(paramKey)
   }
   
   /**
@@ -252,7 +233,7 @@ export default class Coverage {
    * @returns {Promise} A Promise object with the subsetted coverage object as result.
    */
   subsetByIndex (constraints) {
-    return subsetByIndex(this, constraints)
+    return subsetByIndexFn(this)(constraints)
   }
   
   /**
@@ -320,63 +301,99 @@ function getRangeShapeArray (domain, range) {
   return shape
 }
 
-function subsetByIndex (cov, constraints) {
-  return cov.loadDomain().then(domain => {
-    constraints = normalizeIndexSubsetConstraints(domain, constraints)
-    let newdomain = subsetDomainByIndex(domain, constraints)
-    
-    // backwards-compatibility
-    if (domain._rangeAxisOrder) {
-      newdomain._rangeAxisOrder = domain._rangeAxisOrder
-    }
+function loadRangeFn (cov, globalConstraints) {
+  return paramKey => {
+    // Since the shape of the range array is derived from the domain, it has to be loaded as well.
+    return cov.loadDomain().then(domain => {
+      let rangeOrUrl = cov._covjson.ranges[paramKey]
+      if (typeof rangeOrUrl === 'object') {
+        let range = rangeOrUrl
+        if (range.type === 'NdArray' || range.type === 'Range') {
+          transformNdArrayRange(range, domain)
+          return Promise.resolve(range)
+        } else if (range.type === 'TiledNdArray') {
           
-    // subset the ndarrays of the ranges (on request)
-    let rangeWrapper = range => {
-      let ndarr = range._ndarr
-            
-      // fast ndarray view
-      let axisNames = getRangeAxisOrder(domain, range)
-      let los = axisNames.map(name => constraints[name].start)
-      let his = axisNames.map(name => constraints[name].stop)
-      let steps = axisNames.map(name => constraints[name].step)
-      let newndarr = ndarr.hi(...his).lo(...los).step(...steps)
+        } else {
+          throw new Error('Unsupported: ' + range.type)
+        }
+      } else {
+        let url = rangeOrUrl
+        return load(url).then(result => {
+          // this is always an NdArray because TiledNdArray must be embedded
+          let range = result.data
+          transformNdArrayRange(range, domain)
+          if (cov.options.cacheRanges) {
+            cov._covjson.ranges[paramKey] = range
+            cov._updateLoadStatus()
+          }
+          return range
+        })
+      }
+    })
+  }
+}
+
+function subsetByIndexFn (cov, globalConstraints) {
+  return constraints => {
+    return cov.loadDomain().then(domain => {
+      constraints = normalizeIndexSubsetConstraints(domain, constraints)
+      let newdomain = subsetDomainByIndex(domain, constraints)
       
-      let newrange = {
-        dataType: range.dataType,
-        get: createRangeGetFunction(newndarr, axisNames),
-        _ndarr: newndarr,
-        _axisNames: axisNames,
-        _shape: axisNames.map(axisName => newdomain.axes.get(axisName).values.length)
+      let newGlobalConstraints = toGlobalSubsetConstraints(constraints, globalConstraints)
+      
+      // backwards-compatibility
+      if (domain._rangeAxisOrder) {
+        newdomain._rangeAxisOrder = domain._rangeAxisOrder
       }
-      newrange.shape = new Map()
-      for (let axisName of axisNames) {
-        let size = newdomain.axes.get(axisName).values.length
-        newrange.shape.set(axisName, size)
+            
+      // subset the ndarrays of the ranges (on request)
+      let rangeWrapper = range => {
+        let ndarr = range._ndarr
+              
+        // fast ndarray view
+        let axisNames = getRangeAxisOrder(domain, range)
+        let los = axisNames.map(name => constraints[name].start)
+        let his = axisNames.map(name => constraints[name].stop)
+        let steps = axisNames.map(name => constraints[name].step)
+        let newndarr = ndarr.hi(...his).lo(...los).step(...steps)
+        
+        let newrange = {
+          dataType: range.dataType,
+          get: createRangeGetFunction(newndarr, axisNames),
+          _ndarr: newndarr,
+          _axisNames: axisNames,
+          _shape: axisNames.map(axisName => newdomain.axes.get(axisName).values.length)
+        }
+        newrange.shape = new Map()
+        for (let axisName of axisNames) {
+          let size = newdomain.axes.get(axisName).values.length
+          newrange.shape.set(axisName, size)
+        }
+        return newrange
       }
-      return newrange
-    }
-    
-    let loadRange = key => cov.loadRange(key).then(rangeWrapper)
-    
-    let loadRanges = keys => cov.loadRanges(keys).then(ranges => 
-      new Map([...ranges].map(([key, range]) => [key, rangeWrapper(range)]))
-    )
-    
-    // assemble everything to a new coverage
-    let newcov = {
-      type: COVERAGE,
-      // TODO are the profiles still valid?
-      domainProfiles: cov.domainProfiles,
-      domainType: cov.domainType,
-      parameters: cov.parameters,
-      loadDomain: () => Promise.resolve(newdomain),
-      loadRange,
-      loadRanges
-    }
-    newcov.subsetByIndex = subsetByIndex.bind(null, newcov)
-    newcov.subsetByValue = subsetCoverageByValue.bind(null, newcov)
-    return newcov
-  })
+      
+      let loadRange = key => cov.loadRange(key).then(rangeWrapper)
+      
+      let loadRanges = keys => cov.loadRanges(keys).then(ranges => 
+        new Map([...ranges].map(([key, range]) => [key, rangeWrapper(range)]))
+      )
+      
+      // assemble everything to a new coverage
+      let newcov = {
+        type: COVERAGE,
+        // TODO are the profiles still valid?
+        domainProfiles: cov.domainProfiles,
+        domainType: cov.domainType,
+        parameters: cov.parameters,
+        loadDomain: () => Promise.resolve(newdomain),
+        loadRange,
+        loadRanges
+      }
+      newcov.subsetByIndex = subsetByIndexFn(newcov, newGlobalConstraints)
+      newcov.subsetByValue = subsetCoverageByValue.bind(null, newcov)
+      return newcov
+    })
+  }
 }
 
 /**
@@ -451,14 +468,14 @@ export function transformParameter (params, key) {
 }
 
 /**
- * Transforms a CoverageJSON range to the Coverage API format, that is,
+ * Transforms a CoverageJSON NdArray range to the Coverage API format, that is,
  * no special encoding etc. is left. Transformation is made in-place.
  * 
- * @param {Object} range The original range.
+ * @param {Object} range The original NdArray range.
  * @param {Object} domain The CoverageJSON domain object. 
  * @return {Object} The transformed range.
  */
-function transformRange (range, domain) {
+function transformNdArrayRange (range, domain) {
   if ('__transformDone' in range) return
   
   const values = range.values
@@ -708,6 +725,37 @@ export function transformDomain (domain, referencing, domainType) {
   domain.__transformDone = true
   
   return domain
+}
+
+/**
+ * Applies the local index subset constraints to the existing global constraints.
+ * Both constraint objects must be normalized, that is, must contain the same axes
+ * as start/stop/step objects.
+ * 
+ * @example
+ * var local = {x: {start: 0, stop: 50, step: 2}}
+ * var global = {x: {start: 500, stop: 1000}}
+ * var newGlobal = toGlobalSubsetConstraints(local, global)
+ * // newGlobal == {x: {start: 500, stop: 550, step: 2}}
+ * 
+ * @example
+ * var local = {x: {start: 5, stop: 10, step: 2}} // 5, 7, 9
+ * var global = {x: {start: 500, stop: 1000, step: 10}} // 500, 510, 520,...
+ * var newGlobal = toGlobalSubsetConstraints(local, global) 
+ * // newGlobal == {x: {start: 550, stop: 600, step: 20}} // 550, 570, 590
+ */
+function toGlobalSubsetConstraints (localConstraints, globalConstraints={}) {
+  let res = {}
+  for (let axis of Object.keys(localConstraints)) {
+    let local = localConstraints[axis]
+    let {start: globalStart=0, step: globalStep=1} = globalConstraints[axis] || {}
+    res[axis] = {
+      start: globalStart + globalStep*local.start,
+      stop: globalStart + globalStep*local.stop,
+      step: globalStep * local.step
+    }
+  }
+  return res
 }
 
 function wrapBounds (axis) {
