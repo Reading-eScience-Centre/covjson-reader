@@ -192,15 +192,7 @@ export default class Coverage {
    * @return {Promise} A Promise object which loads the requested range data and succeeds with a Map object.
    */
   loadRanges (paramKeys) {
-    if (paramKeys === undefined) paramKeys = this.parameters.keys()
-    paramKeys = Array.from(paramKeys)
-    return Promise.all(paramKeys.map(k => this.loadRange(k))).then(ranges => {
-      let map = new Map()
-      for (let i=0; i < paramKeys.length; i++) {
-        map.set(paramKeys[i], ranges[i])
-      }
-      return map
-    })
+    return loadRangesFn(this)(paramKeys)
   }
   
   /**
@@ -301,36 +293,92 @@ function getRangeShapeArray (domain, range) {
   return shape
 }
 
+function loadRangesFn (cov) {
+  return paramKeys => {
+    if (paramKeys === undefined) paramKeys = this.parameters.keys()
+    paramKeys = Array.from(paramKeys)
+    return Promise.all(paramKeys.map(k => cov.loadRange(k))).then(ranges => {
+      let map = new Map()
+      for (let i=0; i < paramKeys.length; i++) {
+        map.set(paramKeys[i], ranges[i])
+      }
+      return map
+    })
+  }
+}
+
 function loadRangeFn (cov, globalConstraints) {
   return paramKey => {
     // Since the shape of the range array is derived from the domain, it has to be loaded as well.
-    return cov.loadDomain().then(domain => {
+    return cov.loadDomain().then(() => {
       let rangeOrUrl = cov._covjson.ranges[paramKey]
       if (typeof rangeOrUrl === 'object') {
-        let range = rangeOrUrl
-        if (range.type === 'NdArray' || range.type === 'Range') {
-          transformNdArrayRange(range, domain)
-          return Promise.resolve(range)
-        } else if (range.type === 'TiledNdArray') {
-          
-        } else {
-          throw new Error('Unsupported: ' + range.type)
-        }
+        let rawRange = rangeOrUrl
+        // we need the original domain here, not a potentially subsetted one,
+        // therefore we access cov._covjson directly
+        // this legacy code will disappear once the old range format is not supported anymore
+        return doLoadRange(rawRange, cov._covjson.domain, globalConstraints)
       } else {
         let url = rangeOrUrl
         return load(url).then(result => {
-          // this is always an NdArray because TiledNdArray must be embedded
-          let range = result.data
-          transformNdArrayRange(range, domain)
-          if (cov.options.cacheRanges) {
-            cov._covjson.ranges[paramKey] = range
-            cov._updateLoadStatus()
+          let rawRange = result.data
+          let range = doLoadRange(rawRange, cov._covjson.domain, globalConstraints)
+          // TODO caching logic specific to NdArray case, should be more generic and handled by range loaders (see doLoadRange)
+          if (range.type === 'NdArray' || range.type === 'Range') {
+            if (cov.options.cacheRanges) {
+              cov._covjson.ranges[paramKey] = range
+              cov._updateLoadStatus()
+            }
           }
           return range
         })
       }
     })
   }
+}
+
+function doLoadRange (range, domain, globalConstraints) {
+  if (range.type === 'NdArray' || range.type === 'Range') {
+    // if an NdArray, then we modify it in-place (only done the first time)
+    transformNdArrayRange(range, domain)
+    
+    let newrange = subsetNdArrayRangeByIndex(range, domain, globalConstraints)
+    return Promise.resolve(newrange)
+  } else if (range.type === 'TiledNdArray') {
+    // TODO implement
+    
+    // step 1: figure out which tiles to load (strategy: least requests)
+    // step 2: load tiles and apply transformNdArrayRange
+    // step 3: create a new range based on the globalConstraints; this will be a copy in most cases
+    
+    throw new Error('Unsupported: ' + range.type)
+  } else {
+    throw new Error('Unsupported: ' + range.type)
+  }
+}
+
+function subsetNdArrayRangeByIndex (range, domain, constraints) {
+  if (!constraints) {
+    return range
+  }
+  let ndarr = range._ndarr
+        
+  // fast ndarray view
+  let axisNames = getRangeAxisOrder(domain, range)
+  let los = axisNames.map(name => constraints[name].start)
+  let his = axisNames.map(name => constraints[name].stop)
+  let steps = axisNames.map(name => constraints[name].step)
+  let newndarr = ndarr.hi(...his).lo(...los).step(...steps)
+  
+  let newrange = {
+    dataType: range.dataType,
+    get: createRangeGetFunction(newndarr, axisNames),
+    _ndarr: newndarr,
+    _axisNames: axisNames,
+    _shape: newndarr.shape
+  }
+  newrange.shape = new Map(axisNames.map((v,i) => [v, newndarr.shape[i]]))
+  return newrange
 }
 
 function subsetByIndexFn (cov, globalConstraints) {
@@ -345,50 +393,19 @@ function subsetByIndexFn (cov, globalConstraints) {
       if (domain._rangeAxisOrder) {
         newdomain._rangeAxisOrder = domain._rangeAxisOrder
       }
-            
-      // subset the ndarrays of the ranges (on request)
-      let rangeWrapper = range => {
-        let ndarr = range._ndarr
-              
-        // fast ndarray view
-        let axisNames = getRangeAxisOrder(domain, range)
-        let los = axisNames.map(name => constraints[name].start)
-        let his = axisNames.map(name => constraints[name].stop)
-        let steps = axisNames.map(name => constraints[name].step)
-        let newndarr = ndarr.hi(...his).lo(...los).step(...steps)
-        
-        let newrange = {
-          dataType: range.dataType,
-          get: createRangeGetFunction(newndarr, axisNames),
-          _ndarr: newndarr,
-          _axisNames: axisNames,
-          _shape: axisNames.map(axisName => newdomain.axes.get(axisName).values.length)
-        }
-        newrange.shape = new Map()
-        for (let axisName of axisNames) {
-          let size = newdomain.axes.get(axisName).values.length
-          newrange.shape.set(axisName, size)
-        }
-        return newrange
-      }
-      
-      let loadRange = key => cov.loadRange(key).then(rangeWrapper)
-      
-      let loadRanges = keys => cov.loadRanges(keys).then(ranges => 
-        new Map([...ranges].map(([key, range]) => [key, rangeWrapper(range)]))
-      )
       
       // assemble everything to a new coverage
       let newcov = {
+        _covjson: cov._covjson,
         type: COVERAGE,
         // TODO are the profiles still valid?
         domainProfiles: cov.domainProfiles,
         domainType: cov.domainType,
         parameters: cov.parameters,
-        loadDomain: () => Promise.resolve(newdomain),
-        loadRange,
-        loadRanges
+        loadDomain: () => Promise.resolve(newdomain)
       }
+      newcov.loadRange = loadRangeFn(newcov, newGlobalConstraints)
+      newcov.loadRanges = loadRangesFn(newcov)
       newcov.subsetByIndex = subsetByIndexFn(newcov, newGlobalConstraints)
       newcov.subsetByValue = subsetCoverageByValue.bind(null, newcov)
       return newcov
@@ -569,12 +586,7 @@ function transformNdArrayRange (range, domain) {
   let ndarr = ndarray(vals, shapeArr)
   range._ndarr = ndarr
   range.get = createRangeGetFunction(ndarr, axisNames)
-  
-  let shapeMap = new Map()
-  for (let [axisName, axis] of domain.axes) {
-    shapeMap.set(axisName, axis.values.length)
-  }  
-  range.shape = shapeMap
+  range.shape = new Map(axisNames.map((v,i) => [v, shapeArr[i]]))
   
   range.__transformDone = true  
   return range
