@@ -337,7 +337,9 @@ function loadRangeFn (cov, globalConstraints) {
   }
 }
 
-function doLoadRange (range, domain, globalConstraints) {
+function doLoadRange (range, domain, globalConstraints={}) {
+  globalConstraints = normalizeIndexSubsetConstraints(domain, globalConstraints)
+  
   if (range.type === 'NdArray' || range.type === 'Range') {
     // if an NdArray, then we modify it in-place (only done the first time)
     transformNdArrayRange(range, domain)
@@ -345,11 +347,24 @@ function doLoadRange (range, domain, globalConstraints) {
     let newrange = subsetNdArrayRangeByIndex(range, domain, globalConstraints)
     return Promise.resolve(newrange)
   } else if (range.type === 'TiledNdArray') {
-    // TODO implement
+    // step 1: figure out which tileset to load (strategy: least number of requests and amount of data)        
+    let constraintsArr = range.axisNames.map(name => globalConstraints[name])
     
-    // step 1: figure out which tiles to load (strategy: least requests)
+    let tilesetsStats = []
+    for (let tileset of range.tilesets) {
+      let tileShape = tileset.tileShape.map((v,i) => v === null ? range.shape[i] : v)
+      let tilesetStats = getTilesetStats(tileShape, constraintsArr)
+      tilesetsStats.push(tilesetStats)
+    }
+    let idxBestTileset = indexOfBestTileset(tilesetsStats)
+    
     // step 2: load tiles and apply transformNdArrayRange
+    
+        
     // step 3: create a new range based on the globalConstraints; this will be a copy in most cases
+
+    // TODO 
+    
     
     throw new Error('Unsupported: ' + range.type)
   } else {
@@ -357,10 +372,51 @@ function doLoadRange (range, domain, globalConstraints) {
   }
 }
 
-function subsetNdArrayRangeByIndex (range, domain, constraints) {
-  if (!constraints) {
-    return range
+/**
+ * Returns the number of tiles and values that have to be loaded, given a set of subsetting constraints.
+ * 
+ * @param {Array<number>} tileShape
+ * @param {Array<object>} constraints - start/stop/step subset constraints for each axis, stop is exclusive
+ * @returns {number}
+ */
+function getTilesetStats (tileShape, constraints) {
+  let tileCount = 1
+  for (let i=0; i < tileShape.length; i++) {
+    let {start, stop, step} = constraints[i]
+    let tileSize = tileShape[i]
+    
+    // the indices of the first and last tile containing the subsetting constraints
+    let tileStart = Math.floor(start / tileSize) // inclusive
+    let tileStop = Math.ceil(stop / tileSize) // exclusive
+    
+    // total number of values within the tiles containing the subsetting constraints
+    let nvalues = tileSize * (tileStop - tileStart)
+
+    // number of tiles that intersect with the subsetting constraints
+    tileCount *= Math.ceil(nvalues / (Math.max(step, tileSize)))
   }
+  // the value count is an upper bound as it doesn't account for edge tiles that may be smaller
+  let valueCount = tileCount * tileShape.reduce((l,r) => l*r)
+  
+  return {tileCount, valueCount}
+}
+
+/**
+ * Returns the index of the tileset with minimum network effort based on the given tileset statistics.
+ * Effort here means a combination of number of requested tiles and values.
+ * 
+ * @param {Array<object>} tilesetsStats
+ * @returns {number} index of the tileset with minimum network effort
+ */
+function indexOfBestTileset (tilesetsStats) {
+  // one tile request shall have an equal effort as receiving 1000 values
+  let tileValueRatio = 1000
+  let efforts = tilesetsStats.map(s => s.tileCount + s.valueCount / tileValueRatio)
+  let minEffortIdx = efforts.reduce((imin, x, i, arr) => x < arr[imin] ? i : imin, 0)
+  return minEffortIdx
+}
+
+function subsetNdArrayRangeByIndex (range, domain, constraints) {
   let ndarr = range._ndarr
         
   // fast ndarray view
