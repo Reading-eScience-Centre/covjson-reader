@@ -369,9 +369,9 @@ function loadTiledNdArraySubset (range, constraints) {
   
   // step 1: select tileset with least network effort
   let fillNulls = tileShape => tileShape.map((v,i) => v === null ? range.shape[i] : v)    
-  let tilesetsStats = range.tilesets.map(ts => getTilesetStats(fillNulls(ts.tileShape), constraintsArr))
+  let tilesetsStats = range.tileSets.map(ts => getTilesetStats(fillNulls(ts.tileShape), constraintsArr))
   let idxBestTileset = indexOfBestTileset(tilesetsStats)
-  let tileset = range.tilesets[idxBestTileset]
+  let tileset = range.tileSets[idxBestTileset]
   let tileShape = fillNulls(tileset.tileShape)
       
   // step 2: determine the tiles to load
