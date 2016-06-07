@@ -18,6 +18,7 @@
     "covutils": "^0.2.5",
     "cbor-js": "^0.1.0",
     "ndarray": "^1.0.18",
+    "url-template": "^2.0.7",
     "request-promise": "^1.0.2"
   },
   "files": [

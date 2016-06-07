@@ -75,6 +75,8 @@ describe('Coverage structure', () => {
 })
 
 describe('Coverage methods', () => {
+  runServerIfNode()
+  
   describe('#subsetByIndex', () => {
     it('should not modify the original coverage', () => {
       return read(FIXTURES.Profile()).then(cov => {
@@ -173,6 +175,27 @@ describe('Coverage methods', () => {
             assert.deepEqual(domain.axes.get('z').values, dom.axes.z.values)
             assert.strictEqual(range.get({x: 0, y: 0, z: 0}), vals[0])
             assert.strictEqual(range.get({x: 0, y: 0, z: 1}), vals[1])
+          })
+        })
+      })
+    })
+    it('should subset a tiled range correctly', () => {
+      return read(FIXTURES.GridTiledURL).then(cov => {
+        // TODO how to check which tileset was loaded?
+        let constraint = {t: {start: 1, stop: 2}, y: {start: 2, stop: 4}, x: {start: 0, stop: 3}}
+        return cov.subsetByIndex(constraint).then(subset => {
+          return subset.loadRange('FOO').then(range => {
+            for (let t=0; t < 1; t++) {
+              for (let y=0; y < 2; y++) {
+                for (let x=0; x < 3; x++) {
+                  assert.strictEqual(range.get({t, y, x}), 
+                                     tiledAllVals.xget({
+                                       t: t + constraint.t.start,
+                                       y: y + constraint.y.start,
+                                       x: x + constraint.x.start}))
+                }
+              }
+            }
           })
         })
       })

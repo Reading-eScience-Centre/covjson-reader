@@ -1,4 +1,5 @@
 import ndarray from 'ndarray'
+import template from 'url-template'
 
 import {subsetByIndex as subsetDomainByIndex, normalizeIndexSubsetConstraints} from 'covutils/lib/domain/subset.js'
 import {subsetByValue as subsetCoverageByValue} from 'covutils/lib/coverage/subset.js'
@@ -268,6 +269,9 @@ export default class Coverage {
 }
 
 function getRangeAxisOrder (domain, range) {
+  if (!domain) {
+    return range._axisNames
+  }
   // backwards-compatibility, in the future the range always has an explicit axis ordering
   let needsRangeAxisOrder = [...domain.axes.values()].filter(axis => axis.values.length > 1).length > 1
   
@@ -281,6 +285,9 @@ function getRangeAxisOrder (domain, range) {
 }
 
 function getRangeShapeArray (domain, range) {
+  if (!domain) {
+    return range._shape
+  }
   // mostly backwards-compatibility, in the future this just returns range._shape
   let axisOrder = getRangeAxisOrder(domain, range)
   let shape = axisOrder.map(k => domain.axes.get(k).values.length)
@@ -317,59 +324,166 @@ function loadRangeFn (cov, globalConstraints) {
         // we need the original domain here, not a potentially subsetted one,
         // therefore we access cov._covjson directly
         // this legacy code will disappear once the old range format is not supported anymore
-        return doLoadRange(rawRange, cov._covjson.domain, globalConstraints)
+        return doLoadRange(cov, paramKey, rawRange, cov._covjson.domain, globalConstraints)
       } else {
         let url = rangeOrUrl
         return load(url).then(result => {
           let rawRange = result.data
-          let range = doLoadRange(rawRange, cov._covjson.domain, globalConstraints)
-          // TODO caching logic specific to NdArray case, should be more generic and handled by range loaders (see doLoadRange)
-          if (range.type === 'NdArray' || range.type === 'Range') {
-            if (cov.options.cacheRanges) {
-              cov._covjson.ranges[paramKey] = range
-              cov._updateLoadStatus()
-            }
-          }
-          return range
+          return doLoadRange(cov, paramKey, rawRange, cov._covjson.domain, globalConstraints)
         })
       }
     })
   }
 }
 
-function doLoadRange (range, domain, globalConstraints={}) {
+function doLoadRange (cov, paramKey, range, domain, globalConstraints={}) {
   globalConstraints = normalizeIndexSubsetConstraints(domain, globalConstraints)
   
   if (range.type === 'NdArray' || range.type === 'Range') {
     // if an NdArray, then we modify it in-place (only done the first time)
     transformNdArrayRange(range, domain)
-    
-    let newrange = subsetNdArrayRangeByIndex(range, domain, globalConstraints)
-    return Promise.resolve(newrange)
-  } else if (range.type === 'TiledNdArray') {
-    // step 1: figure out which tileset to load (strategy: least number of requests and amount of data)        
-    let constraintsArr = range.axisNames.map(name => globalConstraints[name])
-    
-    let tilesetsStats = []
-    for (let tileset of range.tilesets) {
-      let tileShape = tileset.tileShape.map((v,i) => v === null ? range.shape[i] : v)
-      let tilesetStats = getTilesetStats(tileShape, constraintsArr)
-      tilesetsStats.push(tilesetStats)
+    if (cov.options.cacheRanges) {
+      cov._covjson.ranges[paramKey] = range
+      cov._updateLoadStatus()
     }
-    let idxBestTileset = indexOfBestTileset(tilesetsStats)
     
-    // step 2: load tiles and apply transformNdArrayRange
+    let newrange = subsetNdArrayRangeByIndex(range, domain, globalConstraints)    
+    return Promise.resolve(newrange)
     
-        
-    // step 3: create a new range based on the globalConstraints; this will be a copy in most cases
-
-    // TODO 
+  } else if (range.type === 'TiledNdArray') {
+    return loadTiledNdArraySubset(range, globalConstraints)
     
-    
-    throw new Error('Unsupported: ' + range.type)
   } else {
     throw new Error('Unsupported: ' + range.type)
   }
+}
+
+/**
+ * 
+ * @param {object} range TiledNdArray range object
+ * @param {object} constraints subsetting constraints
+ * @returns {Promise<Range>}
+ */
+function loadTiledNdArraySubset (range, constraints) {
+  let constraintsArr = range.axisNames.map(name => constraints[name])
+  
+  // step 1: select tileset with least network effort
+  let fillNulls = tileShape => tileShape.map((v,i) => v === null ? range.shape[i] : v)    
+  let tilesetsStats = range.tilesets.map(ts => getTilesetStats(fillNulls(ts.tileShape), constraintsArr))
+  let idxBestTileset = indexOfBestTileset(tilesetsStats)
+  let tileset = range.tilesets[idxBestTileset]
+  let tileShape = fillNulls(tileset.tileShape)
+      
+  // step 2: determine the tiles to load
+  let subsetTilesetAxes = []
+  for (let ax=0; ax < tileShape.length; ax++) {
+    let {start,stop,step} = constraintsArr[ax]
+    let tileSize = tileShape[ax]
+    
+    // the indices of the first and last tile containing the subsetting constraints
+    let tileStart = Math.floor(start / tileSize) // inclusive
+    let tileStop = Math.ceil(stop / tileSize) // exclusive
+    
+    let tilesetAxis = []
+    for (let t=tileStart; t < tileStop; t++) {
+      let mid = (t + 0.5) * tileSize
+      // regard the subset constraint as a list of [x,y) half-closed intervals and find out where 'mid' falls into
+      let iv = Math.floor((mid - start) / step)
+      
+      // start and end point of the interval in range index space
+      let ivStart = start + iv * step
+      let ivStop = start + (iv + 1) * step
+      
+      // tile start and end in range index space
+      let tileStartR = t * tileSize
+      let tileStopR = (t + 1) * tileSize
+      
+      // check if the start or end point of the interval lies within the tile
+      if (ivStart >= tileStartR || tileStopR <= ivStop) {
+        tilesetAxis.push(t)
+      }
+    }
+    subsetTilesetAxes.push(tilesetAxis)
+  }
+  
+  // step 3: create an empty ndarray of the subset shape that will be filled with tile data
+  // TODO check if only a single tile will be loaded and avoid copying data around in that case
+  let subsetShape = constraintsArr.map(({start,stop,step}) => Math.floor((stop - start) / step) + (stop - start) % step)
+  let subsetSize = subsetShape.reduce((l,r) => l*r)
+  let subsetNdArr = ndarray(new Array(subsetSize), subsetShape)
+  
+  // step 4: load tiles and fill subset ndarray
+  let urlTemplate = template.parse(tileset.urlTemplate)
+  let tiles = cartesianProduct(subsetTilesetAxes)
+  let promises = tiles.map(tile => {
+    let tileUrlVars = {}
+    tile.forEach((v,i) => tileUrlVars[range.axisNames[i]] = v)
+    let url = urlTemplate.expand(tileUrlVars)
+    return load(url).then(result => {
+      let tileRange = result.data
+      transformNdArrayRange(tileRange)
+      
+      // figure out which parts of the tile to copy into which part of the final ndarray
+      let tileOffsets = tile.map((v,i) => v * tileShape[i])
+      
+      // iterate all tile values and for each check if they are part of the subset
+      // TODO this code is probably quite slow, consider pre-compiling etc
+      let tileAxesSubsetIndices = []
+      for (let ax=0; ax < tileShape.length; ax++) {
+        let {start,stop,step} = constraintsArr[ax]
+        let tileAxisSize = tileShape[ax]
+        let tileAxisOffset = tileOffsets[ax]
+        let tileAxisSubsetIndices = []
+        let startIdx = 0
+        if (tileAxisOffset < start) {
+          startIdx = start - tileAxisOffset
+        }
+        let stopIdx = tileAxisSize
+        if (tileAxisOffset + stopIdx > stop) {
+          stopIdx = stop - tileAxisOffset
+        }
+        
+        for (let i=startIdx; i < stopIdx; i++) {
+          let idx = tileAxisOffset + i
+          if ((idx - start) % step === 0) {
+            tileAxisSubsetIndices.push(i)
+          }
+        }
+        tileAxesSubsetIndices.push(tileAxisSubsetIndices)
+      }
+      let tileSubsetIndices = cartesianProduct(tileAxesSubsetIndices)
+      for (let tileInd of tileSubsetIndices) {
+        let val = tileRange._ndarr.get(...tileInd)
+        let subsetInd = tileInd.map((i,ax) => {
+          let idx = tileOffsets[ax] + i
+          return Math.floor((idx - constraintsArr[ax].start) / constraintsArr[ax].step)
+        })
+        subsetNdArr.set(...subsetInd, val)
+      }
+    })
+  })
+  
+  // step 5: create and return the new range
+  return Promise.all(promises).then(() => {
+    let newrange = {
+      dataType: range.dataType,
+      get: createRangeGetFunction(subsetNdArr, range.axisNames),
+      _ndarr: subsetNdArr,
+      _axisNames: range.axisNames,
+      _shape: subsetShape
+    }
+    newrange.shape = new Map(range.axisNames.map((v,i) => [v, subsetNdArr.shape[i]]))
+    return newrange
+  })
+}
+
+/**
+ * Return the cartesian product of the given arrays.
+ * 
+ * @see http://stackoverflow.com/a/36234242
+ */
+function cartesianProduct (arr) {
+  return arr.reduce((a,b) => a.map(x => b.map(y => x.concat(y))).reduce((a,b) => a.concat(b), []), [[]])
 }
 
 /**
@@ -453,6 +567,7 @@ function subsetByIndexFn (cov, globalConstraints) {
       // assemble everything to a new coverage
       let newcov = {
         _covjson: cov._covjson,
+        options: cov.options,
         type: COVERAGE,
         // TODO are the profiles still valid?
         domainProfiles: cov.domainProfiles,
@@ -545,7 +660,7 @@ export function transformParameter (params, key) {
  * no special encoding etc. is left. Transformation is made in-place.
  * 
  * @param {Object} range The original NdArray range.
- * @param {Object} domain The CoverageJSON domain object. 
+ * @param {Object} [domain] The CoverageJSON domain object. 
  * @return {Object} The transformed range.
  */
 function transformNdArrayRange (range, domain) {
