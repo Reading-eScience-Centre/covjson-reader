@@ -12,7 +12,7 @@ import * as http from './http'
  * Loads a CoverageJSON document from a given URL and returns a {@link Promise} object
  * that succeeds with the unmodified CoverageJSON object.
  * 
- * @param {string} url
+ * @param {string} url The URL to load the CoverageJSON document from.
  * @param {Object} [options] An options object. 
  * @param {Object} [options.headers] Additional HTTP headers to send if input is a URL.
  * @param {Object} [options.eagerload]
@@ -42,8 +42,8 @@ export function load (url, options) {
  *   // there was an error when loading the coverage data
  *   console.log(e)
  * })
- * @param {Object|string} input
- *    A CoverageJSON Domain, Coverage, or Coverage Collection document, as URL or object,
+ * @param {Object|string} input 
+ *    A CoverageJSON Domain, Coverage, or Coverage Collection document, as URL or object.
  * @param {Object} [options]
  *   An options object. 
  * @param {Object} [options.headers]

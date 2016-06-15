@@ -1,3 +1,7 @@
+/**
+ * @external {CollectionQuery} https://github.com/Reading-eScience-Centre/coverage-jsapi/blob/master/CoverageCollectionQuery.md
+ */
+
 import {COVERAGECOLLECTION} from './constants.js'
 import {default as Coverage, transformDomain, transformParameter} from './Coverage.js'
 import {shallowcopy, endsWith, PREFIX} from './util.js'
@@ -14,6 +18,11 @@ export default class CoverageCollection {
    * @param {Object} covjson The CoverageJSON Collection document.
    */
   constructor(covjson) {
+    /**
+     * The constant "CoverageCollection".
+     * 
+     * @type {string}
+     */
     this.type = COVERAGECOLLECTION
     
     /**
@@ -53,6 +62,11 @@ export default class CoverageCollection {
     if (domainType && domainType.substr(0,4) !== 'http') {
       domainType = PREFIX + domainType
     }
+    /**
+     * If defined, every coverage in the collection has the given domain type, typically a URI.
+     * 
+     * @type {string|undefined}
+     */
     this.domainType = domainType
     
     // backwards-compatibility
@@ -97,10 +111,19 @@ export default class CoverageCollection {
       covs.push(new Coverage(coverage, covOptions))
     }
     
-    /** @type {Array<Coverage>} */
+    /** 
+     * The Coverages of this collection.
+     * 
+     * @type {Array<Coverage>} 
+     */
     this.coverages = covs
     if (covjson.parameters) {
-      /** @type {Map} */
+      /**
+       * A Map from key to {@link Parameter} object.
+       * The key is a short alias of a {@link Parameter}, typically what is called a "variable name" or similar.
+       * 
+       * @type {Map<string,Parameter>}
+       */
       this.parameters = new Map()
       for (let key of Object.keys(covjson.parameters)) {
         transformParameter(covjson.parameters, key)
@@ -109,6 +132,9 @@ export default class CoverageCollection {
     }
     if (covjson.domainTemplate) {
       transformDomain(covjson.domainTemplate)
+      /**
+       * @ignore
+       */
       this.domainTemplate = covjson.domainTemplate
     }
   }

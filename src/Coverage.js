@@ -1,3 +1,9 @@
+/**
+ * @external {Parameter} https://github.com/Reading-eScience-Centre/coverage-jsapi/blob/master/Parameter.md
+ * @external {Domain} https://github.com/Reading-eScience-Centre/coverage-jsapi/blob/master/Domain.md
+ * @external {Range} https://github.com/Reading-eScience-Centre/coverage-jsapi/blob/master/Range.md
+ */
+
 import ndarray from 'ndarray'
 import template from 'url-template'
 
@@ -18,11 +24,12 @@ import {load} from './http'
  * Wraps a CoverageJSON Coverage object as a Coverage API object.
  * 
  * @see https://github.com/Reading-eScience-Centre/coverage-jsapi
- * 
  */
 export default class Coverage {
   
   /**
+   * Create a Coverage instance.
+   * 
    * @param {Object} covjson A CoverageJSON Coverage object.
    * @param {Object} [options] 
    * @param {boolean} [options.cacheRanges]
@@ -34,6 +41,11 @@ export default class Coverage {
   constructor (covjson, options) {
     this._covjson = covjson
     
+    /**
+     * The constant "Coverage".
+     * 
+     * @type {string}
+     */
     this.type = COVERAGE
     
     /**
@@ -59,7 +71,12 @@ export default class Coverage {
      */
     this.id = covjson.id
     
-    /** @type {Map} */
+    /**
+     * A Map from key to {@link Parameter} object.
+     * The key is a short alias of a {@link Parameter}, typically what is called a "variable name" or similar.
+     * 
+     * @type {Map<string,Parameter>}
+     */
     this.parameters = new Map()
     for (let key of Object.keys(covjson.parameters)) {
       transformParameter(covjson.parameters, key)
@@ -78,7 +95,10 @@ export default class Coverage {
     }
     
     // TODO remove .domainProfiles in favour of .domainType at some point
-    /** @type {Array<string>} */
+    /** 
+     * @ignore
+     * @type {Array<string>} 
+     */
     this.domainProfiles = []
     
     let domainProfile
@@ -93,6 +113,11 @@ export default class Coverage {
       if (domainProfile.substr(0,4) !== 'http') {
         domainProfile = PREFIX + domainProfile
       }
+      /**
+       * If defined, then the coverage has a domain that follows the given domain type, typically given as URI.
+       *  
+       * @type {string|undefined} 
+       */
       this.domainType = domainProfile
       this.domainProfiles.push(domainProfile)
     }
@@ -110,6 +135,14 @@ export default class Coverage {
     let isLoaded = prop => typeof prop === 'object' 
     let domainLoaded = isLoaded(this._covjson.domain)
     let rangesLoaded = Object.keys(this._covjson.ranges).every(key => isLoaded(this._covjson.ranges[key]))
+    
+    /**
+     * A boolean which indicates whether all coverage data is already loaded in memory.
+     * If true then this typically means that calls to .loadDomain(), .loadRange(),
+     * .loadRanges(), .subsetByIndex(), and .subsetByValue() will not invoke a network request.
+     * 
+     * @type {boolean}
+     */
     this.loaded = domainLoaded && rangesLoaded
   }
   
@@ -127,9 +160,9 @@ export default class Coverage {
   }
     
   /**
-   * Returns a Promise succeeding with the domain data.
+   * Returns a Promise succeeding with a {@link Domain} object.
    * 
-   * @return {Promise}
+   * @return {Promise<Domain>}
    */
   loadDomain () {
     let domainOrUrl = this._covjson.domain
@@ -158,7 +191,7 @@ export default class Coverage {
   }
   
   /**
-   * Returns a Promise succeeding with the requested range data.
+   * Returns a Promise succeeding with a {@link Range} object.
    * 
    * Note that this method implicitly loads the domain as well. 
    * 
@@ -170,7 +203,7 @@ export default class Coverage {
    *   console.log(e.message)
    * }) 
    * @param {string} paramKey The key of the Parameter for which to load the range.
-   * @return {Promise} A Promise object which loads the requested range data and succeeds with a Range object.
+   * @return {Promise<Range>} A Promise object which loads the requested range data and succeeds with a Range object.
    */
   loadRange (paramKey) {
     return loadRangeFn(this)(paramKey)
@@ -190,7 +223,7 @@ export default class Coverage {
    *   console.log(e)
    * }) 
    * @param {iterable<string>} [paramKeys] An iterable of parameter keys for which to load the range data. If not given, loads all range data.
-   * @return {Promise} A Promise object which loads the requested range data and succeeds with a Map object.
+   * @return {Promise<Map<string,Range>>} A Promise object which loads the requested range data and succeeds with a Map object.
    */
   loadRanges (paramKeys) {
     return loadRangesFn(this)(paramKeys)
@@ -223,7 +256,7 @@ export default class Coverage {
    *   If step=1, this includes all indices starting at start and ending at stop (exclusive);
    *   if step>1, all indices start, start + step, ..., start + (q + r - 1) step where 
    *   q and r are the quotient and remainder obtained by dividing stop - start by step.
-   * @returns {Promise} A Promise object with the subsetted coverage object as result.
+   * @returns {Promise<Coverage>} A Promise object with the subsetted coverage object as result.
    */
   subsetByIndex (constraints) {
     return subsetByIndexFn(this)(constraints)
@@ -261,7 +294,7 @@ export default class Coverage {
    *  A number or string constrains the axis to exactly the given value,
    *  a start/stop object to the values intersecting the extent,
    *  and a target object to the value closest to the given value.
-   * @returns {Promise} A Promise object with the subsetted coverage object as result.
+   * @returns {Promise<Coverage>} A Promise object with the subsetted coverage object as result.
    */
   subsetByValue (constraints) {
     return subsetCoverageByValue(this, constraints)

@@ -2,6 +2,11 @@ import cbor from 'cbor-js'
 import {endsWith} from './util.js'
 import {MEDIATYPE, matchesMediaTypes, getAcceptHeader, EXT} from './http-common.js'
 
+/**
+ * See reader.js#load for docs.
+ * 
+ * Browser implementation.
+ */
 export function load (url, options = {}, responseType='arraybuffer') {
   if (['arraybuffer', 'text'].indexOf(responseType) === -1) {
     throw new Error()

@@ -4,6 +4,11 @@ import request from 'request-promise'
 import {endsWith} from './util.js'
 import {MEDIATYPE, matchesMediaTypes, getAcceptHeader, EXT} from './http-common.js'
 
+/**
+ * See reader.js#load for docs.
+ * 
+ * Node.js implementation.
+ */
 export function load (url, options = {}) {
   let headers = options.headers || {}
   let accept = getAcceptHeader(options.eagerload)
