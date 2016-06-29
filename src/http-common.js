@@ -9,7 +9,8 @@ export const EXT = {
   COVJSON: '.covjson'
 }
 
-export const COVJSON_PROFILE_STANDALONE = 'http://covjson.org/def/core#standalone'
+import {CORE_PREFIX} from './util.js'
+export const COVJSON_PROFILE_STANDALONE = CORE_PREFIX + 'standalone'
 
 /**
  * Returns an Accept header value for requesting CoverageJSON documents.

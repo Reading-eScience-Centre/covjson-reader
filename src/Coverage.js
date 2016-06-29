@@ -12,7 +12,7 @@ import {subsetByValue as subsetCoverageByValue} from 'covutils/lib/coverage/subs
 import {minMax} from 'covutils/lib/array.js'
 
 import {COVERAGE} from './constants.js'
-import {shallowcopy, PREFIX} from './util.js'
+import {shallowcopy, getNamespacePrefixes, CORE_PREFIX, DOMAINTYPES_PREFIX} from './util.js'
 
   
   
@@ -57,6 +57,8 @@ export default class Coverage {
     
     this._exposeLd(covjson)
     
+    this.prefixes = getNamespacePrefixes(this.ld)
+    
     /**
      * The options object that was passed in to the constructor. 
      * 
@@ -82,55 +84,28 @@ export default class Coverage {
       transformParameter(covjson.parameters, key)
       this.parameters.set(key, covjson.parameters[key])
     }
-    
-    /** @type {Array<string>} */
-    this.profiles = []
-    
-    let profile = this._covjson.profile
-    if (profile) {
-      if (profile.substr(0,4) !== 'http') {
-        profile = PREFIX + profile
-      }
-      this.profiles.push(profile)
-    }
-    
-    // TODO remove .domainProfiles in favour of .domainType at some point
-    /** 
-     * @ignore
-     * @type {Array<string>} 
-     */
-    this.domainProfiles = []
-    
-    let domainProfile
+            
+    let domainType
     if (typeof this._covjson.domain === 'string') {
-      domainProfile = this._covjson.domainProfile || this._covjson.domainType
+      domainType = this._covjson.domainType
     } else {
-      domainProfile = this._covjson.domain.profile || this._covjson.domain.domainType ||
-                      this._covjson.domainProfile || this._covjson.domainType
+      domainType = this._covjson.domain.domainType || this._covjson.domainType
+    }
+    if (domainType && domainType.indexOf(':') === -1) {
+      domainType = DOMAINTYPES_PREFIX + domainType
     }
 
-    if (domainProfile) {
-      if (domainProfile.substr(0,4) !== 'http') {
-        domainProfile = PREFIX + domainProfile
-      }
-      /**
-       * If defined, then the coverage has a domain that follows the given domain type, typically given as URI.
-       *  
-       * @type {string|undefined} 
-       */
-      this.domainType = domainProfile
-      this.domainProfiles.push(domainProfile)
-    }
-    
-    // backwards-compatibility
-    if (!profile && domainProfile) {
-      profile = domainProfile + COVERAGE
-      this.profiles.push(profile)
-    }
+    /**
+     * If defined, then the coverage has a domain that follows the given domain type,
+     * either a full URI or a namespace-prefixed term. (See .prefixes)
+     *  
+     * @type {string|undefined} 
+     */
+    this.domainType = domainType
     
     this._updateLoadStatus()
   }
-  
+    
   _updateLoadStatus () {
     let isLoaded = prop => typeof prop === 'object' 
     let domainLoaded = isLoaded(this._covjson.domain)
@@ -775,16 +750,11 @@ function createRangeGetFunction (ndarr, axisOrder) {
 export function transformDomain (domain, referencing, domainType) {
   if ('__transformDone' in domain) return
   
-  // TODO remove .profiles in favour .domainType at some point
-  domain.profiles = []
-  let profile = domain.profile || domain.domainType || domainType
-  if (profile) {
-    if (profile.substr(0,4) !== 'http') {
-      profile = PREFIX + profile
-    }
-    domain.domainType = profile
-    domain.profiles.push(profile)
+  domainType = domain.domainType || domainType
+  if (domainType && domainType.indexOf(':') === -1) {
+    domainType = DOMAINTYPES_PREFIX + domainType
   }
+  domain.domainType = domainType
 
   let axes = new Map() // axis name -> axis object
   
@@ -798,8 +768,8 @@ export function transformDomain (domain, referencing, domainType) {
   for (let [key, axis] of axes) {
     axis.key = key
     
-    if (axis.dataType === 'Tuple' || axis.dataType === 'Polygon') {
-      axis.dataType = PREFIX + axis.dataType
+    if (axis.dataType && axis.dataType.indexOf(':') === -1) {
+      axis.dataType = CORE_PREFIX + axis.dataType
     }
     
     // TODO remove this if-block later, just here for backwards-compatibility 

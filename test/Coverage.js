@@ -9,7 +9,7 @@ import xndarray from 'xndarray'
 
 import {read} from '../lib/reader.js'
 import {COVERAGE} from '../lib/constants.js'
-import {PREFIX} from '../lib/util.js'
+import {DOMAINTYPES_PREFIX as PREFIX} from '../lib/util.js'
 
 import {runServerIfNode} from './node-setup.js'
 import {FIXTURES} from './data.js'

@@ -4,7 +4,7 @@
 
 import {COVERAGECOLLECTION} from './constants.js'
 import {default as Coverage, transformDomain, transformParameter} from './Coverage.js'
-import {shallowcopy, endsWith, PREFIX} from './util.js'
+import {shallowcopy, getNamespacePrefixes, DOMAINTYPES_PREFIX} from './util.js'
 import {CollectionQuery} from 'covutils/lib/collection/create.js'
 
 /** 
@@ -34,6 +34,8 @@ export default class CoverageCollection {
     
     this._exposeLd(covjson)
     
+    this.prefixes = getNamespacePrefixes(this.ld)
+    
     /** 
      * ID of the coverage collection.
      * 
@@ -41,27 +43,12 @@ export default class CoverageCollection {
      */
     this.id = covjson.id
     
-    /** @type {Array<string>} */
-    this.profiles = []
     
-    let profile = covjson.profile
-    let domainType
-    if (profile) {
-      if (profile.substr(0,4) !== 'http') {
-        if (endsWith(profile, COVERAGECOLLECTION)) {
-          domainType = profile.substr(0, profile.length - COVERAGECOLLECTION.length)
-        }
-        profile = PREFIX + profile
-      }
-      this.profiles.push(profile)
+    let domainType = covjson.domainType
+    if (domainType && domainType.indexOf(':') === -1) {
+      domainType = DOMAINTYPES_PREFIX + domainType
     }
-    
-    if (!domainType) {
-      domainType = covjson.domainType
-    }
-    if (domainType && domainType.substr(0,4) !== 'http') {
-      domainType = PREFIX + domainType
-    }
+
     /**
      * If defined, every coverage in the collection has the given domain type, typically a URI.
      * 
@@ -69,11 +56,6 @@ export default class CoverageCollection {
      */
     this.domainType = domainType
     
-    // backwards-compatibility
-    if (!profile && domainType) {
-      profile = domainType + COVERAGECOLLECTION
-      this.profiles.push(profile)
-    }
     
     let covs = []
     let rootParams = covjson.parameters ? covjson.parameters : {}
@@ -92,10 +74,8 @@ export default class CoverageCollection {
       covOptions.referencing = covjson.referencing
     }
     for (let coverage of covjson.coverages) {
-      // the Coverage class transforms domainProfile to domainType
-      // all the profile stuff should be removed eventually
-      if (!coverage.domainProfile) {
-        coverage.domainProfile = domainType
+      if (!coverage.domainType) {
+        coverage.domainType = domainType
       }
       if (!coverage.parameters) {
         coverage.parameters = {}

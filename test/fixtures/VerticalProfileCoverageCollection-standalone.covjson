@@ -45,13 +45,12 @@
       "calendar": "Gregorian"
     }
   }],
+  "domainType" : "VerticalProfile",
   "coverages": [
     {
       "type" : "Coverage",
-      "profile": "VerticalProfileCoverage",
       "domain" : {
         "type": "Domain",
-        "profile" : "VerticalProfile",
         "axes": {
           "x": { "values": [-10.1] },
           "y": { "values": [-40.2] },
@@ -68,10 +67,8 @@
       }
     }, {
       "type" : "Coverage",
-      "profile": "VerticalProfileCoverage",
       "domain" : {
         "type": "Domain",
-        "profile" : "VerticalProfile",
         "axes": {
           "x": { "values": [-11.1] },
           "y": { "values": [-45.2] },

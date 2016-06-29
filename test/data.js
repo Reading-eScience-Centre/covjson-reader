@@ -9,10 +9,9 @@ export const FIXTURES = {
     GridTiledURL: base + 'Coverage-Grid-tiled.covjson',
     Profile: () => ({
       "type" : "Coverage",
-      "profile" : "VerticalProfileCoverage",
       "domain" : {
         "type" : "Domain",
-        "profile" : "VerticalProfile",
+        "domainType" : "VerticalProfile",
         "axes": {
           "x": { "values": [-10.1] },
           "y": { "values": [-40.2] },
@@ -136,7 +135,7 @@ export const FIXTURES = {
       "type" : "Coverage",
       "domain" : {
         "type" : "Domain",
-        "profile" : "VerticalProfile",
+        "domainType" : "VerticalProfile",
         "axes": {
           "x": { "values": [-10.1] },
           "y": { "values": [-40.2] },
@@ -191,10 +190,9 @@ export const FIXTURES = {
     }),
     Grid: () => ({
       "type" : "Coverage",
-      "profile" : "GridCoverage",
       "domain" : {
         "type" : "Domain",
-        "profile" : "Grid",
+        "domainType" : "Grid",
         "axes": {
           "x": { "values": [-10,-5,0], "bounds": [-12.5,-7.5, -7.5,-2.5, -2.5,2.5] },
           "y": { "values": [40,50], "bounds": [35,45, 45,55] }, 
@@ -239,10 +237,9 @@ export const FIXTURES = {
     }),
     GridRegular: () => ({
       "type" : "Coverage",
-      "profile" : "GridCoverage",
       "domain" : {
         "type" : "Domain",
-        "profile" : "Grid",
+        "domainType" : "Grid",
         "axes": {
           "x": { "values": [-10,-5,0] },
           "y": { "start": 40, "stop": 50, "num": 2 },
@@ -287,7 +284,7 @@ export const FIXTURES = {
     }),
     GridRegularDomain: () => ({
       "type" : "Domain",
-      "profile" : "Grid",
+      "domainType" : "Grid",
       "axes": {
         "x": { "values": [-10,-5,0] },
         "y": { "start": 40, "stop": 50, "num": 2 },
@@ -311,10 +308,9 @@ export const FIXTURES = {
     }),
     GridNewRange: () => ({
       "type" : "Coverage",
-      "profile" : "GridCoverage",
       "domain" : {
         "type" : "Domain",
-        "profile" : "Grid",
+        "domainType" : "Grid",
         "axes": {
           "x": { "values": [-10,-5,0] },
           "y": { "values": [40,50] },
@@ -362,7 +358,7 @@ export const FIXTURES = {
       "type" : "Coverage",
       "domain" : {
         "type" : "Domain",
-        "profile" : "Point",
+        "domainType" : "Point",
         "axes": {
           "x": { "values": [-10.1] },
           "y": { "values": [-40.2] }

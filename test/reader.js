@@ -7,7 +7,7 @@ import 'core-js/es6/map'
 import assert from 'assert'
 
 import {read} from '../lib/reader.js'
-import {PREFIX} from '../lib/util.js'
+import {DOMAINTYPES_PREFIX as PREFIX} from '../lib/util.js'
 
 import {runServerIfNode} from './node-setup.js'
 import {FIXTURES} from './data.js'
@@ -46,9 +46,7 @@ describe('reader methods', () => {
     })
     it('Coverage should have correct properties', () => {
       return read(FIXTURES.Profile()).then(cov => {
-        assert.deepEqual(cov.profiles, [PREFIX + FIXTURES.Profile().profile])
-        assert.deepEqual(cov.domainProfiles, [PREFIX + FIXTURES.Profile().domain.profile])
-        assert.strictEqual(cov.domainType, PREFIX + FIXTURES.Profile().domain.profile)
+        assert.strictEqual(cov.domainType, PREFIX + FIXTURES.Profile().domain.domainType)
         let label = cov.parameters.get('PSAL').observedProperty.label
         assert(label.en, 'en label missing')
         assert.equal(label.en, 'Sea Water Salinity')
@@ -56,11 +54,9 @@ describe('reader methods', () => {
     })
     it('Coverage should have correct properties (domainType)', () => {
       return read(FIXTURES.ProfileWithDomainType()).then(cov => {
-        assert.deepEqual(cov.domainProfiles, [PREFIX + FIXTURES.Profile().domain.profile])
-        assert.strictEqual(cov.domainType, PREFIX + FIXTURES.Profile().domain.profile)
+        assert.strictEqual(cov.domainType, PREFIX + FIXTURES.Profile().domain.domainType)
         return cov.loadDomain().then(domain => {
-          assert.strictEqual(domain.domainType, PREFIX + FIXTURES.Profile().domain.profile)
-          assert.deepEqual(domain.profiles, [PREFIX + FIXTURES.Profile().domain.profile])
+          assert.strictEqual(domain.domainType, PREFIX + FIXTURES.Profile().domain.domainType)
         })
       })
     })

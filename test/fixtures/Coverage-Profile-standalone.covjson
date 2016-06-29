@@ -1,10 +1,9 @@
 {
   "type" : "Coverage",
-  "profile": "VerticalProfileCoverage",
   "id" : "http://.../datasets/1/coverages/123",
   "domain" : {
     "type": "Domain",
-    "profile" : "VerticalProfile",
+    "domainType" : "VerticalProfile",
     "axes": {
       "x": { "values": [-10.1] },
       "y": { "values": [-40.2] },
