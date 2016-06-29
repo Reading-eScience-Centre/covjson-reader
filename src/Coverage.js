@@ -12,7 +12,7 @@ import {subsetByValue as subsetCoverageByValue} from 'covutils/lib/coverage/subs
 import {minMax} from 'covutils/lib/array.js'
 
 import {COVERAGE} from './constants.js'
-import {shallowcopy, assert, PREFIX} from './util.js'
+import {shallowcopy, PREFIX} from './util.js'
 
   
   
@@ -689,8 +689,7 @@ export function transformParameter (params, key) {
 }
 
 /**
- * Transforms a CoverageJSON NdArray range to the Coverage API format, that is,
- * no special encoding etc. is left. Transformation is made in-place.
+ * Transforms a CoverageJSON NdArray range to the Coverage API format. Transformation is made in-place.
  * 
  * @param {Object} range The original NdArray range.
  * @param {Object} [domain] The CoverageJSON domain object. 
@@ -700,74 +699,9 @@ function transformNdArrayRange (range, domain) {
   if ('__transformDone' in range) return
   
   const values = range.values
-  const targetDataType = range.dataType // 'integer', 'float', 'string'
-  const isTyped = ArrayBuffer.isView(values)
-  const missingIsEncoded = typeof range.validMin === 'number'
-  const hasOffsetFactor = 'offset' in range
-
-  if ('offset' in range) {
-    assert('factor' in range)
-  }
-  const offset = range.offset
-  const factor = range.factor
-  
-  if (missingIsEncoded) {
-    assert('validMin' in range)
-    assert('validMax' in range)
-  }
-  const validMin = range.validMin
-  const validMax = range.validMax
-  
-  let vals
-  if (!missingIsEncoded && !hasOffsetFactor) {
-    // No transformation necessary.
-    vals = values
-  } else {
-    // Transformation is necessary.
-    // we use a regular array so that missing values can be represented as null
-    vals = new Array(values.length)
     
-    // TODO can we use typed arrays here without having to scan for missing values first?
-    //  When typed arrays with missing value encoding was used we could keep that and provide
-    //  a higher abstraction on the array similar to an ndarray interface. This means that [] syntax
-    //  would be impossible and change to .get(index).
-    
-    if (hasOffsetFactor) {
-      for (let i=0; i < values.length; i++) {
-        const val = values[i]
-        if (missingIsEncoded && (val < validMin || val > validMax)) {
-          // This is necessary as the default value is "undefined".
-          vals[i] = null
-        } else if (!missingIsEncoded && val === null) {
-          vals[i] = null
-        } else {
-          vals[i] = val * factor + offset
-        }
-      }
-      
-      if (validMin !== undefined) {
-        range.validMin = validMin * factor + offset
-        range.validMax = validMax * factor + offset
-      }
-    } else { // missingIsEncoded == true
-      for (let i=0; i < values.length; i++) {
-        const val = values[i]
-        if (val < validMin || val > validMax) {
-          vals[i] = null
-        } else {
-          vals[i] = val
-        }
-      }
-    }
-        
-    delete range.offset
-    delete range.factor
-    delete range.validMin
-    delete range.validMax
-  }
-  
   if (range.actualMin === undefined) {
-    let [min,max] = minMax(vals)
+    let [min,max] = minMax(values)
     if (min !== null) {
       range.actualMin = min
       range.actualMax = max
@@ -787,7 +721,7 @@ function transformNdArrayRange (range, domain) {
   let axisNames = getRangeAxisOrder(domain, range)
   let shapeArr = getRangeShapeArray(domain, range)
   
-  let ndarr = ndarray(vals, shapeArr)
+  let ndarr = ndarray(values, shapeArr)
   range._ndarr = ndarr
   range.get = createRangeGetFunction(ndarr, axisNames)
   range.shape = new Map(axisNames.map((v,i) => [v, shapeArr[i]]))
@@ -902,10 +836,6 @@ export function transformDomain (domain, referencing, domainType) {
       delete axis.num
     }
     
-    if (ArrayBuffer.isView(axis.values)) {
-      // already a typed array
-      continue
-    }
     if (Array.isArray(axis.values) && typeof axis.values[0] === 'number') {
       let arr = new Float64Array(axis.values.length)
       for (let i=0; i < axis.values.length; i++) {

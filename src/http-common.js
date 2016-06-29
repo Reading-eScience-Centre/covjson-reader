@@ -1,18 +1,15 @@
 export const MEDIATYPE = {
-  COVCBOR: 'application/prs.coverage+cbor',
   COVJSON: 'application/prs.coverage+json',
   JSONLD: 'application/ld+json',
   JSON: 'application/json',
-  OCTETSTREAM: 'application/octet-stream',
   TEXT: 'text/plain'
 }
 
 export const EXT = {
-  COVJSON: '.covjson',
-  COVCBOR: '.covcbor'
+  COVJSON: '.covjson'
 }
 
-export const COVJSON_PROFILE_STANDALONE = 'http://coveragejson.org/profiles/standalone'
+export const COVJSON_PROFILE_STANDALONE = 'http://covjson.org/def/core#standalone'
 
 /**
  * Returns an Accept header value for requesting CoverageJSON documents.
@@ -21,8 +18,8 @@ export const COVJSON_PROFILE_STANDALONE = 'http://coveragejson.org/profiles/stan
  */
 export function getAcceptHeader (standalone) {
   let covjsonProfile = standalone ? '; profile="' + COVJSON_PROFILE_STANDALONE + '"' : ''
-  let accept = MEDIATYPE.COVCBOR + '; q=1.0, ' +
-    MEDIATYPE.COVJSON + covjsonProfile + '; q=0.5, ' + 
+  let accept =
+    MEDIATYPE.COVJSON + covjsonProfile + '; q=1.0, ' + 
     MEDIATYPE.JSONLD + '; q=0.1, ' + 
     MEDIATYPE.JSON + '; q=0.1'
   return accept

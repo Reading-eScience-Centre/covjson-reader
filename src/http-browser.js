@@ -1,6 +1,4 @@
-import cbor from 'cbor-js'
-import {endsWith} from './util.js'
-import {MEDIATYPE, matchesMediaTypes, getAcceptHeader, EXT} from './http-common.js'
+import {getAcceptHeader} from './http-common.js'
 
 /**
  * See reader.js#load for docs.
@@ -31,43 +29,23 @@ export function load (url, options = {}, responseType='arraybuffer') {
           return
         }
         
-        var type = req.getResponseHeader('Content-Type')
-        
-        if (matchesMediaTypes(type, [MEDIATYPE.OCTETSTREAM, MEDIATYPE.TEXT])) {
-          // wrong media type, try to infer type from extension
-          if (endsWith(url, EXT.COVJSON)) {
-            type = MEDIATYPE.COVJSON
-          } else if (endsWith(url, EXT.COVCBOR)) {
-            type = MEDIATYPE.COVCBOR
-          } 
-        }
         let data
-        if (matchesMediaTypes(type, MEDIATYPE.COVCBOR)) {
-          var arrayBuffer = req.response
-          let t0 = new Date()
-          data = cbor.decode(arrayBuffer)
-          console.log('CBOR decoding: ' + (new Date()-t0) + 'ms')
-        } else if (matchesMediaTypes(type, [MEDIATYPE.COVJSON, MEDIATYPE.JSONLD, MEDIATYPE.JSON])) {
-          if (responseType === 'arraybuffer') {
-            if (window.TextDecoder) {
-              let t0 = new Date()
-              data = JSON.parse(new TextDecoder().decode(new DataView(req.response)))
-              console.log('JSON decoding: ' + (new Date()-t0) + 'ms')
-            } else {
-              // load again (from cache) to get correct response type
-              // Note we use 'text' and not 'json' as we want to throw parsing errors.
-              // With 'json', the response is just 'null'.
-              reject({responseType: 'text'})
-              return
-            }
-          } else {
+        if (responseType === 'arraybuffer') {
+          if (window.TextDecoder) {
             let t0 = new Date()
-            data = JSON.parse(req.response)
-            console.log('JSON decoding (slow path): ' + (new Date()-t0) + 'ms')
-          }        
+            data = JSON.parse(new TextDecoder().decode(new DataView(req.response)))
+            console.log('JSON decoding: ' + (new Date()-t0) + 'ms')
+          } else {
+            // load again (from cache) to get correct response type
+            // Note we use 'text' and not 'json' as we want to throw parsing errors.
+            // With 'json', the response is just 'null'.
+            reject({responseType: 'text'})
+            return
+          }
         } else {
-          reject(new Error('Unsupported media type: ' + type))
-          return
+          let t0 = new Date()
+          data = JSON.parse(req.response)
+          console.log('JSON decoding (slow path): ' + (new Date()-t0) + 'ms')
         }
         let responseHeaders = parseResponseHeaders(req.getAllResponseHeaders())
         resolve({

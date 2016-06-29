@@ -16,10 +16,3 @@ export function shallowcopy (obj) {
   }
   return copy
 }
-
-export function endsWith (subject, search) {
-  // IE support
-  let position = subject.length - search.length
-  let lastIndex = subject.indexOf(search, position)
-  return lastIndex !== -1 && lastIndex === position
-}
