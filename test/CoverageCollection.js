@@ -6,8 +6,8 @@ import 'core-js/es6/map'
 
 import assert from 'assert'
 
-import {read} from '../lib/reader.js'
-import {COVERAGECOLLECTION} from '../lib/constants.js'
+import {read} from '../src/reader.js'
+import {COVERAGECOLLECTION} from '../src/constants.js'
 
 import {runServerIfNode} from './node-setup.js'
 import {FIXTURES} from './data.js'

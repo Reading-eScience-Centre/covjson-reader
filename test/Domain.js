@@ -6,8 +6,8 @@ import 'core-js/es6/map'
 
 import assert from 'assert'
 
-import {read} from '../lib/reader.js'
-import {DOMAIN} from '../lib/constants.js'
+import {read} from '../src/reader.js'
+import {DOMAIN} from '../src/constants.js'
 
 import {FIXTURES} from './data.js'
 

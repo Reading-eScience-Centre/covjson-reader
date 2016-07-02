@@ -1,4 +1,4 @@
-export {minMax, indicesOfNearest, indexOfNearest} from 'covutils/lib/array.js'
+export {minMax, indicesOfNearest, indexOfNearest} from 'covutils'
 
 const PREFIX = 'http://covjson.org/def/'
 export const CORE_PREFIX = PREFIX + 'core#'

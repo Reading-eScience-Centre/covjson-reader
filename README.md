@@ -6,13 +6,11 @@ A library that reads [CoverageJSON](https://github.com/reading-escience-centre/c
 
 ## Usage
 
-covjson-reader can be used both on node.js and browsers.
-
 A browser version of this library is hosted on both [jsDelivr](http://www.jsdelivr.com/projects/covjson-reader) and [cdnjs](https://cdnjs.com/libraries/covjson-reader), where the latter also hosts the unminified version together with source maps.
 
 Usage is simple:
 ```html
-<script src="https://cdn.jsdelivr.net/covjson-reader/0.13/covjson-reader.min.js"></script>
+<script src="https://cdn.jsdelivr.net/covjson-reader/0.14/covjson-reader.min.js"></script>
 <script>
 CovJSON.read('http://example.com/coverage.covjson').then(function (cov) {
   // work with Coverage object
@@ -33,7 +31,7 @@ JSPM example:
 ```html
 <script src="https://jspm.io/system.js"></script>
 <script>
-System.import('npm:covjson-reader@^0.13', function (CovJSON) {
+System.import('npm:covjson-reader@^0.14', function (CovJSON) {
 
   CovJSON.read('http://example.com/coverage.covjson').then(function (cov) {
     // work with Coverage object

@@ -19,13 +19,18 @@ module.exports = function(config) {
       base: 'SauceLabs',
       browserName: 'chrome'
     },
-    'SL_InternetExplorer': {
-      base: 'SauceLabs',
-      browserName: 'internet explorer'
-    },
-    'SL_FireFox': {
+    'SL_Firefox': {
       base: 'SauceLabs',
       browserName: 'firefox'
+    },
+    'SL_Edge': {
+      base: 'SauceLabs',
+      browserName: 'MicrosoftEdge'
+    },
+    'SL_Safari': {
+      base: 'SauceLabs',
+      browserName: 'safari',
+      platform: 'OS X 10.11'
     }
   };
   
@@ -58,7 +63,6 @@ module.exports = function(config) {
     // preprocess matching files before serving them to the browser
     // available preprocessors: https://npmjs.org/browse/keyword/karma-preprocessor
     preprocessors: {
-      'src/**/*.js': ['browserify'],
       'test/**/*.js': ['browserify']
     },
     

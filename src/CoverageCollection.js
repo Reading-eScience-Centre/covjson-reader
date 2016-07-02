@@ -5,7 +5,7 @@
 import {COVERAGECOLLECTION} from './constants.js'
 import {default as Coverage, transformDomain, transformParameter} from './Coverage.js'
 import {shallowcopy, getNamespacePrefixes, DOMAINTYPES_PREFIX} from './util.js'
-import {CollectionQuery} from 'covutils/lib/collection/create.js'
+import {CollectionQuery} from 'covutils'
 
 /** 
  * Wraps a CoverageJSON Collection object as a CoverageCollection API object.
