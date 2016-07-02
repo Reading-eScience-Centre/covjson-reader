@@ -10,6 +10,7 @@ A browser version of this library is hosted on both [jsDelivr](http://www.jsdeli
 
 Usage is simple:
 ```html
+<script src="https://npmcdn.com/covutils/covutils-lite.min.js"></script>
 <script src="https://cdn.jsdelivr.net/covjson-reader/0.14/covjson-reader.min.js"></script>
 <script>
 CovJSON.read('http://example.com/coverage.covjson').then(function (cov) {
@@ -31,7 +32,7 @@ JSPM example:
 ```html
 <script src="https://jspm.io/system.js"></script>
 <script>
-System.import('npm:covjson-reader@^0.14', function (CovJSON) {
+System.import('npm:covjson-reader', function (CovJSON) {
 
   CovJSON.read('http://example.com/coverage.covjson').then(function (cov) {
     // work with Coverage object
