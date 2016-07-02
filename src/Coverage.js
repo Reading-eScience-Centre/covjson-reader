@@ -7,7 +7,7 @@
 import ndarray from 'ndarray'
 import template from 'url-template'
 
-import {subsetByIndex as subsetDomainByIndex, normalizeIndexSubsetConstraints} from 'covutils/lib/domain/subset.js'
+import {subsetDomainByIndex, normalizeIndexSubsetConstraints} from 'covutils/lib/domain/subset.js'
 import {subsetByValue as subsetCoverageByValue} from 'covutils/lib/coverage/subset.js'
 import {minMax} from 'covutils/lib/array.js'
 

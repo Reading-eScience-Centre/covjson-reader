@@ -15,7 +15,7 @@
   },
   "main": "lib/reader.js",
   "dependencies": {
-    "covutils": "^0.2.5",
+    "covutils": "^0.4.1",
     "ndarray": "^1.0.18",
     "url-template": "^2.0.7",
     "request-promise": "^1.0.2"
