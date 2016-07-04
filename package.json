@@ -54,6 +54,7 @@
     "babel-eslint": "^4.1.3",
     "babel-preset-es2015": "^6.3.13",
     "babel-preset-es2015-rollup": "^1.1.1",
+    "babel-preset-es2015-nostrict": "^6.6.2",
     "babel-register": "^6.3.13",
     "babelify": "^7.2.0",
     "browserify": "^11.0.1",

@@ -68,7 +68,8 @@ module.exports = function(config) {
     
     browserify: {
       transform: [
-        ['babelify', {presets: ['es2015']}]
+        // we use nostrict here to support Safari (see related: https://github.com/mishoo/UglifyJS2/issues/179)
+        ['babelify', {presets: ['es2015-nostrict']}]
       ]
     },
 
