@@ -2,7 +2,7 @@
 
 A library that reads [CoverageJSON](https://github.com/reading-escience-centre/coveragejson) documents and exposes them as [Coverage data objects](https://github.com/reading-escience-centre/coverage-jsapi).
 
-[API docs](https://doc.esdoc.org/github.com/reading-escience-centre/covjson-reader/)
+[API docs](https://doc.esdoc.org/github.com/Reading-eScience-Centre/covjson-reader/)
 
 ## Usage
 
