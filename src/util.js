@@ -1,6 +1,6 @@
 export {minMax, indicesOfNearest, indexOfNearest} from 'covutils'
 
-const PREFIX = 'http://covjson.org/def/'
+const PREFIX = 'https://covjson.org/def/'
 export const CORE_PREFIX = PREFIX + 'core#'
 export const DOMAINTYPES_PREFIX = PREFIX + 'domainTypes#'
 
