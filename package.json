@@ -1,6 +1,6 @@
 {
   "name": "covjson-reader",
-  "version": "0.14.0",
+  "version": "0.15.0",
   "license": "BSD-3-Clause",
   "description": "A reader for CoverageJSON files.",
   "repository": {
@@ -16,7 +16,7 @@
   "main": "lib/reader.js",
   "esnext:main": "src/reader.js",
   "dependencies": {
-    "covutils": "^0.4.1",
+    "covutils": "^0.5.2",
     "ndarray": "^1.0.18",
     "url-template": "^2.0.7"
   },
