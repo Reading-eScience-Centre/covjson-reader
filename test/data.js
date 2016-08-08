@@ -19,13 +19,13 @@ export const FIXTURES = {
           "t": { "values": ["2013-01-13T11:12:20Z"] }
         },
         "referencing": [{
-          "components": ["x","y"],
+          "coordinates": ["x","y"],
           "system": {
             "type": "GeodeticCRS",
             "id": "http://www.opengis.net/def/crs/OGC/1.3/CRS84"
           }
         }, {
-          "components": ["z"],
+          "coordinates": ["z"],
           "system": {
             "type": "VerticalCRS",
             "cs": {
@@ -41,7 +41,7 @@ export const FIXTURES = {
             }
           }
         }, {
-          "components": ["t"],
+          "coordinates": ["t"],
           "system": {
             "type": "TemporalRS",
             "calendar": "Gregorian"
@@ -81,13 +81,13 @@ export const FIXTURES = {
           "t": { "values": ["2013-01-13T11:12:20Z"] }
         },
         "referencing": [{
-          "components": ["x","y"],
+          "coordinates": ["x","y"],
           "system": {
             "type": "GeodeticCRS",
             "id": "http://www.opengis.net/def/crs/OGC/1.3/CRS84"
           }
         }, {
-          "components": ["z"],
+          "coordinates": ["z"],
           "system": {
             "type": "VerticalCRS",
             "cs": {
@@ -103,7 +103,7 @@ export const FIXTURES = {
             }
           }
         }, {
-          "components": ["t"],
+          "coordinates": ["t"],
           "system": {
             "type": "TemporalRS",
             "calendar": "Gregorian"
@@ -142,13 +142,13 @@ export const FIXTURES = {
           "z": { "values": [ 5.4562, 8.9282 ] }
         },
         "referencing": [{
-          "components": ["x","y"],
+          "coordinates": ["x","y"],
           "system": {
             "type": "GeodeticCRS",
             "id": "http://www.opengis.net/def/crs/OGC/1.3/CRS84"
           }
         }, {
-          "components": ["z"],
+          "coordinates": ["z"],
           "system": {
             "type": "VerticalCRS",
             "cs": {
@@ -201,13 +201,13 @@ export const FIXTURES = {
         },
         "rangeAxisOrder": ["t","z","y","x"],
         "referencing": [{
-          "components": ["y","x","z"],
+          "coordinates": ["y","x","z"],
           "system": {
             "type": "GeodeticCRS",
             "id": "http://www.opengis.net/def/crs/EPSG/0/4979"
           }
         }, {
-          "components": ["t"],
+          "coordinates": ["t"],
           "system": {
             "type": "TemporalRS",
             "calendar": "Gregorian"
@@ -248,13 +248,13 @@ export const FIXTURES = {
         },
         "rangeAxisOrder": ["t","z","y","x"],
         "referencing": [{
-          "components": ["y","x","z"],
+          "coordinates": ["y","x","z"],
           "system": {
             "type": "GeodeticCRS",
             "id": "http://www.opengis.net/def/crs/EPSG/0/4979"
           }
         }, {
-          "components": ["t"],
+          "coordinates": ["t"],
           "system": {
             "type": "TemporalRS",
             "calendar": "Gregorian"
@@ -293,13 +293,13 @@ export const FIXTURES = {
       },
       "rangeAxisOrder": ["t","z","y","x"],
       "referencing": [{
-        "components": ["y","x","z"],
+        "coordinates": ["y","x","z"],
         "system": {
           "type": "GeodeticCRS",
           "id": "http://www.opengis.net/def/crs/EPSG/0/4979"
         }
       }, {
-        "components": ["t"],
+        "coordinates": ["t"],
         "system": {
           "type": "TemporalRS",
           "calendar": "Gregorian"
@@ -318,13 +318,13 @@ export const FIXTURES = {
           "t": { "values": ["2010-01-01T00:12:20Z"] }
         },
         "referencing": [{
-          "components": ["y","x","z"],
+          "coordinates": ["y","x","z"],
           "system": {
             "type": "GeodeticCRS",
             "id": "http://www.opengis.net/def/crs/EPSG/0/4979"
           }
         }, {
-          "components": ["t"],
+          "coordinates": ["t"],
           "system": {
             "type": "TemporalRS",
             "calendar": "Gregorian"
@@ -364,7 +364,7 @@ export const FIXTURES = {
           "y": { "values": [-40.2] }
         },
         "referencing": [{
-          "components": ["x","y"],
+          "coordinates": ["x","y"],
           "system": {
             "type": "GeodeticCRS",
             "id": "http://www.opengis.net/def/crs/OGC/1.3/CRS84"

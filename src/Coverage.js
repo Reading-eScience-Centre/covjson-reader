@@ -771,16 +771,16 @@ export function transformDomain (domain, referencing, domainType) {
     }
     
     // TODO remove this if-block later, just here for backwards-compatibility 
-    if (axis.dimensions) {
-      axis.components = axis.dimensions
+    if (axis.components) {
+      axis.coordinates = axis.components
     }
     
-    if (!axis.components) {
-      axis.components = [key]
+    if (!axis.coordinates) {
+      axis.coordinates = [key]
     }
     
     // TODO remove this line later, just here for backwards-compatibility 
-    axis.dimensions = axis.components
+    axis.components = axis.coordinates
     
     
     if ('start' in axis && 'stop' in axis && 'num' in axis) {
@@ -821,14 +821,9 @@ export function transformDomain (domain, referencing, domainType) {
   
   // TODO remove this later, just here for backwards-compatibility 
   for (let obj of domain.referencing) {
-    if (obj.system) break // already transformed
-    obj.system = obj.srs || obj.trs || obj.rs
-    if (obj.dimensions) {
-      obj.components = obj.dimensions
+    if (obj.components) {
+      obj.coordinates = obj.components
     }
-    delete obj.srs
-    delete obj.trs
-    delete obj.rs
   }
   
   if (domain.rangeAxisOrder) {

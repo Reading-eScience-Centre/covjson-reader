@@ -11,7 +11,7 @@ A browser version of this library is hosted on both [jsDelivr](http://www.jsdeli
 Usage is simple:
 ```html
 <script src="https://npmcdn.com/covutils/covutils-lite.min.js"></script>
-<script src="https://cdn.jsdelivr.net/covjson-reader/0.14/covjson-reader.min.js"></script>
+<script src="https://cdn.jsdelivr.net/covjson-reader/0.16/covjson-reader.min.js"></script>
 <script>
 CovJSON.read('http://example.com/coverage.covjson').then(function (cov) {
   // work with Coverage object
