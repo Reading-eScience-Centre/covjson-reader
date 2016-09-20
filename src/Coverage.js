@@ -308,7 +308,7 @@ function getRangeShapeArray (domain, range) {
 
 function loadRangesFn (cov) {
   return paramKeys => {
-    if (paramKeys === undefined) paramKeys = this.parameters.keys()
+    if (paramKeys === undefined) paramKeys = cov.parameters.keys()
     paramKeys = Array.from(paramKeys)
     return Promise.all(paramKeys.map(k => cov.loadRange(k))).then(ranges => {
       let map = new Map()
