@@ -1,6 +1,6 @@
 # covjson-reader [![Build Status](https://travis-ci.org/Reading-eScience-Centre/covjson-reader.svg?branch=master)](https://travis-ci.org/Reading-eScience-Centre/covjson-reader)
 
-A library that reads [CoverageJSON](https://github.com/reading-escience-centre/coveragejson) documents and exposes them as [Coverage data objects](https://github.com/reading-escience-centre/coverage-jsapi).
+A library that reads [CoverageJSON](https://covjson.org) documents and exposes them as [Coverage data objects](https://github.com/reading-escience-centre/coverage-jsapi).
 
 [API docs](https://doc.esdoc.org/github.com/Reading-eScience-Centre/covjson-reader/)
 
