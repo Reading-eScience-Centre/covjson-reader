@@ -34,7 +34,7 @@ module.exports = function(config) {
     
     browserify: {
       transform: [
-        ['babelify', {presets: ['es2015']}]
+        ['babelify', { "presets": ["es2015"] }]
       ]
     },
         
