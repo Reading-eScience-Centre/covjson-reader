@@ -378,6 +378,7 @@ function loadTiledNdArraySubset (range, constraints) {
   let tilesetsStats = range.tileSets.map(ts => getTilesetStats(fillNulls(ts.tileShape), constraintsArr))
   let idxBestTileset = indexOfBestTileset(tilesetsStats)
   let tileset = range.tileSets[idxBestTileset]
+  let urlTemplate = template.parse(tileset.urlTemplate)
   let tileShape = fillNulls(tileset.tileShape)
       
   // step 2: determine the tiles to load
@@ -412,75 +413,90 @@ function loadTiledNdArraySubset (range, constraints) {
     subsetTilesetAxes.push(tilesetAxis)
   }
   
-  // step 3: create an empty ndarray of the subset shape that will be filled with tile data
-  // TODO check if only a single tile will be loaded and avoid copying data around in that case
-  let subsetShape = constraintsArr.map(({start,stop,step}) => Math.floor((stop - start) / step) + (stop - start) % step)
-  let subsetSize = subsetShape.reduce((l,r) => l*r)
-  let subsetNdArr = ndarray(new Array(subsetSize), subsetShape)
-  
-  // step 4: load tiles and fill subset ndarray
-  let urlTemplate = template.parse(tileset.urlTemplate)
   let tiles = cartesianProduct(subsetTilesetAxes)
-  let promises = tiles.map(tile => {
-    let tileUrlVars = {}
-    tile.forEach((v,i) => tileUrlVars[range.axisNames[i]] = v)
-    let url = urlTemplate.expand(tileUrlVars)
+  let subsetShape = constraintsArr.map(({start,stop,step}) => Math.floor((stop - start) / step) + (stop - start) % step)
+
+  function getTileUrl (tile) {
+      let tileUrlVars = {}
+      tile.forEach((v,i) => tileUrlVars[range.axisNames[i]] = v)
+      return urlTemplate.expand(tileUrlVars)
+  }
+  
+  // step 3a: check if only a single tile will be loaded and avoid copying data around in that case
+  if (tiles.length === 1 && subsetShape.every((v,i) => v === tileShape[i])) {
+    let url = getTileUrl(tiles[0])
     return load(url).then(result => {
       let tileRange = result.data
       transformNdArrayRange(tileRange)
-      
-      // figure out which parts of the tile to copy into which part of the final ndarray
-      let tileOffsets = tile.map((v,i) => v * tileShape[i])
-      
-      // iterate all tile values and for each check if they are part of the subset
-      // TODO this code is probably quite slow, consider pre-compiling etc
-      let tileAxesSubsetIndices = []
-      for (let ax=0; ax < tileShape.length; ax++) {
-        let {start,stop,step} = constraintsArr[ax]
-        let tileAxisSize = tileShape[ax]
-        let tileAxisOffset = tileOffsets[ax]
-        let tileAxisSubsetIndices = []
-        let startIdx = 0
-        if (tileAxisOffset < start) {
-          startIdx = start - tileAxisOffset
-        }
-        let stopIdx = tileAxisSize
-        if (tileAxisOffset + stopIdx > stop) {
-          stopIdx = stop - tileAxisOffset
-        }
-        
-        for (let i=startIdx; i < stopIdx; i++) {
-          let idx = tileAxisOffset + i
-          if ((idx - start) % step === 0) {
-            tileAxisSubsetIndices.push(i)
-          }
-        }
-        tileAxesSubsetIndices.push(tileAxisSubsetIndices)
-      }
-      let tileSubsetIndices = cartesianProduct(tileAxesSubsetIndices)
-      for (let tileInd of tileSubsetIndices) {
-        let val = tileRange._ndarr.get(...tileInd)
-        let subsetInd = tileInd.map((i,ax) => {
-          let idx = tileOffsets[ax] + i
-          return Math.floor((idx - constraintsArr[ax].start) / constraintsArr[ax].step)
-        })
-        subsetNdArr.set(...subsetInd, val)
-      }
+      return tileRange
     })
-  })
-  
-  // step 5: create and return the new range
-  return Promise.all(promises).then(() => {
-    let newrange = {
-      dataType: range.dataType,
-      get: createRangeGetFunction(subsetNdArr, range.axisNames),
-      _ndarr: subsetNdArr,
-      _axisNames: range.axisNames,
-      _shape: subsetShape
-    }
-    newrange.shape = new Map(range.axisNames.map((v,i) => [v, subsetNdArr.shape[i]]))
-    return newrange
-  })
+  } else {
+    // step 3b: create an empty ndarray of the subset shape that will be filled with tile data
+    let subsetSize = subsetShape.reduce((l,r) => l*r)
+    let subsetNdArr = ndarray(new Array(subsetSize), subsetShape)
+    
+    // step 4: load tiles and fill subset ndarray
+    let promises = tiles.map(tile => {
+      let url = getTileUrl(tile)
+      return load(url).then(result => {
+        let tileRange = result.data
+        transformNdArrayRange(tileRange)
+        
+        // figure out which parts of the tile to copy into which part of the final ndarray
+        let tileOffsets = tile.map((v,i) => v * tileShape[i])
+        
+        // iterate all tile values and for each check if they are part of the subset
+        // TODO this code is probably quite slow, consider pre-compiling etc
+        //      -> use ndarray-ops#assign for fast copies
+        let tileAxesSubsetIndices = []
+        for (let ax=0; ax < tileShape.length; ax++) {
+          let {start,stop,step} = constraintsArr[ax]
+          let tileAxisSize = tileShape[ax]
+          let tileAxisOffset = tileOffsets[ax]
+          let tileAxisSubsetIndices = []
+          let startIdx = 0
+          if (tileAxisOffset < start) {
+            startIdx = start - tileAxisOffset
+          }
+          let stopIdx = tileAxisSize
+          if (tileAxisOffset + stopIdx > stop) {
+            stopIdx = stop - tileAxisOffset
+          }
+          
+          for (let i=startIdx; i < stopIdx; i++) {
+            let idx = tileAxisOffset + i
+            if ((idx - start) % step === 0) {
+              tileAxisSubsetIndices.push(i)
+            }
+          }
+          tileAxesSubsetIndices.push(tileAxisSubsetIndices)
+        }
+        let tileSubsetIndices = cartesianProduct(tileAxesSubsetIndices)
+        for (let tileInd of tileSubsetIndices) {
+          let val = tileRange._ndarr.get(...tileInd)
+          let subsetInd = tileInd.map((i,ax) => {
+            let idx = tileOffsets[ax] + i
+            return Math.floor((idx - constraintsArr[ax].start) / constraintsArr[ax].step)
+          })
+          subsetNdArr.set(...subsetInd, val)
+        }
+      })
+    })
+
+    // step 5: create and return the new range
+    return Promise.all(promises).then(() => {
+      let newrange = {
+        dataType: range.dataType,
+        get: createRangeGetFunction(subsetNdArr, range.axisNames),
+        _ndarr: subsetNdArr,
+        _axisNames: range.axisNames,
+        _shape: subsetShape
+      }
+      newrange.shape = new Map(range.axisNames.map((v,i) => [v, subsetNdArr.shape[i]]))
+      return newrange
+    })
+  } 
+
 }
 
 /**

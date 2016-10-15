@@ -200,6 +200,25 @@ describe('Coverage methods', () => {
         })
       })
     })
+    it('should load a full tile correctly', () => {
+      return read(FIXTURES.GridTiledURL).then(cov => {
+        // TODO how to check which tileset was loaded?
+        let constraint = {t: 1}
+        return cov.subsetByIndex(constraint).then(subset => {
+          return subset.loadRange('FOO').then(range => {
+            for (let y=0; y < 5; y++) {
+              for (let x=0; x < 10; x++) {
+                assert.strictEqual(range.get({y, x}), 
+                                    tiledAllVals.xget({
+                                      t: constraint.t,
+                                      y: y,
+                                      x: x}))
+              }
+            }
+          })
+        })
+      })
+    })
   })
   describe('#subsetByValue', () => {
     let vals = FIXTURES.Grid().domain.axes.x.values
