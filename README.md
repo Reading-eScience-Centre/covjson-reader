@@ -1,4 +1,9 @@
-# covjson-reader [![Build Status](https://travis-ci.org/Reading-eScience-Centre/covjson-reader.svg?branch=master)](https://travis-ci.org/Reading-eScience-Centre/covjson-reader)
+# covjson-reader
+
+[![NPM version](http://img.shields.io/npm/v/covjson-reader.svg)](https://npmjs.org/package/wd) 
+[![dependencies Status](https://david-dm.org/Reading-eScience-Centre/covjson-reader/status.svg)](https://david-dm.org/Reading-eScience-Centre/covjson-reader)
+[![devDependencies Status](https://david-dm.org/reading-escience-centre/covjson-reader/dev-status.svg)](https://david-dm.org/reading-escience-centre/covjson-reader?type=dev)
+[![Build Status](https://travis-ci.org/Reading-eScience-Centre/covjson-reader.svg?branch=master)](https://travis-ci.org/Reading-eScience-Centre/covjson-reader)
 
 A library that reads [CoverageJSON](https://covjson.org) documents and exposes them as [Coverage data objects](https://github.com/reading-escience-centre/coverage-jsapi).
 

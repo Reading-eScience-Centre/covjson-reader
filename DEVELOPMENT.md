@@ -35,20 +35,25 @@ $ npm run build
 ```
 This will build the covjson-reader.{src|min}.js files in the root project folder.
 
-Note that both the cbor-js and ndarray dependencies are included in the bundle.
+Note that both the [ndarray](https://www.npmjs.com/package/ndarray) and 
+[url-template](https://www.npmjs.com/package/url-template) dependencies are included in the bundle.
+The [covutils](https://www.npmjs.com/package/covutils) dependency has to be imported manually
+as it is a dependency typically used by more than one library, for example,
+[leaflet-coverage](https://www.npmjs.com/package/leaflet-coverage) also uses it.
 
 ## Publishing a new version
 
 1. Raise the version number in package.json.
-2. If it is a minor or major version change, update the version in README.md.
-3. Create a semver git tag (`x.y.z`) and push it.
+2. If it is a minor or major version change, update the version in [README.md](README.md).
+3. Create a [semver](http://semver.org/) [git tag](https://git-scm.com/book/en/v2/Git-Basics-Tagging) (`x.y.z`) and push it.
 4. Regenerate documentation at https://doc.esdoc.org.
 5. Run `npm publish`.
-6. Attach the `covjson-reader.{src|min}.js` files to the GitHub release.
+6. Attach the `covjson-reader.{src|min}.js[.map]` files to the GitHub release.
 
-The last two steps build and publish the package to the npm registry.
-This project is registered on http://www.jsdelivr.com such that on every new
-npm release, the minified browser bundle is made available automatically on the jsDelivr CDN.
+The last two steps build and publish the package to the [npm registry](https://www.npmjs.com/package/covjson-reader).
+This project is [registered](https://github.com/jsdelivr/jsdelivr/tree/master/files/covjson-reader)
+on http://www.jsdelivr.com such that on every new
+npm release, the minified browser bundle `covjson-reader.min.js` is made available automatically on the jsDelivr CDN.
 
 ## Code style
 
