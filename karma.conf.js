@@ -1,6 +1,3 @@
-// Karma configuration
-// Generated on Tue Aug 25 2015 14:22:52 GMT+0100 (GMT Daylight Time)
-
 module.exports = function(config) {
   config.set({
 
@@ -34,15 +31,22 @@ module.exports = function(config) {
     
     browserify: {
       transform: [
-        ['babelify', { "presets": ["es2015"] }]
+        ['babelify', { "presets": ["es2015"] }],
+        ['browserify-istanbul', { instrumenterConfig: { embedSource: true } }]
+      ]
+    },
+
+    coverageReporter: {
+      reporters: [
+        {'type': 'text'},
+        {'type': 'lcovonly'}
       ]
     },
         
     // test results reporter to use
     // possible values: 'dots', 'progress'
     // available reporters: https://npmjs.org/browse/keyword/karma-reporter
-    reporters: ['progress'],
-
+    reporters: ['progress', 'coverage'],
 
     // web server port
     port: 9876,
