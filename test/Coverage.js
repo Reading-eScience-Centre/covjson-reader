@@ -1,8 +1,8 @@
 // IE11 support
-import 'core-js/es6/array'
 import 'core-js/es6/promise'
 import 'core-js/es6/symbol'
 import 'core-js/es6/map'
+import 'core-js/modules/es6.array.from'
 
 import assert from 'assert'
 import xndarray from 'xndarray'

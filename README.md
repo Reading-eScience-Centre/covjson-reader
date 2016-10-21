@@ -11,7 +11,8 @@ A library that reads [CoverageJSON](https://covjson.org) documents and exposes t
 
 ## Usage
 
-A browser version of this library is hosted on both [jsDelivr](http://www.jsdelivr.com/projects/covjson-reader) and [cdnjs](https://cdnjs.com/libraries/covjson-reader), where the latter also hosts the unminified version together with source maps.
+A browser version of this library is hosted on both [jsDelivr](http://www.jsdelivr.com/projects/covjson-reader)
+and [cdnjs](https://cdnjs.com/libraries/covjson-reader), where the latter also hosts the unminified version together with source maps.
 
 Usage is simple:
 ```html
@@ -27,27 +28,25 @@ CovJSON.read('http://example.com/coverage.covjson').then(function (cov) {
 </script>
 ```
 
-Depending on which browsers shall be supported it may be necessary to include polyfills before loading this library. For example, IE11 requires [polyfills](https://github.com/zloirock/core-js) for `Promise`, `Symbol`, `Map`, and `Array`.
+The library makes use of the following [ES2015](https://en.wikipedia.org/wiki/ECMAScript#6th_Edition_-_ECMAScript_2015) features:
+`Promise`, `Symbol`, `Map`, and `Array.from`.
+Depending on which browsers you need to support it may be necessary to include 
+[polyfills](https://github.com/zloirock/core-js) before loading this library. 
 
-### browserify/JSPM
+### NPM
 
-This library can be used with [browserify](http://browserify.org) and similar tools like [JSPM](http://jspm.io) by importing it via npm.
+This library can be used with [browserify](http://browserify.org) and similar tools by importing it via npm.
 
-JSPM example:
-```html
-<script src="https://jspm.io/system.js"></script>
-<script>
-System.import('npm:covjson-reader', function (CovJSON) {
+ES2015 syntax:
+```js
+import * as CovJSON from 'covjson-reader'
 
-  CovJSON.read('http://example.com/coverage.covjson').then(function (cov) {
-    // work with Coverage object
-  }).catch(function (e) {
-    // there was an error when loading the coverage
-    console.log(e)
-  })
-
+CovJSON.read('http://example.com/coverage.covjson').then(cov => {
+  // work with Coverage object
+}).catch(e => {
+  // there was an error when loading the coverage
+  console.log(e)
 })
-</script>
 ```
 
 ## Acknowledgments

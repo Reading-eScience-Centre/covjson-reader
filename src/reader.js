@@ -115,7 +115,7 @@ function addLinkRelations (cov, headers) {
         continue
       }
       let rel = param.substring(relStart+5, param.length-1)
-      if (!rel.startsWith('http://') && !rel.startsWith('https://')) {
+      if (rel.indexOf('http://') !== 0 && rel.indexOf('https://') !== 0) {
         rel = LINKRELPREFIX + rel
       }
       if (ld[rel]) {
