@@ -33,7 +33,7 @@
   "scripts": {
     "docs": "esdoc -c esdoc.json",
     "style": "standard",
-    "transpile": "babel -d lib/ src/",
+    "transpile": "babel --presets es2015 -d lib/ src/",
     "test": "karma start --single-run",
     "karma": "karma start",
     "saucelabs": "karma start karma.conf-ci.js",
