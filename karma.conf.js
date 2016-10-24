@@ -31,8 +31,7 @@ module.exports = function(config) {
     
     browserify: {
       transform: [
-        ['babelify', { "presets": ["es2015"] }],
-        ['browserify-istanbul', { instrumenterConfig: { embedSource: true } }]
+        ['babelify', { "presets": ["es2015"], "plugins": ["istanbul"] }]
       ]
     },
 
