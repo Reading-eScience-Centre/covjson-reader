@@ -40,6 +40,7 @@ module.exports = function(config) {
         {'type': 'text'},
         {'type': 'lcovonly',
          'subdir': function (browser) {
+           // normalize
            return browser.toLowerCase().split(/[ /-]/)[0]
          }}
       ]
