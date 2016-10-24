@@ -7,43 +7,42 @@ import {default as Coverage, transformDomain, transformParameter} from './Covera
 import {shallowcopy, getNamespacePrefixes, DOMAINTYPES_PREFIX} from './util.js'
 import {CollectionQuery} from 'covutils'
 
-/** 
+/**
  * Wraps a CoverageJSON Collection object as a CoverageCollection API object.
- * 
+ *
  * @see https://github.com/Reading-eScience-Centre/coverage-jsapi
- * 
+ *
  */
 export default class CoverageCollection {
   /**
    * @param {Object} covjson The CoverageJSON Collection document.
    */
-  constructor(covjson) {
+  constructor (covjson) {
     /**
      * The constant "CoverageCollection".
-     * 
+     *
      * @type {string}
      */
     this.type = COVERAGECOLLECTION
-    
+
     /**
      * JSON-LD document
-     * 
+     *
      * @type {Object}
      */
     this.ld = {}
-    
+
     this._exposeLd(covjson)
-    
+
     this.prefixes = getNamespacePrefixes(this.ld)
-    
-    /** 
+
+    /**
      * ID of the coverage collection.
-     * 
-     * @type {string|undefined} 
+     *
+     * @type {string|undefined}
      */
     this.id = covjson.id
-    
-    
+
     let domainType = covjson.domainType
     if (domainType && domainType.indexOf(':') === -1) {
       domainType = DOMAINTYPES_PREFIX + domainType
@@ -51,12 +50,11 @@ export default class CoverageCollection {
 
     /**
      * If defined, every coverage in the collection has the given domain type, typically a URI.
-     * 
+     *
      * @type {string|undefined}
      */
     this.domainType = domainType
-    
-    
+
     let covs = []
     let rootParams = covjson.parameters ? covjson.parameters : {}
     // generate local parameter IDs if not existing
@@ -68,7 +66,7 @@ export default class CoverageCollection {
         param.id = Math.round(new Date().getTime() * Math.random()).toString()
       }
     }
-    
+
     let covOptions = {}
     if (covjson.referencing) {
       covOptions.referencing = covjson.referencing
@@ -90,18 +88,18 @@ export default class CoverageCollection {
       }
       covs.push(new Coverage(coverage, covOptions))
     }
-    
-    /** 
+
+    /**
      * The Coverages of this collection.
-     * 
-     * @type {Array<Coverage>} 
+     *
+     * @type {Array<Coverage>}
      */
     this.coverages = covs
     if (covjson.parameters) {
       /**
        * A Map from key to {@link Parameter} object.
        * The key is a short alias of a {@link Parameter}, typically what is called a "variable name" or similar.
-       * 
+       *
        * @type {Map<string,Parameter>}
        */
       this.parameters = new Map()
@@ -118,15 +116,15 @@ export default class CoverageCollection {
       this.domainTemplate = covjson.domainTemplate
     }
   }
-  
+
   /**
-   * 
+   *
    * @return {CollectionQuery}
    */
   query () {
     return new CollectionQuery(this)
   }
-  
+
   _exposeLd (covjson) {
     if (!covjson['@context']) {
       // no LD love here...

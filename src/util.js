@@ -28,10 +28,10 @@ export function shallowcopy (obj) {
 /**
  * Extracts all the directly included namespaces from the `@context` field,
  * not following remote JSON-LD contexts.
- * 
+ *
  * @ignore
- * @param doc A JSON-LD document. 
- * @returns {Map<string,string>} 
+ * @param doc A JSON-LD document.
+ * @returns {Map<string,string>}
  */
 export function getNamespacePrefixes (doc) {
   let context = doc['@context']
