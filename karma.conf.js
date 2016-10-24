@@ -39,7 +39,10 @@ module.exports = function(config) {
     coverageReporter: {
       reporters: [
         {'type': 'text'},
-        {'type': 'lcovonly'}
+        {'type': 'lcovonly',
+         'subdir': function (browser) {
+           return browser.toLowerCase().split(/[ /-]/)[0]
+         }}
       ]
     },
         
