@@ -270,6 +270,12 @@ export default class Coverage {
   }
 }
 
+/**
+ * Returns the range axis order as an array, supporting older CovJSON variants where the order
+ * was not part of the range itself but the domain.
+ * 
+ * @return {Array<string>}
+ */
 function getRangeAxisOrder (domain, range) {
   if (!domain) {
     return range._axisNames
@@ -286,6 +292,12 @@ function getRangeAxisOrder (domain, range) {
   return axisOrder
 }
 
+/**
+ * Returns the range shape array, supporting older CovJSON variants where the axis order/shape
+ * was not part of the range itself but the domain.
+ * 
+ * @return {Array<number>}
+ */
 function getRangeShapeArray (domain, range) {
   if (!domain) {
     return range._shape
@@ -302,6 +314,12 @@ function getRangeShapeArray (domain, range) {
   return shape
 }
 
+/**
+ * Returns a `loadRanges([keys])` function based on the given coverage object.
+ * 
+ * @param {Coverage} The coverage object.
+ * @return {Function}
+ */
 function loadRangesFn (cov) {
   return paramKeys => {
     if (paramKeys === undefined) paramKeys = cov.parameters.keys()
@@ -316,6 +334,14 @@ function loadRangesFn (cov) {
   }
 }
 
+/**
+ * Returns a `loadRange(key)` function that loads subsetted data based on the given subset constraints.
+ * The subset constraints must be relative to the original coverage, not an already subsetted version.
+ * 
+ * @param {Coverage} cov The coverage object.
+ * @param {Object} globalConstraints Subset constraints in expanded form, see toGlobalSubsetConstraints().
+ * @return {Function}
+ */
 function loadRangeFn (cov, globalConstraints) {
   return paramKey => {
     // Since the shape of the range array is derived from the domain, it has to be loaded as well.
@@ -338,6 +364,16 @@ function loadRangeFn (cov, globalConstraints) {
   }
 }
 
+/**
+ * Loads and returns range data with optional subsetting applied.
+ * 
+ * @param {Coverage} cov The coverage object for which to load range data.
+ * @param {string} paramKey
+ * @param {Object} range A CovJSON range object (of type [Tiled]NdArray)
+ * @param {Domain} domain The domain object corresponding to the coverage object.
+ * @param {Object} [globalConstraints] Subsetting constraints to apply.
+ * @return {Promise<Range>}
+ */
 function doLoadRange (cov, paramKey, range, domain, globalConstraints={}) {
   globalConstraints = normalizeIndexSubsetConstraints(domain, globalConstraints)
   
@@ -548,6 +584,14 @@ function indexOfBestTileset (tilesetsStats) {
   return minEffortIdx
 }
 
+/**
+ * Subsets an NdArray range object by the given subsetting constraints.
+ * 
+ * @param {Range} range The range to subset.
+ * @param {Domain} domain The corresponding domain, needed for backwards-compatibility.
+ * @param {Object} constraints The subsetting constraints in expanded start/stop/step form.
+ * @return {Range} The new range object.
+ */
 function subsetNdArrayRangeByIndex (range, domain, constraints) {
   let ndarr = range._ndarr
         
@@ -569,6 +613,15 @@ function subsetNdArrayRangeByIndex (range, domain, constraints) {
   return newrange
 }
 
+/**
+ * Returns a `subsetByIndex(constraints)` function for a given coverage that works relative
+ * to the given subsetting constraints.
+ * The subset constraints must be relative to the original coverage, not an already subsetted version.
+ * 
+ * @param {Coverage} cov The coverage object.
+ * @param {Object} globalConstraints Subset constraints in expanded form, see toGlobalSubsetConstraints().
+ * @return {Function}
+ */
 function subsetByIndexFn (cov, globalConstraints) {
   return constraints => {
     return cov.loadDomain().then(domain => {
@@ -879,6 +932,20 @@ function toGlobalSubsetConstraints (localConstraints, globalConstraints={}) {
   return res
 }
 
+/**
+ * Wraps the `bounds` of a CovJSON axis object into an object
+ * that has a `get(i)` function that returns a pair of bounds for a given axis index.
+ * 
+ * @example
+ * let cov = ...
+ * let axis = cov.domain.axes.x
+ * let bounds = axis.bounds // [0,1, 1,2, 2,3]
+ * let boundsObj = wrapBounds(bounds)
+ * let bnds = boundsObj.get(1) // [1,2]
+ * 
+ * @param {Object} axis A CovJSON axis object.
+ * @return {Object|undefined} An object with a `get(i)` function, or undefined if the axis has no bounds.
+ */
 function wrapBounds (axis) {
   if (axis.bounds) {
     let bounds = axis.bounds
