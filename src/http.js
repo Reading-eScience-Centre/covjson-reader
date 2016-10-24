@@ -5,15 +5,12 @@ import {getAcceptHeader} from './http-common.js'
  * 
  * Browser implementation.
  */
-export function load (url, options = {}, responseType='arraybuffer') {
-  if (['arraybuffer', 'text'].indexOf(responseType) === -1) {
-    throw new Error()
-  }
+export function load (url, options = {}) {
   let headers = options.headers || {}
   return new Promise((resolve, reject) => {
     var req = new XMLHttpRequest()
     req.open('GET', url)
-    req.responseType = responseType
+    req.responseType = 'text'
     let accept = getAcceptHeader(options.eagerload)
     req.setRequestHeader('Accept', accept)
     if (headers) {
@@ -29,24 +26,9 @@ export function load (url, options = {}, responseType='arraybuffer') {
           return
         }
         
-        let data
-        if (responseType === 'arraybuffer') {
-          if (window.TextDecoder) {
-            let t0 = new Date()
-            data = JSON.parse(new TextDecoder().decode(new DataView(req.response)))
-            console.log('JSON decoding: ' + (new Date()-t0) + 'ms')
-          } else {
-            // load again (from cache) to get correct response type
-            // Note we use 'text' and not 'json' as we want to throw parsing errors.
-            // With 'json', the response is just 'null'.
-            reject({responseType: 'text'})
-            return
-          }
-        } else {
-          let t0 = new Date()
-          data = JSON.parse(req.response)
-          console.log('JSON decoding (slow path): ' + (new Date()-t0) + 'ms')
-        }
+        let t0 = new Date()
+        let data = JSON.parse(req.response)
+        console.log('JSON decoding: ' + (new Date()-t0) + 'ms')
         let responseHeaders = parseResponseHeaders(req.getAllResponseHeaders())
         resolve({
           data,
@@ -61,12 +43,6 @@ export function load (url, options = {}, responseType='arraybuffer') {
     })
 
     req.send()
-  }).catch(e => {
-    if (e.responseType) {
-      return load(url, headers, e.responseType)
-    } else {
-      throw e
-    }
   })
 }
 
