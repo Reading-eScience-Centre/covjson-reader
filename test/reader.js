@@ -1,15 +1,8 @@
-// IE11 support
-import 'core-js/es6/promise'
-import 'core-js/es6/symbol'
-import 'core-js/es6/map'
-import 'core-js/modules/es6.array.from'
-
 import assert from 'assert'
 
 import {read} from '../src/reader.js'
 import {DOMAINTYPES_PREFIX as PREFIX} from '../src/util.js'
 
-import {runServerIfNode} from './node-setup.js'
 import {FIXTURES} from './data.js'
 
 function readall(input) {
@@ -25,9 +18,6 @@ function readall(input) {
 }
 
 describe('reader methods', () => {
-  
-  runServerIfNode()
-  
   describe('#read', () => {
     // The following tests only check for basic reading errors.
     // This is done by returning the Promise directly to Mocha which can handle it.

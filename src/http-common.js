@@ -25,17 +25,3 @@ export function getAcceptHeader (standalone) {
     MEDIATYPE.JSON + '; q=0.1'
   return accept
 }
-
-/**
- * Checks if a media type matches any given media types, ignoring any parameters.
- *
- * @param {string} mediaType The media type.
- * @param {string|Array} matchingMediaTypes The media type(s) to match against.
- * @return {bool} True if there is a match.
- */
-export function matchesMediaTypes (mediaType, matchingMediaTypes) {
-  if (!Array.isArray(matchingMediaTypes)) {
-    matchingMediaTypes = [matchingMediaTypes]
-  }
-  return matchingMediaTypes.some(t => mediaType.indexOf(t) === 0)
-}

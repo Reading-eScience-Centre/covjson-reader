@@ -1,3 +1,9 @@
+if (process.env.CI) {
+  BROWSERS =  ['ChromeHeadless', 'FirefoxHeadless']
+} else {
+  BROWSERS =  ['ChromeHeadless']
+}
+
 module.exports = function(config) {
   config.set({
 
@@ -31,7 +37,7 @@ module.exports = function(config) {
     
     browserify: {
       transform: [
-        ['babelify', { "presets": ["es2015"], "plugins": ["istanbul"] }]
+        ['babelify', { "plugins": ["istanbul"] }]
       ]
     },
 
@@ -70,7 +76,7 @@ module.exports = function(config) {
 
     // start these browsers
     // available browser launchers: https://npmjs.org/browse/keyword/karma-launcher
-    browsers: ['Chrome'],
+    browsers: BROWSERS,
 
 
     // Continuous Integration mode
