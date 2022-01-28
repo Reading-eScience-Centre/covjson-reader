@@ -108,13 +108,6 @@ export default class CoverageCollection {
         this.parameters.set(key, covjson.parameters[key])
       }
     }
-    if (covjson.domainTemplate) {
-      transformDomain(covjson.domainTemplate)
-      /**
-       * @ignore
-       */
-      this.domainTemplate = covjson.domainTemplate
-    }
   }
 
   /**

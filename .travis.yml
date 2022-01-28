@@ -1,8 +1,0 @@
-language: node_js
-
-node_js:
-  - "4"
-
-script:
-  - npm run saucelabs
-  - npm run report-coverage

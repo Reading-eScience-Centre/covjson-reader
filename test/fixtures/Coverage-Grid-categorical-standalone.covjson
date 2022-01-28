@@ -9,11 +9,10 @@
       "z" : { "values": [ 5] },
       "t" : { "values": ["2010-01-01T00:12:20Z"] }
     },
-    "rangeAxisOrder": ["t","z","y","x"],
     "referencing": [{
       "coordinates": ["y","x","z"],
       "system": {
-        "type": "GeodeticCRS",
+        "type": "GeographicCRS",
         "id": "http://www.opengis.net/def/crs/EPSG/0/4979"
       }
     }, {
@@ -61,7 +60,9 @@
   },
   "ranges" : {
     "LC" : {
-      "type" : "Range",
+      "type" : "NdArray",
+      "axisNames": ["t","z","y","x"],
+      "shape": [1, 1, 2, 3],
       "values" : [ 1, 1, null, 2, 1, 2 ]
     }
   }

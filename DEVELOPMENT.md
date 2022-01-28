@@ -19,13 +19,13 @@ Simply run:
 $ npm test
 ```
 
-This tests the library with Chrome which will get started for that purpose.
+This tests the library with Chrome which will get started in the background.
 
 Tests can be automatically re-run on file changes. For that, instead start the long-running test runner:
 ```
 $ npm run karma
 ```
-and minimize the browser windows that popped up. Test output will appear in the shell.
+Test output will appear in the shell.
 
 ## Building a browser bundle
 
@@ -51,9 +51,6 @@ as it is a dependency typically used by more than one library, for example,
 6. Attach the `covjson-reader.{src|min}.js[.map]` files to the GitHub release.
 
 The last two steps build and publish the package to the [npm registry](https://www.npmjs.com/package/covjson-reader).
-This project is [registered](https://github.com/jsdelivr/jsdelivr/tree/master/files/covjson-reader)
-on http://www.jsdelivr.com such that on every new
-npm release, the minified browser bundle `covjson-reader.min.js` is made available automatically on the jsDelivr CDN.
 
 ## Code style
 

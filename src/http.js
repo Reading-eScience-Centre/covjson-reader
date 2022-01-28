@@ -26,9 +26,7 @@ export function load (url, options = {}) {
           return
         }
 
-        let t0 = new Date()
         let data = JSON.parse(req.response)
-        console.log('JSON decoding: ' + (new Date() - t0) + 'ms')
         let responseHeaders = parseResponseHeaders(req.getAllResponseHeaders())
         resolve({
           data,

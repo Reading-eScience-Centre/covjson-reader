@@ -15,13 +15,13 @@
       "t": { "values": ["2013-01-13T11:12:20Z"] }
     },
     "referencing": [{
-      "components": ["x","y"],
+      "coordinates": ["x","y"],
       "system": {
-        "type": "GeodeticCRS",
+        "type": "GeographicCRS",
         "id": "http://www.opengis.net/def/crs/OGC/1.3/CRS84"
       }
     }, {
-      "components": ["z"],
+      "coordinates": ["z"],
       "system": {
         "type": "VerticalCRS",
         "cs": {
@@ -37,7 +37,7 @@
         }
       }
     }, {
-      "components": ["t"],
+      "coordinates": ["t"],
       "system": {
         "type": "TemporalRS",
         "calendar": "Gregorian"
@@ -68,7 +68,7 @@
         "en": "The potential temperature, in degrees celcius, of the sea water"
       },
       "unit" : {
-        "symbol" : "�C"
+        "symbol" : "°C"
       },
       "observedProperty" : {
         "id" : "http://foo/sea_water_potential_temperature",
@@ -80,15 +80,19 @@
   },
   "ranges" : {
     "PSAL" : {
-      "type" : "Range",
+      "type" : "NdArray",
       "dataType": "float",
+      "axisNames": ["z"],
+      "shape": [21],
       "values" : [ 43.9599, 43.9599, 43.9640, 43.9640, 43.9679, 43.9879, 44.0040,
                    44.0120, 44.0120, 44.0159, 44.0320, 44.0320, 44.0480, 44.0559,
                    44.0559, 44.0579, 44.0680, 44.0740, 44.0779, 44.0880, 44.0940 ]
     },
     "POTM" : {
-      "type" : "Range",
+      "type" : "NdArray",
       "dataType": "float",
+      "axisNames": ["z"],
+      "shape": [21],
       "values" : [ 23.8, 23.7, 23.5, 23.4, 23.2, 22.4, 21.8,
                    21.7, 21.5, 21.3, 21.0, 20.6, 20.1, 19.7,
                    19.4, 19.1, 18.9, 18.8, 18.7, 18.6, 18.5 ]

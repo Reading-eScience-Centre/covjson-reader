@@ -1,6 +1,4 @@
-import {PORT} from './node-setup.js'
-
-let base = 'http://localhost:' + PORT + '/fixtures/'
+let base = 'http://localhost:9876/fixtures/'
 
 export const FIXTURES = {
     ProfileURL: base + 'Coverage-Profile-standalone.covjson',
@@ -63,8 +61,10 @@ export const FIXTURES = {
       },
       "ranges" : {
         "PSAL" : {
-          "type" : "Range",
+          "type" : "NdArray",
           "dataType": "float",
+          "shape": [2],
+          "axisNames": ["z"],
           "values" : [ 43.9599, 43.3599 ]
         }
       }
@@ -127,6 +127,8 @@ export const FIXTURES = {
         "PSAL" : {
           "type" : "Range",
           "dataType": "float",
+          "shape": [2],
+          "axisNames": ["z"],
           "values" : [ 43.9599, 43.3599 ]
         }
       }
@@ -199,7 +201,6 @@ export const FIXTURES = {
           "z": { "values": [5] },
           "t": { "values": ["2010-01-01T00:12:20Z"] }
         },
-        "rangeAxisOrder": ["t","z","y","x"],
         "referencing": [{
           "coordinates": ["y","x","z"],
           "system": {
@@ -229,8 +230,10 @@ export const FIXTURES = {
       },
       "ranges" : {
         "ICEC" : {
-          "type" : "Range",
+          "type" : "NdArray",
           "dataType": "float",
+          "axisNames": ["t","z","y","x"],
+          "shape": [1, 1, 2, 3],
           "values" : [ 0.5, 0.6, 0.4, 0.6, 0.2, null ]
         }
       }
@@ -246,7 +249,6 @@ export const FIXTURES = {
           "z": { "values": [5] },
           "t": { "values": ["2010-01-01T00:12:20Z"] }
         },
-        "rangeAxisOrder": ["t","z","y","x"],
         "referencing": [{
           "coordinates": ["y","x","z"],
           "system": {
@@ -276,8 +278,10 @@ export const FIXTURES = {
       },
       "ranges" : {
         "ICEC" : {
-          "type" : "Range",
+          "type" : "NdArray",
           "dataType": "float",
+          "axisNames": ["t","z","y","x"],
+          "shape": [1, 1, 2, 3],
           "values" : [ 0.5, 0.6, 0.4, 0.6, 0.2, null ]
         }
       }
@@ -291,7 +295,6 @@ export const FIXTURES = {
         "z": { "values": [5] },
         "t": { "values": ["2010-01-01T00:12:20Z"] }
       },
-      "rangeAxisOrder": ["t","z","y","x"],
       "referencing": [{
         "coordinates": ["y","x","z"],
         "system": {

@@ -1,9 +1,3 @@
-// IE11 support
-import 'core-js/es6/promise'
-import 'core-js/es6/symbol'
-import 'core-js/es6/map'
-import 'core-js/modules/es6.array.from'
-
 import assert from 'assert'
 import xndarray from 'xndarray'
 
@@ -11,7 +5,6 @@ import {read} from '../src/reader.js'
 import {COVERAGE} from '../src/constants.js'
 import {DOMAINTYPES_PREFIX as PREFIX} from '../src/util.js'
 
-import {runServerIfNode} from './node-setup.js'
 import {FIXTURES} from './data.js'
 
 // copy of grid-tiled/c/all.covjson 
@@ -30,8 +23,6 @@ let tiledAllVals = xndarray([
    {names: ['t','y','x'], shape: [2, 5, 10]})
 
 describe('Coverage structure', () => {
-  runServerIfNode()
-  
   it('should have loaded=true and type=Coverage', () => {
     return read(FIXTURES.Profile()).then(cov => {
       assert.equal(cov.loaded, true)
@@ -75,8 +66,6 @@ describe('Coverage structure', () => {
 })
 
 describe('Coverage methods', () => {
-  runServerIfNode()
-  
   describe('#subsetByIndex', () => {
     it('should not modify the original coverage', () => {
       return read(FIXTURES.Profile()).then(cov => {

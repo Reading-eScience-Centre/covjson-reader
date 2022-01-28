@@ -271,53 +271,9 @@ export default class Coverage {
 }
 
 /**
- * Returns the range axis order as an array, supporting older CovJSON variants where the order
- * was not part of the range itself but the domain.
- *
- * @return {Array<string>}
- */
-function getRangeAxisOrder (domain, range) {
-  if (!domain) {
-    return range._axisNames
-  }
-  // backwards-compatibility, in the future the range always has an explicit axis ordering
-  let needsRangeAxisOrder = [...domain.axes.values()].filter(axis => axis.values.length > 1).length > 1
-
-  // domain is checked for backwards-compatibility
-  let axisOrder = domain._rangeAxisOrder || range._axisNames
-  if (needsRangeAxisOrder && !axisOrder) {
-    throw new Error('Range axis order missing')
-  }
-  axisOrder = axisOrder || [...domain.axes.keys()]
-  return axisOrder
-}
-
-/**
- * Returns the range shape array, supporting older CovJSON variants where the axis order/shape
- * was not part of the range itself but the domain.
- *
- * @return {Array<number>}
- */
-function getRangeShapeArray (domain, range) {
-  if (!domain) {
-    return range._shape
-  }
-  // mostly backwards-compatibility, in the future this just returns range._shape
-  let axisOrder = getRangeAxisOrder(domain, range)
-  let shape = axisOrder.map(k => domain.axes.get(k).values.length)
-  if (range._shape) {
-    let matchesDomain = range._shape.length === shape.length && range._shape.every((v, i) => v === shape[i])
-    if (!matchesDomain) {
-      throw new Error('range.shape must match domain axis sizes')
-    }
-  }
-  return shape
-}
-
-/**
  * Returns a `loadRanges([keys])` function based on the given coverage object.
  *
- * @param {Coverage} The coverage object.
+ * @param {Coverage} cov The coverage object.
  * @return {Function}
  */
 function loadRangesFn (cov) {
@@ -377,20 +333,20 @@ function loadRangeFn (cov, globalConstraints) {
 function doLoadRange (cov, paramKey, range, domain, globalConstraints = {}) {
   globalConstraints = normalizeIndexSubsetConstraints(domain, globalConstraints)
 
-  if (range.type === 'NdArray' || range.type === 'Range') {
+  if (range.type === 'NdArray') {
     // if an NdArray, then we modify it in-place (only done the first time)
-    transformNdArrayRange(range, domain)
+    transformNdArrayRange(range)
     if (cov.options.cacheRanges) {
       cov._covjson.ranges[paramKey] = range
       cov._updateLoadStatus()
     }
 
-    let newrange = subsetNdArrayRangeByIndex(range, domain, globalConstraints)
+    let newrange = subsetNdArrayRangeByIndex(range, globalConstraints)
     return Promise.resolve(newrange)
   } else if (range.type === 'TiledNdArray') {
     return loadTiledNdArraySubset(range, globalConstraints)
   } else {
-    throw new Error('Unsupported: ' + range.type)
+    throw new Error('Unsupported range type: ' + range.type)
   }
 }
 
@@ -585,15 +541,14 @@ function indexOfBestTileset (tilesetsStats) {
  * Subsets an NdArray range object by the given subsetting constraints.
  *
  * @param {Range} range The range to subset.
- * @param {Domain} domain The corresponding domain, needed for backwards-compatibility.
  * @param {Object} constraints The subsetting constraints in expanded start/stop/step form.
  * @return {Range} The new range object.
  */
-function subsetNdArrayRangeByIndex (range, domain, constraints) {
+function subsetNdArrayRangeByIndex (range, constraints) {
   let ndarr = range._ndarr
 
   // fast ndarray view
-  let axisNames = getRangeAxisOrder(domain, range)
+  let axisNames = range._axisNames
   let los = axisNames.map(name => constraints[name].start)
   let his = axisNames.map(name => constraints[name].stop)
   let steps = axisNames.map(name => constraints[name].step)
@@ -627,18 +582,11 @@ function subsetByIndexFn (cov, globalConstraints) {
 
       let newGlobalConstraints = toGlobalSubsetConstraints(constraints, globalConstraints)
 
-      // backwards-compatibility
-      if (domain._rangeAxisOrder) {
-        newdomain._rangeAxisOrder = domain._rangeAxisOrder
-      }
-
       // assemble everything to a new coverage
       let newcov = {
         _covjson: cov._covjson,
         options: cov.options,
         type: COVERAGE,
-        // TODO are the profiles still valid?
-        domainProfiles: cov.domainProfiles,
         domainType: cov.domainType,
         parameters: cov.parameters,
         loadDomain: () => Promise.resolve(newdomain)
@@ -694,7 +642,8 @@ function arrayType (validMin, validMax) {
  * Transforms a CoverageJSON parameter to the Coverage API format, that is,
  * some elements are converted from objects to Maps. Transformation is made in-place.
  *
- * @param {Object} param The original parameter.
+ * @param {Object} params The parameters object.
+ * @param {string} key The name of the parameter to transform.
  * @access private
  */
 export function transformParameter (params, key) {
@@ -727,10 +676,9 @@ export function transformParameter (params, key) {
  * Transforms a CoverageJSON NdArray range to the Coverage API format. Transformation is made in-place.
  *
  * @param {Object} range The original NdArray range.
- * @param {Object} [domain] The CoverageJSON domain object.
  * @return {Object} The transformed range.
  */
-function transformNdArrayRange (range, domain) {
+function transformNdArrayRange (range) {
   if ('__transformDone' in range) return
 
   const values = range.values
@@ -744,17 +692,14 @@ function transformNdArrayRange (range, domain) {
   }
 
   // store the array as we will expose a Map on range.shape in the next step
-  if (range.shape) {
-    range._shape = range.shape
-  }
-  if (range.axisNames) {
-    // not part of public API
-    range._axisNames = range.axisNames
-    delete range.axisNames
-  }
-
-  let axisNames = getRangeAxisOrder(domain, range)
-  let shapeArr = getRangeShapeArray(domain, range)
+  range._shape = range.shape || []
+  
+  // not part of public API
+  range._axisNames = range.axisNames || []
+  delete range.axisNames
+  
+  let axisNames = range._axisNames
+  let shapeArr = range._shape
 
   let ndarr = ndarray(values, shapeArr)
   range._ndarr = ndarr
@@ -767,6 +712,7 @@ function transformNdArrayRange (range, domain) {
 
 /**
  *
+ * @param ndarr The ndarray object.
  * @param axisOrder An array of axis names.
  * @returns Function
  */
@@ -804,6 +750,7 @@ function createRangeGetFunction (ndarr, axisOrder) {
  *
  * @param {Object} domain The original domain object.
  * @param {Array} [referencing] Referencing info to inject.
+ * @param {string} [domainType] Fall-back domain type.
  * @return {Object} The transformed domain object.
  * @access private
  */
@@ -832,17 +779,9 @@ export function transformDomain (domain, referencing, domainType) {
       axis.dataType = CORE_PREFIX + axis.dataType
     }
 
-    // TODO remove this if-block later, just here for backwards-compatibility
-    if (axis.components) {
-      axis.coordinates = axis.components
-    }
-
     if (!axis.coordinates) {
       axis.coordinates = [key]
     }
-
-    // TODO remove this line later, just here for backwards-compatibility
-    axis.components = axis.coordinates
 
     if ('start' in axis && 'stop' in axis && 'num' in axis) {
       let arr = new Float64Array(axis.num)
@@ -878,18 +817,6 @@ export function transformDomain (domain, referencing, domainType) {
 
   if (referencing) {
     domain.referencing = referencing
-  }
-
-  // TODO remove this later, just here for backwards-compatibility
-  for (let obj of domain.referencing) {
-    if (obj.components) {
-      obj.coordinates = obj.components
-    }
-  }
-
-  if (domain.rangeAxisOrder) {
-    domain._rangeAxisOrder = domain.rangeAxisOrder
-    delete domain.rangeAxisOrder
   }
 
   domain.__transformDone = true
